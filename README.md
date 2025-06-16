@@ -33,3 +33,40 @@ pb-and-jay/
 ├── index.html
 ├── vite.config.js
 └── package.json
+
+🌐 D&D 5e API Integration
+
+This project optionally pulls from the D&D 5e API:
+// src/services/dndAPI.js
+export const fetchClasses = async () => {
+  const res = await fetch('https://www.dnd5eapi.co/api/classes');
+  return await res.json();
+};
+
+🧠 AI DM Support (Planned)
+
+Future updates will include a DM Console powered by GPT-like AI for solo or small-group storytelling.
+	•	AI-generated responses to player actions
+	•	Module authoring prompts
+	•	Persistent world state
+
+⸻
+
+📦 Deployment (Coming Soon)
+
+You can deploy this project via:
+	•	Vercel (best for Next.js variant)
+	•	Netlify or Render for standard Vite builds
+
+⸻
+
+🧑‍💻 Author
+
+Made by Matthew R. Stitt
+Repo managed via GitHub · Project name: pb-and-jay
+
+⸻
+
+💬 License
+
+MIT License — do what you will, just don’t be a goblin about it.
