@@ -1,0 +1,73 @@
+/* Global reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html, body {
+  height: 100%;
+  font-family: 'Segoe UI', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #1e1e2f;
+  color: #333;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Basic layout styles */
+body {
+    padding: 20px;
+}
+
+a {
+  color: #78c0e0;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Homepage containter */
+.homepage-container {
+  max-width: 800px;
+    margin: 0 auto;
+    padding: 2 rem;
+    background: #2a2a3c;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(120, 192, 224, 0.2);
+}
+
+/* Navigation styles */
+.homepage-nav ul {
+  list-style-type: none;
+  margin-top: 1rem;
+}
+.homepage-nav li {
+  margin: 0.5rem 0;
+}
+
+/* Typography */
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #ffc857;
+}
+p {
+ font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    color: white
+}
+
+/* Button styles */
+button {
+  background-color: #78c0e0;
+  color: #1e1e2f;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  
+}
+button:hover {
+  background-color: #5aaed3;
+}
