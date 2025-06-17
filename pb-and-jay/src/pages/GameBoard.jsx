@@ -4,7 +4,7 @@ import InventoryTab from './Tabs/InventoryTab';
 import SpellsTab from './Tabs/SpellsTab';
 import ConditionsTab from './Tabs/ConditionsTab';
 
-export default function CharacterModal({ character, isOpen, onClose }) {
+const GameBoard = ({ character, isOpen, onClose }) => {
   const [activeTab, setActiveTab] = React.useState('stats');
 
   if (!isOpen || !character) return null;
@@ -33,4 +33,5 @@ export default function CharacterModal({ character, isOpen, onClose }) {
       </div>
     </div>
   );
-}
+};
+export default GameBoard; 
