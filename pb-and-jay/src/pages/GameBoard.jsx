@@ -1,8 +1,8 @@
 import React from 'react';
-import StatsTab from './Tabs/StatsTab';
-import InventoryTab from './Tabs/InventoryTab';
-import SpellsTab from './Tabs/SpellsTab';
-import ConditionsTab from './Tabs/ConditionsTab';
+import StatsTab from '../components/Tabs/StatsTab';
+import InventoryTab from '../components/Tabs/InventoryTab';
+import SpellsTab from '../components/Tabs/SpellsTab';
+import ConditionsTab from '../components/Tabs/ConditionsTab';
 
 const GameBoard = ({ character, isOpen, onClose }) => {
   const [activeTab, setActiveTab] = React.useState('stats');
