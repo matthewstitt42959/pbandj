@@ -1,0 +1,12 @@
+.site-header {
+    width: 100%;
+    background-color: #222;
+    color: #fff;
+    padding: 1rem 2 rem;
+    margin-top: 1rem;
+    text-align: center; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0,2); 
+}
+.site-title {
+    margin-bottom: 0.5rem;
+}

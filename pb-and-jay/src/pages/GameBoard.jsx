@@ -3,7 +3,6 @@ import StatsTab from '../components/Tabs/StatsTab';
 import InventoryTab from '../components/Tabs/InventoryTab';
 import SpellsTab from '../components/Tabs/SpellsTab';
 import ConditionsTab from '../components/Tabs/ConditionsTab';
-
 import mockCharacters from '../data/mockCharacters';
 
 const GameBoard = () => {
