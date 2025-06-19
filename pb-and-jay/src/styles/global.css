@@ -71,3 +71,42 @@ button {
 button:hover {
   background-color: #5aaed3;
 }
+/* Gameboard styles */
+.gameboard-wrapper {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  height: 100%;
+}
+
+/* Left */
+.character-panel {
+  width: 200px;
+  background: #2a2a3c;
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Center */
+.encounter-log {
+  flex: 1;
+  background: #333345;
+  padding: 1rem;
+  border-radius: 8px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.log-window p {
+  margin-bottom: 0.75rem;
+}
+
+/* Right */
+.action-panel {
+  width: 300px;
+  background: #2f2f44;
+  padding: 1rem;
+  border-radius: 8px;
+}
