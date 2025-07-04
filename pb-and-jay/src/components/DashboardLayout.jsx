@@ -1,27 +1,20 @@
-// src/layouts/DashboardLayout.jsx
+// DashboardLayout.jsx
 import React from 'react';
-import Header from '../components/Header';
-import CharacterSidebar from '../components/CharacterSidebar'; // Future feature
-import GameFeed from '../components/GameFeed';               // Future feature
-import ForumFeed from '../components/ForumFeed';             // Future feature
-import './DashboardLayout.css';                              // Optional scoped styles
+import Navbar from './Navbar';
+
+/*
+  DEV NOTE:
+  This layout component wraps core pages like Home, Characters, and Journal.
+  It ensures consistent layout (e.g. navbar, padding) across all pages.
+  Responsive-first. Designed with mobile in mind.
+*/
 
 const DashboardLayout = ({ children }) => {
   return (
-    <div className="dashboard-wrapper">
-      <Header />
-      <main className="dashboard-main">
-        <aside className="dashboard-sidebar">
-          <CharacterSidebar /> {/* Swap this with real tools later */}
-        </aside>
-        <section className="dashboard-content">
-          {children || (
-            <>
-              <GameFeed />
-              <ForumFeed />
-            </>
-          )}
-        </section>
+    <div className="min-h-screen bg-slate-100">
+      <Navbar />
+      <main className="max-w-4xl mx-auto px-4 py-6">
+        {children}
       </main>
     </div>
   );
