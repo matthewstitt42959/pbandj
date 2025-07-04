@@ -29,14 +29,19 @@ a:hover {
 
 /* Homepage containter */
 .homepage-container {
+  padding: 1.5rem;
   max-width: 800px;
-    margin: 0 auto;
-    padding: 2 rem;
-    background: #2a2a3c;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(120, 192, 224, 0.2);
+  margin: 0 auto;
 }
 
+.homepage-nav ul {
+  list-style: none;
+  padding: 0;
+}
+
+.homepage-nav li {
+  margin: 0.5rem 0;
+}
 /* Navigation styles */
 .homepage-nav ul {
   list-style-type: none;
