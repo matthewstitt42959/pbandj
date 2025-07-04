@@ -1,42 +1,17 @@
+// src/pages/HomePage.jsx
 import React from 'react';
-import { Link } from 'react-router-dom';
-// This is the HomePage component for the PB and Jay application.
-// It serves as the landing page for users to navigate to different sections of the app.
-// The page includes a welcome message and a brief description of the app's purpose.
+import DashboardLayout from '../layouts/DashboardLayout';
 
 const HomePage = () => {
   return (
-    <div className="homepage-container">
-      <h1>PB and Jay</h1>
-      <p> Welcome to your play-by-post D&D adventure hub.</p>
-      <nav className="homepage-nav">
-        <ul>
-          <li>
-            <Link to="/game">View Game Board</Link>
-          </li>
-          <li>
-            <Link to="/characters">View Characters</Link>
-          </li>
-          <li>
-            <Link to="/new-post">Start a New Post</Link>
-          </li>
-          <li>
-            <Link to="/modules">Browse Modules</Link>
-          </li>
-          <li>
-            <Link to="/siteopedia">Site-opedia</Link>
-          </li>
-        </ul>
-
-      </nav>
-    </div>
+    <DashboardLayout>
+      {/* Optional: override children if you want custom content here */}
+      <div style={{ padding: '1rem' }}>
+        <h2>Welcome to PB and Jay</h2>
+        <p>Build your party, explore modules, and play-by-post with AI DM support.</p>
+      </div>
+    </DashboardLayout>
   );
-};
-
-const styles = {
-  container: {
-    padding: '2rem',
-  },
 };
 
 export default HomePage;
