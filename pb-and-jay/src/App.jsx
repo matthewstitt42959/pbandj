@@ -1,29 +1,27 @@
-// src/App.jsx
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
+import { GameProvider } from './context/GameContext';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import GameBoard from './pages/GameBoard';
-import CharacterSheet from './pages/CharacterSheet';
-import CampaignEditor from './pages/CampaignEditor';
+import SettingsPage from './pages/SettingsPage';
 import NotFound from './pages/NotFound';
 
-const App = () => {
+function App() {
   return (
-    <Router>
-      <Navbar />
-      <main style={{ padding: '1rem' }}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/game" element={<GameBoard />} />
-          <Route path="/character/:id" element={<CharacterSheet />} />
-          <Route path="/editor" element={<CampaignEditor />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-    </Router>
+    <GameProvider>
+      <Router>
+        <Navbar />
+        <main className="app-main">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/game" element={<GameBoard />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </Router>
+    </GameProvider>
   );
-};
+}
 
 export default App;

@@ -1,6 +1,10 @@
 {
-  "dependencies": {
-    "axios": "^1.10.0",
-    "react-router-dom": "^7.6.2"
+  "name": "pbandj",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix pb-and-jay",
+    "start": "npm run dev --prefix pb-and-jay",
+    "install:app": "npm install --prefix pb-and-jay",
+    "build": "npm run build --prefix pb-and-jay"
   }
 }

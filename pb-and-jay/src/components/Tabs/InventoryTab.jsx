@@ -1,11 +1,23 @@
 import React from 'react';
+import './CharacterTabs.css';
 
-const InventoryTab = () => {
+const InventoryTab = ({ character }) => {
+  if (!character) return null;
+
   return (
-    <div style={{padding: '2rem'}}>
-        <h1>NotFound</h1>
-        <p>This page is under construction</p>
+    <div className="tab-panel">
+      <h4>Inventory</h4>
+      {character.inventory.length === 0 ? (
+        <p className="empty-state">Nothing in your pack.</p>
+      ) : (
+        <ul className="item-list">
+          {character.inventory.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
+
 export default InventoryTab;

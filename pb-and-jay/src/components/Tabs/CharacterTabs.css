@@ -1,0 +1,88 @@
+.tab-panel {
+  color: #e8e6f0;
+  font-size: 0.9rem;
+}
+
+.tab-panel h4 {
+  color: #ffc857;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.stat-box {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.stat-box__label {
+  font-size: 0.7rem;
+  color: #9aa0b8;
+  text-transform: uppercase;
+}
+
+.stat-box__value {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #78c0e0;
+}
+
+.stat-box__mod {
+  font-size: 0.75rem;
+  color: #b8bcc8;
+}
+
+.ability-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ability-row__name {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: #9aa0b8;
+  width: 2.5rem;
+}
+
+.item-list {
+  list-style: none;
+  padding: 0;
+}
+
+.item-list li {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.item-list li::before {
+  content: '• ';
+  color: #78c0e0;
+}
+
+.condition-tag {
+  display: inline-block;
+  background: rgba(255, 100, 80, 0.2);
+  border: 1px solid rgba(255, 100, 80, 0.4);
+  color: #ffb4a8;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin: 0.2rem 0.2rem 0.2rem 0;
+}
+
+.empty-state {
+  color: #7a7f94;
+  font-style: italic;
+}

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: pb-and-jay
+    runtime: node
+    rootDir: pb-and-jay
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: AI_PROVIDER
+        value: openai

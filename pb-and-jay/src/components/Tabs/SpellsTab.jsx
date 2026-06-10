@@ -1,11 +1,23 @@
 import React from 'react';
+import './CharacterTabs.css';
 
-const SpellsTab = () => {
+const SpellsTab = ({ character }) => {
+  if (!character) return null;
+
   return (
-    <div style={{padding: '2rem'}}>
-        <h1>NotFound</h1>
-        <p>This page is under construction</p>
+    <div className="tab-panel">
+      <h4>Spells & Abilities</h4>
+      {character.spells.length === 0 ? (
+        <p className="empty-state">No spells — this class relies on martial prowess.</p>
+      ) : (
+        <ul className="item-list">
+          {character.spells.map((spell, i) => (
+            <li key={i}>{spell}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
+
 export default SpellsTab;
