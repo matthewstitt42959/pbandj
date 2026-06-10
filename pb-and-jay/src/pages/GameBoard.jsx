@@ -30,9 +30,11 @@ const GameBoard = () => {
     activeCharacterIndex,
     playMode,
     isLoadingDM,
+    loadingPlayerIndex,
     dmError,
     setActiveCharacter,
     setPlayMode,
+    toggleCharacterAI,
     submitCharacterPost,
     submitDMPost,
     addPost,
@@ -111,19 +113,42 @@ const GameBoard = () => {
           Manual mode — write character posts and DM narration yourself. No API needed.
         </p>
       )}
+      {playMode === 'ai' && (
+        <p className="gameboard-banner gameboard-banner--ai">
+          AI mode — <strong>{characters[0].name}</strong> is you. AI plays all other characters unless you take control of a slot.
+        </p>
+      )}
 
       <div className="gameboard-wrapper">
         <aside className="character-panel">
           <h3>Party</h3>
           {characters.map((char, index) => (
-            <button
-              key={char.name}
-              className={`character-btn ${index === activeCharacterIndex ? 'active' : ''}`}
-              onClick={() => setActiveCharacter(index)}
-            >
-              <span className="character-btn__name">{char.name}</span>
-              <span className="character-btn__class">{char.class} {char.level}</span>
-            </button>
+            <div key={char.name} className="character-row">
+              <button
+                className={`character-btn ${index === activeCharacterIndex ? 'active' : ''}`}
+                onClick={() => setActiveCharacter(index)}
+              >
+                <div className="character-btn__top">
+                  <span className="character-btn__name">{char.name}</span>
+                  <span className={`character-badge ${char.isAI ? 'character-badge--ai' : 'character-badge--human'}`}>
+                    {index === 0 ? 'You' : char.isAI ? 'AI' : 'Human'}
+                  </span>
+                </div>
+                <span className="character-btn__class">{char.class} {char.level}</span>
+              </button>
+              {index === loadingPlayerIndex && (
+                <span className="character-thinking">{char.name} is acting…</span>
+              )}
+              {index !== 0 && (
+                <button
+                  className="character-control-btn"
+                  onClick={() => toggleCharacterAI(index)}
+                  title={char.isAI ? 'Take control of this character' : 'Let AI play this character'}
+                >
+                  {char.isAI ? '→ Take control' : '→ Let AI play'}
+                </button>
+              )}
+            </div>
           ))}
 
           <DiceRoller onRollResult={handleDiceRoll} />

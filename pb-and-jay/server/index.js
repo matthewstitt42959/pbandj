@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { buildDMPrompt } from './dmPrompt.js';
+import { buildPlayerPrompt } from './playerPrompt.js';
 import { parseWorldFacts } from './parseWorldFacts.js';
 import { getProvider, listProviders } from './providers/index.js';
 
@@ -21,7 +22,10 @@ if (!isProduction) {
 }
 app.use(express.json({ limit: '1mb' }));
 
-function buildUserPrompt(playerAction) {
+function buildUserPrompt(playerAction, allActed) {
+  if (allActed) {
+    return 'All players have taken their turns. Narrate the outcome of their combined actions, then describe what happens next and invite the party to respond.';
+  }
   return playerAction
     ? `The player (${playerAction.author}) posts:\n"${playerAction.content}"\n\nRespond as the DM.`
     : 'Begin the adventure. Set the opening scene and invite the party to act.';
@@ -42,18 +46,48 @@ app.post('/api/dm/respond', async (req, res) => {
     });
   }
 
-  const { campaign, posts, characters, worldFacts, playerAction } = req.body;
+  const { campaign, posts, characters, worldFacts, playerAction, allActed } = req.body;
 
   try {
     const { raw } = await provider.generateDMResponse({
       systemPrompt: buildDMPrompt({ campaign, posts, characters, worldFacts }),
-      userPrompt: buildUserPrompt(playerAction),
+      userPrompt: buildUserPrompt(playerAction, allActed),
     });
 
     const { narrative, facts } = parseWorldFacts(raw);
     res.json({ narrative, facts, provider: provider.id });
   } catch (err) {
     console.error(`DM API error (${provider.id}):`, err.message);
+    res.status(502).json({ error: err.message, provider: provider.id });
+  }
+});
+
+app.post('/api/player/respond', async (req, res) => {
+  let provider;
+  try {
+    provider = getProvider();
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+
+  if (!provider.isConfigured()) {
+    return res.status(503).json({
+      error: `No API key configured. Add ${provider.envKey} to your .env file.`,
+      provider: provider.id,
+    });
+  }
+
+  const { character, campaign, posts, characters, worldFacts } = req.body;
+
+  try {
+    const { raw } = await provider.generateDMResponse({
+      systemPrompt: buildPlayerPrompt({ character, campaign, posts, characters, worldFacts }),
+      userPrompt: `It is ${character.name}'s turn. What does ${character.name} do or say?`,
+    });
+
+    res.json({ action: raw.trim(), provider: provider.id });
+  } catch (err) {
+    console.error(`Player API error (${provider.id}):`, err.message);
     res.status(502).json({ error: err.message, provider: provider.id });
   }
 });

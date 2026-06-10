@@ -70,6 +70,12 @@
   color: #a8e6cf;
 }
 
+.gameboard-banner--ai {
+  background: rgba(162, 120, 255, 0.08);
+  border: 1px solid rgba(162, 120, 255, 0.25);
+  color: #c8b0ff;
+}
+
 .post-as-toggle {
   display: flex;
   gap: 0.35rem;
@@ -154,6 +160,20 @@
   color: #fff;
 }
 
+.character-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.character-btn__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 0.4rem;
+}
+
 .character-btn__name {
   font-weight: 600;
   font-size: 0.95rem;
@@ -162,6 +182,52 @@
 .character-btn__class {
   font-size: 0.75rem;
   color: #9aa0b8;
+}
+
+.character-badge {
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.character-badge--ai {
+  background: rgba(162, 120, 255, 0.18);
+  color: #a278ff;
+  border: 1px solid rgba(162, 120, 255, 0.3);
+}
+
+.character-badge--human {
+  background: rgba(125, 206, 160, 0.15);
+  color: #7dcea0;
+  border: 1px solid rgba(125, 206, 160, 0.3);
+}
+
+.character-control-btn {
+  font-size: 0.68rem;
+  color: #6a7088;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0 0.75rem 0.2rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.character-control-btn:hover {
+  color: #78c0e0;
+}
+
+.character-thinking {
+  font-size: 0.68rem;
+  color: #ffc857;
+  font-style: italic;
+  padding-left: 0.75rem;
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 /* Encounter Log */

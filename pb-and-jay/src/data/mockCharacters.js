@@ -1,6 +1,7 @@
 const mockCharacters = [
   {
     name: 'Kaelin',
+    isAI: false,
     class: 'Wizard',
     level: 3,
     hp: { current: 14, max: 18 },
@@ -20,6 +21,7 @@ const mockCharacters = [
   },
   {
     name: 'Morg',
+    isAI: true,
     class: 'Barbarian',
     level: 3,
     hp: { current: 34, max: 38 },
@@ -39,6 +41,7 @@ const mockCharacters = [
   },
   {
     name: 'Sylra',
+    isAI: true,
     class: 'Rogue',
     level: 3,
     hp: { current: 21, max: 24 },
@@ -58,6 +61,7 @@ const mockCharacters = [
   },
   {
     name: 'Thorne',
+    isAI: true,
     class: 'Ranger',
     level: 3,
     hp: { current: 24, max: 28 },
@@ -77,6 +81,7 @@ const mockCharacters = [
   },
   {
     name: 'Elira',
+    isAI: true,
     class: 'Cleric',
     level: 3,
     hp: { current: 19, max: 22 },
