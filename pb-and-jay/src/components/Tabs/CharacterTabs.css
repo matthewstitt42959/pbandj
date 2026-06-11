@@ -44,9 +44,33 @@
 
 .ability-row {
   display: flex;
-  justify-content: space-between;
-  padding: 0.35rem 0;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  width: 100%;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: default;
+}
+
+.ability-row--clickable {
+  cursor: pointer;
+}
+
+.ability-row--clickable:hover {
+  background: rgba(120, 192, 224, 0.06);
+  border-radius: 4px;
+}
+
+.ability-row--open {
+  color: #78c0e0;
 }
 
 .ability-row__name {
@@ -54,6 +78,104 @@
   font-size: 0.75rem;
   color: #9aa0b8;
   width: 2.5rem;
+  flex-shrink: 0;
+}
+
+.ability-row--open .ability-row__name {
+  color: #78c0e0;
+}
+
+.ability-row__chevron {
+  margin-left: auto;
+  font-size: 0.6rem;
+  color: #6a7088;
+}
+
+/* Skills */
+.skill-list {
+  margin: 0.1rem 0 0.4rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.skill-list--all {
+  margin-left: 0;
+  margin-top: 0.4rem;
+}
+
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.28rem 0.4rem;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  color: #9aa0b8;
+  font-size: 0.8rem;
+  font-family: inherit;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.skill-row:hover {
+  background: rgba(120, 192, 224, 0.08);
+}
+
+.skill-row--proficient {
+  color: #e0dfe8;
+}
+
+.skill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid #6a7088;
+  flex-shrink: 0;
+}
+
+.skill-dot--filled {
+  background: #78c0e0;
+  border-color: #78c0e0;
+}
+
+.skill-name {
+  flex: 1;
+}
+
+.skill-ability {
+  font-size: 0.65rem;
+  color: #6a7088;
+  width: 2rem;
+  text-align: right;
+}
+
+.skill-mod {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #78c0e0;
+  width: 2rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.all-skills-toggle {
+  margin-top: 0.75rem;
+  background: none;
+  border: none;
+  color: #6a7088;
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+
+.all-skills-toggle:hover {
+  color: #9aa0b8;
 }
 
 .item-list {
@@ -141,15 +263,36 @@
   cursor: not-allowed;
 }
 
+.condition-list {
+  margin-bottom: 0.25rem;
+}
+
 .condition-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   background: rgba(255, 100, 80, 0.2);
   border: 1px solid rgba(255, 100, 80, 0.4);
   color: #ffb4a8;
-  padding: 0.2rem 0.5rem;
+  padding: 0.2rem 0.4rem 0.2rem 0.5rem;
   border-radius: 4px;
   font-size: 0.8rem;
   margin: 0.2rem 0.2rem 0.2rem 0;
+}
+
+.condition-remove-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 180, 168, 0.6);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.condition-remove-btn:hover {
+  color: #ff8a80;
 }
 
 .empty-state {

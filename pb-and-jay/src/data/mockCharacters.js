@@ -15,6 +15,12 @@ const mockCharacters = [
       wis: { score: 13, modifier: 1 },
       cha: { score: 10, modifier: 0 }
     },
+    skills: {
+      athletics: false, acrobatics: false, sleightOfHand: false, stealth: false,
+      arcana: true, history: true, investigation: false, nature: false, religion: false,
+      animalHandling: false, insight: false, medicine: false, perception: false, survival: false,
+      deception: false, intimidation: false, performance: false, persuasion: false,
+    },
     inventory: ['Spellbook', 'Wand', 'Potion of Healing'],
     spells: ['Magic Missile', 'Shield', 'Detect Magic'],
     conditions: []
@@ -34,6 +40,12 @@ const mockCharacters = [
       int: { score: 8, modifier: -1 },
       wis: { score: 11, modifier: 0 },
       cha: { score: 9, modifier: -1 }
+    },
+    skills: {
+      athletics: true, acrobatics: false, sleightOfHand: false, stealth: false,
+      arcana: false, history: false, investigation: false, nature: false, religion: false,
+      animalHandling: false, insight: false, medicine: false, perception: true, survival: false,
+      deception: false, intimidation: true, performance: false, persuasion: false,
     },
     inventory: ['Greataxe', 'Javelins (x3)', 'Rations'],
     spells: [],
@@ -55,6 +67,12 @@ const mockCharacters = [
       wis: { score: 14, modifier: 2 },
       cha: { score: 11, modifier: 0 }
     },
+    skills: {
+      athletics: false, acrobatics: true, sleightOfHand: true, stealth: true,
+      arcana: false, history: false, investigation: true, nature: false, religion: false,
+      animalHandling: false, insight: false, medicine: false, perception: false, survival: false,
+      deception: true, intimidation: false, performance: false, persuasion: false,
+    },
     inventory: ['Dagger (x2)', 'Thieves\' Tools', 'Cloak of Elvenkind'],
     spells: [],
     conditions: []
@@ -75,6 +93,12 @@ const mockCharacters = [
       wis: { score: 15, modifier: 2 },
       cha: { score: 9, modifier: -1 }
     },
+    skills: {
+      athletics: false, acrobatics: false, sleightOfHand: false, stealth: true,
+      arcana: false, history: false, investigation: false, nature: true, religion: false,
+      animalHandling: true, insight: false, medicine: false, perception: true, survival: true,
+      deception: false, intimidation: false, performance: false, persuasion: false,
+    },
     inventory: ['Longbow', 'Shortsword', 'Animal Feed'],
     spells: ['Hunter\'s Mark', 'Cure Wounds'],
     conditions: []
@@ -94,6 +118,12 @@ const mockCharacters = [
       int: { score: 10, modifier: 0 },
       wis: { score: 18, modifier: 4 },
       cha: { score: 13, modifier: 1 }
+    },
+    skills: {
+      athletics: false, acrobatics: false, sleightOfHand: false, stealth: false,
+      arcana: false, history: true, investigation: false, nature: false, religion: true,
+      animalHandling: false, insight: true, medicine: true, perception: false, survival: false,
+      deception: false, intimidation: false, performance: false, persuasion: false,
     },
     inventory: ['Mace', 'Shield', 'Holy Symbol'],
     spells: ['Guiding Bolt', 'Healing Word', 'Bless'],

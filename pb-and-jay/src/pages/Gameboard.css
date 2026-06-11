@@ -317,6 +317,61 @@
   animation: pulse 1.5s ease-in-out infinite;
 }
 
+/* Collapsible AI party actions inside DM posts */
+.ai-actions {
+  margin-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 0.5rem;
+}
+
+.ai-actions__toggle {
+  background: none;
+  border: none;
+  color: #6a7088;
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  letter-spacing: 0.03em;
+  transition: color 0.15s;
+}
+
+.ai-actions__toggle:hover {
+  color: #9aa0b8;
+}
+
+.ai-actions__list {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-action {
+  padding: 0.4rem 0.6rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-left: 2px solid rgba(120, 192, 224, 0.3);
+  border-radius: 0 4px 4px 0;
+}
+
+.ai-action__name {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #78c0e0;
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ai-action__text {
+  font-size: 0.82rem;
+  color: #9aa0b8;
+  margin: 0;
+  line-height: 1.5;
+  font-style: italic;
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }

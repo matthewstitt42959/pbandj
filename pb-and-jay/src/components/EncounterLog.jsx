@@ -1,7 +1,28 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 function formatTime(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function AiActionsAccordion({ aiActions }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="ai-actions">
+      <button className="ai-actions__toggle" onClick={() => setOpen(o => !o)}>
+        {open ? '▲' : '▼'} Party actions ({aiActions.length} characters)
+      </button>
+      {open && (
+        <div className="ai-actions__list">
+          {aiActions.map((a, i) => (
+            <div key={i} className="ai-action">
+              <span className="ai-action__name">{a.character}</span>
+              <p className="ai-action__text">{a.action}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function PostEntry({ post }) {
@@ -17,6 +38,9 @@ function PostEntry({ post }) {
           <p key={i}>{line}</p>
         ))}
       </div>
+      {isDM && post.aiActions?.length > 0 && (
+        <AiActionsAccordion aiActions={post.aiActions} />
+      )}
     </article>
   );
 }
@@ -32,13 +56,11 @@ const EncounterLog = ({ posts, isLoading, scrollKey }) => {
     userScrolledUp.current = el.scrollHeight - el.scrollTop - el.clientHeight > 80;
   };
 
-  // Force scroll to bottom (e.g. switching back to log tab on mobile)
   useEffect(() => {
     userScrolledUp.current = false;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [scrollKey]);
 
-  // Auto-scroll on new posts/loading only if user hasn't manually scrolled up
   useEffect(() => {
     if (!userScrolledUp.current) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

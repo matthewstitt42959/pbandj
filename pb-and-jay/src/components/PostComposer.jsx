@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const PostComposer = ({
   authorName,
   onSubmit,
   disabled,
   error,
+  appendText,
   submitLabel = 'Post',
   placeholder = 'Describe your action... (tip: type /roll 1d20+3 for dice rolls)',
 }) => {
   const [content, setContent] = useState('');
+
+  useEffect(() => {
+    if (!appendText) return;
+    setContent(prev => prev ? `${prev}\n${appendText.text}` : appendText.text);
+  }, [appendText]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

@@ -6,7 +6,9 @@ import { fileURLToPath } from 'url';
 import { buildDMPrompt } from './dmPrompt.js';
 import { buildPlayerPrompt } from './playerPrompt.js';
 import { parseWorldFacts } from './parseWorldFacts.js';
+import { createHmac } from 'crypto';
 import { getProvider, listProviders } from './providers/index.js';
+import prisma from './prisma.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, '..', 'dist');
@@ -17,21 +19,57 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// --- AI DM auth ---
+function makeToken(password) {
+  const secret = process.env.SESSION_SECRET || 'pbandj-secret';
+  return createHmac('sha256', secret).update(password).digest('hex');
+}
+
+function validateAiToken(token) {
+  const password = process.env.AI_DM_PASSWORD;
+  if (!password) return true; // no lock configured — open access
+  if (!token) return false;
+  return token === makeToken(password);
+}
+
+function requireAiAuth(req, res, next) {
+  if (!process.env.AI_DM_PASSWORD) return next();
+  if (!validateAiToken(req.headers['x-ai-token'])) {
+    return res.status(401).json({ error: 'AI DM requires authentication', code: 'UNAUTHORIZED' });
+  }
+  next();
+}
+
 if (!isProduction) {
   app.use(cors());
 }
 app.use(express.json({ limit: '1mb' }));
 
-function buildUserPrompt(playerAction, allActed) {
+function buildUserPrompt(playerAction, allActed, aiActions) {
   if (allActed) {
-    return 'All players have taken their turns. Narrate the outcome of their combined actions, then describe what happens next and invite the party to respond.';
+    const actionLines = aiActions?.length
+      ? aiActions.map(a => `${a.character}: ${a.action}`).join('\n')
+      : null;
+    const actionBlock = actionLines
+      ? `The party took the following actions this round:\n\n${actionLines}\n\n`
+      : 'All players have taken their turns. ';
+    return `${actionBlock}Narrate the outcome of their combined actions in an engaging way, then describe what happens next and invite the party to respond.`;
   }
   return playerAction
     ? `The player (${playerAction.author}) posts:\n"${playerAction.content}"\n\nRespond as the DM.`
     : 'Begin the adventure. Set the opening scene and invite the party to act.';
 }
 
-app.post('/api/dm/respond', async (req, res) => {
+app.post('/api/auth/unlock', (req, res) => {
+  const password = process.env.AI_DM_PASSWORD;
+  if (!password) return res.json({ token: 'open' }); // no lock
+  if (req.body.password !== password) {
+    return res.status(401).json({ error: 'Incorrect access code' });
+  }
+  res.json({ token: makeToken(password) });
+});
+
+app.post('/api/dm/respond', requireAiAuth, async (req, res) => {
   let provider;
   try {
     provider = getProvider();
@@ -46,12 +84,12 @@ app.post('/api/dm/respond', async (req, res) => {
     });
   }
 
-  const { campaign, posts, characters, worldFacts, playerAction, allActed } = req.body;
+  const { campaign, posts, characters, worldFacts, playerAction, allActed, aiActions } = req.body;
 
   try {
     const { raw } = await provider.generateDMResponse({
       systemPrompt: buildDMPrompt({ campaign, posts, characters, worldFacts }),
-      userPrompt: buildUserPrompt(playerAction, allActed),
+      userPrompt: buildUserPrompt(playerAction, allActed, aiActions),
     });
 
     const { narrative, facts } = parseWorldFacts(raw);
@@ -62,7 +100,7 @@ app.post('/api/dm/respond', async (req, res) => {
   }
 });
 
-app.post('/api/player/respond', async (req, res) => {
+app.post('/api/player/respond', requireAiAuth, async (req, res) => {
   let provider;
   try {
     provider = getProvider();
@@ -92,7 +130,33 @@ app.post('/api/player/respond', async (req, res) => {
   }
 });
 
-app.get('/api/health', (_req, res) => {
+app.get('/api/game', async (_req, res) => {
+  try {
+    const game = await prisma.game.findUnique({ where: { id: 'singleton' } });
+    res.json({ state: game?.state ?? null });
+  } catch (err) {
+    console.error('Game load error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/game', async (req, res) => {
+  const { state } = req.body;
+  if (!state) return res.status(400).json({ error: 'Missing state' });
+  try {
+    await prisma.game.upsert({
+      where: { id: 'singleton' },
+      update: { state },
+      create: { id: 'singleton', state },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Game save error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/health', (req, res) => {
   let provider;
   try {
     provider = getProvider();
@@ -100,9 +164,14 @@ app.get('/api/health', (_req, res) => {
     return res.status(500).json({ ok: false, error: err.message });
   }
 
+  const aiLocked = !!process.env.AI_DM_PASSWORD;
+  const authenticated = validateAiToken(req.headers['x-ai-token']);
+
   res.json({
     ok: true,
     hasApiKey: provider.isConfigured(),
+    aiLocked,
+    authenticated,
     provider: provider.id,
     providerName: provider.name,
     model: provider.getModel(),

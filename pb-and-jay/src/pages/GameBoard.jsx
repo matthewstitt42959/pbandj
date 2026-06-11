@@ -10,6 +10,7 @@ import PostComposer from '../components/PostComposer';
 import DiceRoller from '../components/DiceRoller';
 import SiteOpediaPanel from '../components/SiteOpediaPanel';
 import { checkAIStatus } from '../services/aiDM';
+import AiUnlockModal from '../components/AiUnlockModal';
 import './Gameboard.css';
 
 const TABS = [
@@ -44,19 +45,27 @@ const GameBoard = () => {
   const [activeTab, setActiveTab] = useState('stats');
   const [postAs, setPostAs] = useState('character');
   const [aiAvailable, setAiAvailable] = useState(false);
+  const [aiLocked, setAiLocked] = useState(false);
+  const [aiAuthenticated, setAiAuthenticated] = useState(false);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [mobileTab, setMobileTab] = useState('log');
   const [logScrollKey, setLogScrollKey] = useState(0);
+  const [diceInsert, setDiceInsert] = useState(null);
 
   const handleMobileTab = (tab) => {
     setMobileTab(tab);
     if (tab === 'log') setLogScrollKey((k) => k + 1);
   };
 
-  useEffect(() => {
+  const refreshAiStatus = () => {
     checkAIStatus().then((status) => {
       setAiAvailable(!!status.hasApiKey);
+      setAiLocked(!!status.aiLocked);
+      setAiAuthenticated(!status.aiLocked || !!status.authenticated);
     });
-  }, []);
+  };
+
+  useEffect(() => { refreshAiStatus(); }, []);
 
   if (!campaign) {
     return (
@@ -71,7 +80,8 @@ const GameBoard = () => {
   }
 
   const handleDiceRoll = (resultText) => {
-    addPost(activeCharacter.name, resultText, 'system');
+    setDiceInsert({ text: resultText, ts: Date.now() });
+    if (mobileTab !== 'log') handleMobileTab('log');
   };
 
   const handlePost = (content) => {
@@ -83,6 +93,7 @@ const GameBoard = () => {
   };
 
   return (
+    <>
     <div className="gameboard-page">
       <header className="gameboard-header">
         <div>
@@ -102,11 +113,21 @@ const GameBoard = () => {
             <button
               type="button"
               className={`mode-toggle__btn ${playMode === 'ai' ? 'active' : ''}`}
-              onClick={() => setPlayMode('ai')}
+              onClick={() => {
+                if (aiLocked && !aiAuthenticated) {
+                  setShowUnlockModal(true);
+                } else {
+                  setPlayMode('ai');
+                }
+              }}
               disabled={!aiAvailable}
-              title={aiAvailable ? 'AI responds after each character post' : 'Add an API key in Setup to enable'}
+              title={
+                !aiAvailable ? 'Add an API key in Setup to enable'
+                : aiLocked && !aiAuthenticated ? 'Subscription required — click to unlock'
+                : 'AI responds after each character post'
+              }
             >
-              AI DM
+              {aiLocked && !aiAuthenticated ? '🔒 AI DM' : 'AI DM'}
             </button>
           </div>
           <button className="btn btn--ghost" onClick={resetCampaign} title="Reset campaign">
@@ -208,6 +229,7 @@ const GameBoard = () => {
 
           <PostComposer
             authorName={postAs === 'dm' ? 'DM' : activeCharacter.name}
+            appendText={postAs === 'character' ? diceInsert : null}
             onSubmit={handlePost}
             disabled={isLoadingDM}
             error={playMode === 'ai' ? dmError : null}
@@ -249,6 +271,18 @@ const GameBoard = () => {
         </aside>
       </div>
     </div>
+
+    {showUnlockModal && (
+      <AiUnlockModal
+        onUnlocked={() => {
+          setShowUnlockModal(false);
+          setAiAuthenticated(true);
+          setPlayMode('ai');
+        }}
+        onClose={() => setShowUnlockModal(false)}
+      />
+    )}
+    </>
   );
 };
 

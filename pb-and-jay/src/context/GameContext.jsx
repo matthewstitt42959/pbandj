@@ -19,19 +19,21 @@ const initialState = {
   initialized: false,
 };
 
-function loadSavedGame() {
+function migrateState(saved) {
+  if (saved.characters) {
+    saved.characters = saved.characters.map((char, i) => ({
+      isAI: i !== 0,
+      ...char,
+    }));
+  }
+  return { playMode: 'manual', ...saved };
+}
+
+function loadLocalGame() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const saved = JSON.parse(raw);
-    // Migrate: ensure isAI defaults are set (player 0 always human, rest default AI)
-    if (saved.characters) {
-      saved.characters = saved.characters.map((char, i) => ({
-        isAI: i !== 0,
-        ...char,
-      }));
-    }
-    return { playMode: 'manual', ...saved };
+    return migrateState(JSON.parse(raw));
   } catch {
     return null;
   }
@@ -126,18 +128,43 @@ export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
   useEffect(() => {
-    const saved = loadSavedGame();
-    if (saved) {
-      dispatch({ type: 'INIT', payload: saved });
-    } else {
-      dispatch({ type: 'INIT', payload: {} });
+    async function init() {
+      // Try server first (enables cross-device sync)
+      try {
+        const res = await fetch('/api/game');
+        if (res.ok) {
+          const { state } = await res.json();
+          if (state) {
+            dispatch({ type: 'INIT', payload: migrateState(state) });
+            return;
+          }
+        }
+      } catch {
+        // Server unreachable — fall through to localStorage
+      }
+      const local = loadLocalGame();
+      dispatch({ type: 'INIT', payload: local ?? {} });
     }
+    init();
   }, []);
 
   useEffect(() => {
     if (!state.initialized) return;
     const { initialized, isLoadingDM, loadingPlayerIndex, dmError, ...toSave } = state;
+
+    // Always save locally for fast reload
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+
+    // Debounced server save for cross-device sync
+    const timer = setTimeout(() => {
+      fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: toSave }),
+      }).catch(() => {}); // silently ignore if offline
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [state]);
 
   const startCampaign = useCallback(() => {
@@ -162,13 +189,14 @@ export function GameProvider({ children }) {
     dispatch({ type: 'TOGGLE_CHARACTER_AI', index });
   }, []);
 
-  const addPost = useCallback((author, content, type = 'player') => {
+  const addPost = useCallback((author, content, type = 'player', aiActions = null) => {
     const post = {
       id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       author,
       type,
       content,
       timestamp: Date.now(),
+      ...(aiActions?.length ? { aiActions } : {}),
     };
     dispatch({ type: 'ADD_POST', post });
     return post;
@@ -190,7 +218,8 @@ export function GameProvider({ children }) {
 
       dispatch({ type: 'SET_LOADING_DM', loading: true, error: null });
 
-      // AI players take their turns sequentially
+      // AI players take their turns sequentially — collected silently, not shown in log
+      const aiActions = [];
       for (let i = 0; i < characters.length; i++) {
         const char = characters[i];
         if (!char.isAI) continue;
@@ -205,8 +234,15 @@ export function GameProvider({ children }) {
             characters,
             worldFacts,
           });
-          const aiPost = addPost(char.name, action, 'player');
-          runningPosts = [...runningPosts, aiPost];
+          aiActions.push({ character: char.name, action });
+          // Add to running context so DM sees all actions, but don't put in the visible log
+          runningPosts = [...runningPosts, {
+            id: `ctx-${Date.now()}-${i}`,
+            author: char.name,
+            type: 'player',
+            content: action,
+            timestamp: Date.now(),
+          }];
         } catch (err) {
           dispatch({ type: 'SET_LOADING_DM', loading: false, error: `${char.name}: ${err.message}` });
           dispatch({ type: 'SET_LOADING_PLAYER', index: null });
@@ -216,7 +252,7 @@ export function GameProvider({ children }) {
 
       dispatch({ type: 'SET_LOADING_PLAYER', index: null });
 
-      // DM narrates the full round
+      // DM narrates the full round, with AI actions attached for the expandable accordion
       try {
         const { narrative, facts } = await requestDMResponse({
           campaign,
@@ -225,9 +261,10 @@ export function GameProvider({ children }) {
           worldFacts,
           playerAction: { author: character.name, content: finalContent },
           allActed: characters.some((c) => c.isAI),
+          aiActions,
         });
 
-        addPost('DM', narrative, 'dm');
+        addPost('DM', narrative, 'dm', aiActions.length ? aiActions : null);
 
         if (facts?.length) {
           dispatch({ type: 'ADD_WORLD_FACTS', facts });
