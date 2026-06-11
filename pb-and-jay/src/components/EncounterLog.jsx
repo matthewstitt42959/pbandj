@@ -27,17 +27,25 @@ function AiActionsAccordion({ aiActions }) {
 
 function PostEntry({ post }) {
   const isDM = post.type === 'dm';
+  const [expanded, setExpanded] = useState(false);
+  const isLong = post.content.length > 280;
+
   return (
     <article className={`log-entry ${isDM ? 'log-entry--dm' : 'log-entry--player'}`}>
       <header className="log-entry__header">
         <span className="log-entry__author">{post.author}</span>
         <time className="log-entry__time">{formatTime(post.timestamp)}</time>
       </header>
-      <div className="log-entry__body">
+      <div className={`log-entry__body${isLong && !expanded ? ' log-entry__body--clamped' : ''}`}>
         {post.content.split('\n').map((line, i) => (
           <p key={i}>{line}</p>
         ))}
       </div>
+      {isLong && (
+        <button className="read-more-btn" onClick={() => setExpanded(e => !e)}>
+          {expanded ? 'Show less' : 'Read more'}
+        </button>
+      )}
       {isDM && post.aiActions?.length > 0 && (
         <AiActionsAccordion aiActions={post.aiActions} />
       )}
