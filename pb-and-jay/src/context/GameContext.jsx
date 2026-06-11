@@ -107,6 +107,14 @@ function gameReducer(state, action) {
     case 'SET_LOADING_PLAYER':
       return { ...state, loadingPlayerIndex: action.index };
 
+    case 'UPDATE_CHARACTER':
+      return {
+        ...state,
+        characters: state.characters.map((char, i) =>
+          i === action.index ? { ...char, ...action.updates } : char
+        ),
+      };
+
     default:
       return state;
   }
@@ -234,6 +242,10 @@ export function GameProvider({ children }) {
     [state, addPost]
   );
 
+  const updateCharacter = useCallback((index, updates) => {
+    dispatch({ type: 'UPDATE_CHARACTER', index, updates });
+  }, []);
+
   const submitDMPost = useCallback(
     (content) => {
       if (!state.campaign || !content.trim()) return;
@@ -254,6 +266,7 @@ export function GameProvider({ children }) {
     addPost,
     submitCharacterPost,
     submitDMPost,
+    updateCharacter,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
