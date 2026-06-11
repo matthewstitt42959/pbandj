@@ -44,6 +44,13 @@ const GameBoard = () => {
   const [activeTab, setActiveTab] = useState('stats');
   const [postAs, setPostAs] = useState('character');
   const [aiAvailable, setAiAvailable] = useState(false);
+  const [mobileTab, setMobileTab] = useState('log');
+  const [logScrollKey, setLogScrollKey] = useState(0);
+
+  const handleMobileTab = (tab) => {
+    setMobileTab(tab);
+    if (tab === 'log') setLogScrollKey((k) => k + 1);
+  };
 
   useEffect(() => {
     checkAIStatus().then((status) => {
@@ -119,8 +126,32 @@ const GameBoard = () => {
         </p>
       )}
 
+      <nav className="mobile-tab-bar">
+        <button
+          className={`mobile-tab-bar__btn ${mobileTab === 'log' ? 'active' : ''}`}
+          onClick={() => handleMobileTab('log')}
+        >
+          <span className="mobile-tab-bar__icon">&#9776;</span>
+          Log
+        </button>
+        <button
+          className={`mobile-tab-bar__btn ${mobileTab === 'party' ? 'active' : ''}`}
+          onClick={() => handleMobileTab('party')}
+        >
+          <span className="mobile-tab-bar__icon">&#9876;</span>
+          Party
+        </button>
+        <button
+          className={`mobile-tab-bar__btn ${mobileTab === 'stats' ? 'active' : ''}`}
+          onClick={() => handleMobileTab('stats')}
+        >
+          <span className="mobile-tab-bar__icon">&#9654;</span>
+          Stats
+        </button>
+      </nav>
+
       <div className="gameboard-wrapper">
-        <aside className="character-panel">
+        <aside className={`character-panel${mobileTab !== 'party' ? ' mobile-hidden' : ''}`}>
           <h3>Party</h3>
           {characters.map((char, index) => (
             <div key={char.name} className="character-row">
@@ -154,9 +185,9 @@ const GameBoard = () => {
           <DiceRoller onRollResult={handleDiceRoll} />
         </aside>
 
-        <section className="encounter-log">
+        <section className={`encounter-log${mobileTab !== 'log' ? ' mobile-hidden' : ''}`}>
           <h3>Encounter Log</h3>
-          <EncounterLog posts={posts} isLoading={isLoadingDM} />
+          <EncounterLog posts={posts} isLoading={isLoadingDM} scrollKey={logScrollKey} />
 
           <div className="post-as-toggle">
             <button
@@ -195,7 +226,7 @@ const GameBoard = () => {
           />
         </section>
 
-        <aside className="action-panel">
+        <aside className={`action-panel${mobileTab !== 'stats' ? ' mobile-hidden' : ''}`}>
           <nav className="tab-nav">
             {TABS.map((tab) => (
               <button

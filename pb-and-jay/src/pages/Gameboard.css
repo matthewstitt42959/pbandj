@@ -584,6 +584,11 @@
   margin-bottom: 1.5rem;
 }
 
+/* Mobile tab bar — hidden on desktop */
+.mobile-tab-bar {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .gameboard-wrapper {
     grid-template-columns: 1fr;
@@ -592,5 +597,115 @@
 
   .log-window {
     max-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-tab-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: #1e1e2e;
+    border-top: 1px solid rgba(120, 192, 224, 0.2);
+    z-index: 200;
+  }
+
+  .mobile-tab-bar__btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: transparent;
+    border: none;
+    color: #6a7088;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s;
+  }
+
+  .mobile-tab-bar__btn.active {
+    color: #78c0e0;
+  }
+
+  .mobile-tab-bar__icon {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  /* Page fills the viewport minus fixed tab bar */
+  .gameboard-page {
+    padding-bottom: 56px;
+  }
+
+  /* Compact gameboard header on mobile */
+  .gameboard-header {
+    padding: 0.4rem 0.5rem;
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .gameboard-header__title {
+    font-size: 1.1rem;
+  }
+
+  .gameboard-header__scene {
+    font-size: 0.8rem;
+  }
+
+  .gameboard-banner {
+    margin: 0 0.5rem 0.5rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  /* Single-column wrapper, no grid */
+  .gameboard-wrapper {
+    display: block;
+    min-height: 0;
+  }
+
+  /* Encounter log fills remaining height on mobile */
+  .encounter-log {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 56px - 130px); /* viewport minus tab bar and headers */
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .log-window {
+    flex: 1;
+    overflow-y: auto;
+    max-height: none;
+    min-height: 0;
+  }
+
+  /* Character panel full width on mobile */
+  .character-panel {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  /* Stats panel full width on mobile */
+  .action-panel {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    min-height: calc(100dvh - 56px - 130px);
   }
 }

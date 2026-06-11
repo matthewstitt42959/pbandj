@@ -21,15 +21,32 @@ function PostEntry({ post }) {
   );
 }
 
-const EncounterLog = ({ posts, isLoading }) => {
+const EncounterLog = ({ posts, isLoading, scrollKey }) => {
   const bottomRef = useRef(null);
+  const logRef = useRef(null);
+  const userScrolledUp = useRef(false);
 
+  const handleScroll = () => {
+    const el = logRef.current;
+    if (!el) return;
+    userScrolledUp.current = el.scrollHeight - el.scrollTop - el.clientHeight > 80;
+  };
+
+  // Force scroll to bottom (e.g. switching back to log tab on mobile)
   useEffect(() => {
+    userScrolledUp.current = false;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [scrollKey]);
+
+  // Auto-scroll on new posts/loading only if user hasn't manually scrolled up
+  useEffect(() => {
+    if (!userScrolledUp.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [posts, isLoading]);
 
   return (
-    <div className="log-window">
+    <div className="log-window" ref={logRef} onScroll={handleScroll}>
       {posts.map((post) => (
         <PostEntry key={post.id} post={post} />
       ))}
