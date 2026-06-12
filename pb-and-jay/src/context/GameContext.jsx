@@ -56,6 +56,8 @@ const initialState = {
   isLoadingDM: false,
   loadingPlayerIndex: null,
   dmError: null,
+  sessionsAtLevel: 0,
+  totalSessions: 0,
   initialized: false,
 };
 
@@ -66,7 +68,7 @@ function migrateState(saved) {
       ...char,
     }));
   }
-  return { playMode: 'manual', ...saved };
+  return { playMode: 'manual', sessionsAtLevel: 0, totalSessions: 0, ...saved };
 }
 
 function loadLocalGame() {
@@ -157,10 +159,18 @@ function gameReducer(state, action) {
         ),
       };
 
+    case 'MARK_SESSION':
+      return {
+        ...state,
+        sessionsAtLevel: state.sessionsAtLevel + 1,
+        totalSessions: state.totalSessions + 1,
+      };
+
     case 'LEVEL_UP_ALL':
       return {
         ...state,
         characters: state.characters.map(levelUpGameChar),
+        sessionsAtLevel: 0,
       };
 
     case 'SET_PLAYER_CHARACTER':
@@ -345,6 +355,10 @@ export function GameProvider({ children }) {
     dispatch({ type: 'LEVEL_UP_ALL' });
   }, []);
 
+  const markSessionComplete = useCallback(() => {
+    dispatch({ type: 'MARK_SESSION' });
+  }, []);
+
   const submitDMPost = useCallback(
     (content) => {
       if (!state.campaign || !content.trim()) return;
@@ -368,6 +382,7 @@ export function GameProvider({ children }) {
     updateCharacter,
     setPlayerCharacter,
     levelUpParty,
+    markSessionComplete,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

@@ -20,16 +20,54 @@ enum UserRole {
   SUPER_DM
 }
 
+enum CampaignStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
 model User {
-  id          String      @id @default(cuid())
-  email       String      @unique
-  username    String      @unique
-  displayName String
-  password    String
-  role        UserRole    @default(PLAYER)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  characters  Character[]
+  id                String      @id @default(cuid())
+  email             String      @unique
+  username          String      @unique
+  displayName       String
+  password          String
+  role              UserRole    @default(PLAYER)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  characters        Character[]
+  campaignsCreated  Campaign[]  @relation("CampaignCreator")
+  campaignsApproved Campaign[]  @relation("CampaignApprover")
+}
+
+model Campaign {
+  id           String         @id @default(cuid())
+  name         String
+  setting      String         @default("")
+  openingScene String         @default("")
+  hooks        Json           @default("[]")
+  npcs         Json           @default("[]")
+  dmNotes      String         @default("")
+  status       CampaignStatus @default(DRAFT)
+  rejectedNote String?
+  createdById  String
+  createdBy    User           @relation("CampaignCreator",  fields: [createdById],  references: [id])
+  approvedById String?
+  approvedBy   User?          @relation("CampaignApprover", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Rule {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Character {

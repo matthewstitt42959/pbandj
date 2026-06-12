@@ -1,0 +1,301 @@
+.cb-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 5rem;
+}
+
+.cb-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40vh;
+  color: #6a7088;
+}
+
+/* ── Top bar ── */
+
+.cb-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.cb-top-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cb-status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+}
+
+.cb-msg {
+  font-size: 0.82rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+}
+
+.cb-msg--ok  { color: #a8e6cf; background: rgba(168, 230, 207, 0.08); }
+.cb-msg--err { color: #ff8a80; background: rgba(255, 138, 128, 0.08); }
+
+/* ── Header ── */
+
+.cb-header {
+  margin-bottom: 1.75rem;
+}
+
+.cb-header__title {
+  font-size: 1.6rem;
+  color: #ffc857;
+  margin: 0;
+}
+
+.cb-rejected-note {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 138, 128, 0.08);
+  border: 1px solid rgba(255, 138, 128, 0.2);
+  border-radius: 6px;
+  color: #ff8a80;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* ── AI panel ── */
+
+.cb-ai-panel {
+  margin-bottom: 2rem;
+  border: 1px solid rgba(120, 192, 224, 0.15);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cb-ai-toggle {
+  width: 100%;
+  background: rgba(120, 192, 224, 0.06);
+  border: none;
+  padding: 0.8rem 1.25rem;
+  text-align: left;
+  color: #78c0e0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cb-ai-toggle:hover {
+  background: rgba(120, 192, 224, 0.1);
+}
+
+.cb-ai-form {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.cb-ai-hint {
+  font-size: 0.82rem;
+  color: #9aa0b8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Form ── */
+
+.cb-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.cb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cb-label {
+  font-size: 0.72rem;
+  color: #9aa0b8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+}
+
+.cb-label-private {
+  color: #6a7088;
+  font-weight: 400;
+  text-transform: none;
+  font-size: 0.85em;
+}
+
+.cb-field-hint {
+  font-size: 0.8rem;
+  color: #6a7088;
+  margin: 0;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.cb-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.92rem;
+  padding: 0.55rem 0.75rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.cb-input:focus {
+  border-color: rgba(120, 192, 224, 0.4);
+}
+
+.cb-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cb-textarea {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.92rem;
+  padding: 0.6rem 0.75rem;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s;
+  line-height: 1.6;
+}
+
+.cb-textarea:focus {
+  border-color: rgba(120, 192, 224, 0.4);
+}
+
+.cb-textarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Hooks ── */
+
+.cb-hook-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cb-hook-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cb-hook-num {
+  font-size: 0.8rem;
+  color: #6a7088;
+  min-width: 16px;
+}
+
+.cb-hook-row .cb-input {
+  flex: 1;
+}
+
+/* ── NPCs ── */
+
+.cb-npc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cb-npc-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cb-npc-name {
+  width: 180px;
+  flex-shrink: 0;
+}
+
+.cb-npc-desc {
+  flex: 1;
+}
+
+/* ── Add / Remove ── */
+
+.cb-add-btn {
+  background: none;
+  border: 1px dashed rgba(120, 192, 224, 0.25);
+  border-radius: 5px;
+  color: #78c0e0;
+  font-family: inherit;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.cb-add-btn:hover {
+  border-color: #78c0e0;
+  color: #a8d9f0;
+}
+
+.cb-remove-btn {
+  background: none;
+  border: none;
+  color: #6a7088;
+  font-size: 1.1rem;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.12s;
+}
+
+.cb-remove-btn:hover {
+  color: #ff8a80;
+}
+
+/* ── Approval info ── */
+
+.cb-approved-info {
+  font-size: 0.82rem;
+  color: #a8e6cf;
+  padding: 0.6rem 1rem;
+  background: rgba(168, 230, 207, 0.06);
+  border: 1px solid rgba(168, 230, 207, 0.15);
+  border-radius: 6px;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 560px) {
+  .cb-npc-row {
+    flex-wrap: wrap;
+  }
+
+  .cb-npc-name {
+    width: 100%;
+  }
+}

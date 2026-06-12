@@ -93,9 +93,17 @@ function AiCompanionCard({ character, index, onUpdate }) {
   );
 }
 
+// Sessions recommended before leveling up, by current level
+function sessionsRecommended(level) {
+  if (level <= 4) return 2;
+  if (level <= 10) return 3;
+  if (level <= 16) return 4;
+  return 5;
+}
+
 const DmPage = () => {
   const { user, authFetch } = useAuth();
-  const { campaign, characters, levelUpParty, updateCharacter } = useGame();
+  const { campaign, characters, levelUpParty, markSessionComplete, updateCharacter, sessionsAtLevel, totalSessions } = useGame();
   const [leveling, setLeveling] = useState(false);
   const [levelMsg, setLevelMsg] = useState('');
 
@@ -150,32 +158,55 @@ const DmPage = () => {
 
       {/* Party level */}
       <section className="dm-section">
-        <div className="dm-section__head">
-          <h2 className="dm-section__title">Party Level</h2>
-        </div>
+        <h2 className="dm-section__title">Party Level</h2>
         <div className="dm-level-panel">
+
+          {/* Current level */}
           <div className="dm-level-display">
             <span className="dm-level-num">{currentLevel}</span>
             <span className="dm-level-label">Current Level</span>
           </div>
-          <div className="dm-level-actions">
-            <p className="dm-level-hint">
-              Leveling up advances all party members simultaneously — human players and AI companions.
-              Human player HP is also updated in the database.
+
+          {/* Session counter */}
+          <div className="dm-session-block">
+            <div className="dm-session-pips">
+              {Array.from({ length: sessionsRecommended(currentLevel) }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`dm-session-pip ${i < sessionsAtLevel ? 'dm-session-pip--done' : ''}`}
+                />
+              ))}
+              {sessionsAtLevel > sessionsRecommended(currentLevel) && (
+                <span className="dm-session-extra">+{sessionsAtLevel - sessionsRecommended(currentLevel)}</span>
+              )}
+            </div>
+            <p className="dm-session-label">
+              {sessionsAtLevel} / {sessionsRecommended(currentLevel)} sessions at level {currentLevel}
+              {totalSessions > 0 && <span className="dm-session-total"> · {totalSessions} total</span>}
             </p>
+            {sessionsAtLevel >= sessionsRecommended(currentLevel) && (
+              <p className="dm-session-nudge">✦ Party may be ready to level up</p>
+            )}
+            <button className="btn btn--ghost btn--sm" onClick={markSessionComplete}>
+              Mark Session Complete
+            </button>
+          </div>
+
+          {/* Level up */}
+          <div className="dm-level-actions">
             {levelMsg && (
               <p className={`dm-level-msg ${levelMsg.startsWith('Error') ? 'dm-level-msg--err' : 'dm-level-msg--ok'}`}>
                 {levelMsg}
               </p>
             )}
-            <button
-              className="btn btn--primary"
-              onClick={handleLevelUp}
-              disabled={leveling}
-            >
+            <button className="btn btn--primary" onClick={handleLevelUp} disabled={leveling}>
               {leveling ? 'Leveling up...' : `Level Up Party → ${currentLevel + 1}`}
             </button>
+            <p className="dm-level-hint">
+              Levels all characters simultaneously and resets the session counter.
+            </p>
           </div>
+
         </div>
       </section>
 
@@ -215,11 +246,16 @@ const DmPage = () => {
         </section>
       )}
 
-      {!campaign && (
-        <div className="dm-no-campaign">
-          <p>No active campaign. Start one from the <Link to="/">home page</Link>.</p>
+      {/* Campaign management link */}
+      <section className="dm-section">
+        <div className="dm-section__head">
+          <h2 className="dm-section__title">Campaign</h2>
         </div>
-      )}
+        <div className="dm-campaign-links">
+          <Link to="/campaigns" className="btn btn--ghost btn--sm">View All Campaigns</Link>
+          <Link to="/campaigns/new" className="btn btn--primary btn--sm">+ New Campaign</Link>
+        </div>
+      </section>
     </div>
   );
 };

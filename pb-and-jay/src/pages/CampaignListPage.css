@@ -1,0 +1,282 @@
+.cl-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 5rem;
+}
+
+.cl-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.cl-header {
+  margin-bottom: 2rem;
+}
+
+.cl-header__title {
+  font-size: 1.6rem;
+  color: #ffc857;
+  margin: 0;
+}
+
+.cl-header__sub {
+  color: #9aa0b8;
+  font-size: 0.88rem;
+  margin: 0.25rem 0 0;
+}
+
+.cl-loading { color: #6a7088; font-size: 0.9rem; }
+.cl-err { color: #ff8a80; font-size: 0.88rem; }
+
+/* ── Sections ── */
+
+.cl-section {
+  margin-bottom: 2.5rem;
+}
+
+.cl-section__title {
+  font-size: 0.7rem;
+  color: #6a7088;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.75rem;
+}
+
+/* ── Campaign rows ── */
+
+.cl-campaign-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cl-campaign-row {
+  background: rgba(30, 29, 48, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: border-color 0.15s;
+}
+
+.cl-campaign-row:hover {
+  border-color: rgba(120, 192, 224, 0.15);
+}
+
+.cl-campaign-row__main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cl-campaign-row__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e8e6f0;
+  flex: 1;
+  min-width: 120px;
+}
+
+.cl-campaign-row__author {
+  font-size: 0.78rem;
+  color: #6a7088;
+}
+
+.cl-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 0.18rem 0.55rem;
+  white-space: nowrap;
+}
+
+.cl-campaign-row__meta {
+  padding-left: 0;
+}
+
+.cl-campaign-row__setting {
+  font-size: 0.8rem;
+  color: #6a7088;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.cl-campaign-row__actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding-top: 0.25rem;
+}
+
+/* ── Empty state ── */
+
+.cl-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6a7088;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ── Approval modal ── */
+
+.cl-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+
+.cl-modal {
+  background: #1e1d30;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+}
+
+.cl-modal__title {
+  font-size: 1.25rem;
+  color: #ffc857;
+  margin: 0;
+}
+
+.cl-modal__h3 {
+  font-size: 0.7rem;
+  color: #6a7088;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0 0 0.4rem;
+}
+
+.cl-modal__section {
+  display: flex;
+  flex-direction: column;
+}
+
+.cl-modal__text {
+  font-size: 0.9rem;
+  color: #c8c6d8;
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.cl-modal__list {
+  font-size: 0.9rem;
+  color: #c8c6d8;
+  margin: 0;
+  padding-left: 1.4rem;
+  line-height: 1.8;
+}
+
+.cl-empty {
+  color: #6a7088;
+}
+
+.cl-modal__rejected-note {
+  padding: 0.75rem 1rem;
+  background: rgba(255, 138, 128, 0.08);
+  border: 1px solid rgba(255, 138, 128, 0.2);
+  border-radius: 6px;
+  color: #ff8a80;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.cl-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 1rem;
+}
+
+.cl-modal__reject-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cl-modal__note-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+}
+
+.cl-modal__note-input:focus {
+  border-color: rgba(255, 138, 128, 0.4);
+}
+
+.cl-modal__err {
+  font-size: 0.82rem;
+  color: #ff8a80;
+  margin: 0;
+}
+
+.cl-modal__close {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #9aa0b8;
+  font-family: inherit;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: color 0.15s;
+}
+
+.cl-modal__close:hover {
+  color: #e8e6f0;
+}
+
+/* ── Campaign-specific button variants ── */
+
+.btn--review {
+  background: rgba(255, 200, 87, 0.12);
+  color: #ffc857;
+  border: 1px solid rgba(255, 200, 87, 0.3);
+}
+.btn--review:hover:not(:disabled) { background: rgba(255, 200, 87, 0.2); }
+
+.btn--approve {
+  background: rgba(168, 230, 207, 0.15);
+  color: #a8e6cf;
+  border: 1px solid rgba(168, 230, 207, 0.3);
+  align-self: flex-start;
+}
+.btn--approve:hover:not(:disabled) { background: rgba(168, 230, 207, 0.25); }
+
+.btn--danger {
+  background: rgba(255, 138, 128, 0.12);
+  color: #ff8a80;
+  border: 1px solid rgba(255, 138, 128, 0.3);
+}
+.btn--danger:hover:not(:disabled) { background: rgba(255, 138, 128, 0.22); }

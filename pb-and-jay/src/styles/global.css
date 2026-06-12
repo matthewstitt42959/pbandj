@@ -144,11 +144,56 @@ code {
   font-size: 0.8rem;
 }
 
-.btn--large {
-  padding: 0.85rem 2rem;
-  font-size: 1.05rem;
-  width: 100%;
+/* ── Shared button system ── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+  text-decoration: none;
 }
+
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn--xs  { font-size: 0.76rem; padding: 0.35rem 0.7rem; }
+.btn--sm  { font-size: 0.82rem; padding: 0.45rem 0.9rem; }
+.btn--large { padding: 0.85rem 2rem; font-size: 1.05rem; width: 100%; }
+
+.btn--primary {
+  background: #ffc857;
+  color: #1a1929;
+}
+.btn--primary:hover:not(:disabled) { background: #ffd47e; }
+
+.btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8e6f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.btn--ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
+
+.btn--danger {
+  background: rgba(255, 138, 128, 0.12);
+  color: #ff8a80;
+  border: 1px solid rgba(255, 138, 128, 0.3);
+}
+.btn--danger:hover:not(:disabled) { background: rgba(255, 138, 128, 0.22); }
+
+/* ── Shared back link ── */
+
+.cs-back-link {
+  font-size: 0.82rem;
+  color: #9aa0b8;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.cs-back-link:hover { color: #e8e6f0; text-decoration: none; }
 
 .homepage__steps {
   padding-left: 1.25rem;

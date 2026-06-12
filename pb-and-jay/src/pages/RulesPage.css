@@ -1,0 +1,205 @@
+.rules-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 5rem;
+}
+
+/* ── Header ── */
+
+.rules-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.rules-header__title {
+  font-size: 1.8rem;
+  color: #ffc857;
+  margin: 0;
+}
+
+.rules-header__sub {
+  color: #9aa0b8;
+  font-size: 0.9rem;
+  margin: 0.3rem 0 0;
+}
+
+.rules-loading { color: #6a7088; }
+.rules-err { color: #ff8a80; font-size: 0.88rem; margin-bottom: 1rem; }
+
+/* ── Add form ── */
+
+.rule-add-form {
+  background: rgba(30, 29, 48, 0.8);
+  border: 1px solid rgba(255, 200, 87, 0.2);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rule-add-form__title {
+  font-size: 0.8rem;
+  color: #ffc857;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0;
+}
+
+/* ── Rules list ── */
+
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Rule card ── */
+
+.rule-card {
+  display: flex;
+  gap: 1.25rem;
+  background: rgba(30, 29, 48, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  transition: border-color 0.2s;
+}
+
+.rule-card:hover {
+  border-color: rgba(120, 192, 224, 0.12);
+}
+
+.rule-card--editing {
+  border-color: rgba(255, 200, 87, 0.25);
+}
+
+.rule-card__num {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: rgba(255, 200, 87, 0.25);
+  min-width: 2rem;
+  line-height: 1;
+  padding-top: 0.15rem;
+  user-select: none;
+}
+
+.rule-card__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rule-card__title {
+  font-size: 1.05rem;
+  color: #e8e6f0;
+  margin: 0;
+  font-weight: 600;
+}
+
+.rule-card__body {
+  font-size: 0.9rem;
+  color: #9aa0b8;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.rule-edit-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  color: #6a7088;
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.rule-edit-btn:hover {
+  color: #9aa0b8;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Edit fields ── */
+
+.rule-edit-title {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.rule-edit-title:focus {
+  border-color: rgba(255, 200, 87, 0.4);
+}
+
+.rule-edit-body {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #c8c6d8;
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.6rem 0.75rem;
+  outline: none;
+  resize: vertical;
+  width: 100%;
+  line-height: 1.6;
+  transition: border-color 0.15s;
+}
+
+.rule-edit-body:focus {
+  border-color: rgba(255, 200, 87, 0.4);
+}
+
+.rule-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+/* ── Footer ── */
+
+.rules-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
+}
+
+.rules-footer p {
+  font-size: 0.85rem;
+  color: #6a7088;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 500px) {
+  .rule-card {
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .rule-card__num {
+    font-size: 1.1rem;
+    min-width: 1.5rem;
+  }
+}

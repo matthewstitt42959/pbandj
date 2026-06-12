@@ -19,14 +19,17 @@ const Navbar = () => {
 
         <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
           <li><NavLink to="/" end onClick={close}>Home</NavLink></li>
+          <li><NavLink to="/rules" onClick={close}>Rules</NavLink></li>
           {user && (
             <>
               <li><NavLink to="/dashboard" onClick={close}>My Characters</NavLink></li>
               <li><NavLink to="/game" onClick={close}>Game Board</NavLink></li>
               {(user.role === 'DM' || user.role === 'SUPER_DM') && (
-                <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
+                <>
+                  <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
+                  <li><NavLink to="/campaigns" onClick={close}>Campaigns</NavLink></li>
+                </>
               )}
-              <li><NavLink to="/settings" onClick={close}>Setup</NavLink></li>
             </>
           )}
         </ul>
@@ -52,14 +55,17 @@ const Navbar = () => {
       {menuOpen && (
         <ul className="nav-links nav-links--mobile">
           <li><NavLink to="/" end onClick={close}>Home</NavLink></li>
+          <li><NavLink to="/rules" onClick={close}>Rules</NavLink></li>
           {user ? (
             <>
               <li><NavLink to="/dashboard" onClick={close}>My Characters</NavLink></li>
               <li><NavLink to="/game" onClick={close}>Game Board</NavLink></li>
               {(user.role === 'DM' || user.role === 'SUPER_DM') && (
-                <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
+                <>
+                  <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
+                  <li><NavLink to="/campaigns" onClick={close}>Campaigns</NavLink></li>
+                </>
               )}
-              <li><NavLink to="/settings" onClick={close}>Setup</NavLink></li>
               <li><button className="nav-mobile-signout" onClick={handleSignOut}>Sign out</button></li>
             </>
           ) : (

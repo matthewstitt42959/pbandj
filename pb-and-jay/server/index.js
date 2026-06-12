@@ -425,6 +425,323 @@ app.post('/api/characters/:id/unassign', requireAuth, async (req, res) => {
   }
 });
 
+// ── Campaign endpoints ────────────────────────────────────────────────────────
+
+const CAMPAIGN_SELECT = {
+  id: true, name: true, setting: true, openingScene: true,
+  hooks: true, npcs: true, dmNotes: true, status: true,
+  rejectedNote: true, approvedAt: true, createdAt: true, updatedAt: true,
+  createdBy: { select: { id: true, username: true, displayName: true } },
+  approvedBy: { select: { id: true, username: true, displayName: true } },
+};
+
+function canEditCampaign(campaign, authUser) {
+  if (authUser.role === 'SUPER_DM') return true;
+  if (authUser.role === 'DM' && campaign.createdById === authUser.id) return true;
+  return false;
+}
+
+// List — DMs see their own; Super DM sees all
+app.get('/api/campaigns', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  try {
+    const where = req.authUser.role === 'SUPER_DM' ? {} : { createdById: req.authUser.id };
+    const campaigns = await prisma.campaign.findMany({
+      where,
+      select: CAMPAIGN_SELECT,
+      orderBy: { updatedAt: 'desc' },
+    });
+    res.json(campaigns);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get single
+app.get('/api/campaigns/:id', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  try {
+    const campaign = await prisma.campaign.findUnique({
+      where: { id: req.params.id },
+      select: { ...CAMPAIGN_SELECT, createdById: true },
+    });
+    if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+    if (req.authUser.role === 'DM' && campaign.createdById !== req.authUser.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    res.json(campaign);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create
+app.post('/api/campaigns', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  const { name } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'Campaign name is required' });
+  try {
+    const campaign = await prisma.campaign.create({
+      data: {
+        name: name.trim(),
+        setting: req.body.setting ?? '',
+        openingScene: req.body.openingScene ?? '',
+        hooks: req.body.hooks ?? [],
+        npcs: req.body.npcs ?? [],
+        dmNotes: req.body.dmNotes ?? '',
+        createdById: req.authUser.id,
+      },
+      select: { ...CAMPAIGN_SELECT, createdById: true },
+    });
+    res.status(201).json(campaign);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update (only DRAFT or REJECTED)
+app.patch('/api/campaigns/:id', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  try {
+    const existing = await prisma.campaign.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Campaign not found' });
+    if (!canEditCampaign(existing, req.authUser)) return res.status(403).json({ error: 'Access denied' });
+    if (!['DRAFT', 'REJECTED'].includes(existing.status) && req.authUser.role !== 'SUPER_DM') {
+      return res.status(409).json({ error: 'Only SUPER_DM can edit a submitted or approved campaign' });
+    }
+    const { name, setting, openingScene, hooks, npcs, dmNotes } = req.body;
+    const updated = await prisma.campaign.update({
+      where: { id: req.params.id },
+      data: { ...(name && { name }), setting, openingScene, hooks, npcs, dmNotes },
+      select: { ...CAMPAIGN_SELECT, createdById: true },
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Submit for review
+app.post('/api/campaigns/:id/submit', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  try {
+    const existing = await prisma.campaign.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Campaign not found' });
+    if (existing.createdById !== req.authUser.id && req.authUser.role !== 'SUPER_DM') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    if (!['DRAFT', 'REJECTED'].includes(existing.status)) {
+      return res.status(409).json({ error: 'Campaign is already submitted or approved' });
+    }
+    const updated = await prisma.campaign.update({
+      where: { id: req.params.id },
+      data: { status: 'PENDING_REVIEW', rejectedNote: null },
+      select: CAMPAIGN_SELECT,
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Approve (SUPER_DM only)
+app.post('/api/campaigns/:id/approve', requireAuth, async (req, res) => {
+  if (req.authUser.role !== 'SUPER_DM') return res.status(403).json({ error: 'Super DM access required' });
+  try {
+    const existing = await prisma.campaign.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Campaign not found' });
+    const updated = await prisma.campaign.update({
+      where: { id: req.params.id },
+      data: { status: 'APPROVED', approvedById: req.authUser.id, approvedAt: new Date(), rejectedNote: null },
+      select: CAMPAIGN_SELECT,
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Reject (SUPER_DM only)
+app.post('/api/campaigns/:id/reject', requireAuth, async (req, res) => {
+  if (req.authUser.role !== 'SUPER_DM') return res.status(403).json({ error: 'Super DM access required' });
+  const { note } = req.body;
+  try {
+    const existing = await prisma.campaign.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Campaign not found' });
+    const updated = await prisma.campaign.update({
+      where: { id: req.params.id },
+      data: { status: 'REJECTED', rejectedNote: note ?? null, approvedById: null, approvedAt: null },
+      select: CAMPAIGN_SELECT,
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// AI generate campaign content
+app.post('/api/campaigns/:id/generate', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  let provider;
+  try { provider = getProvider(); } catch (err) { return res.status(500).json({ error: err.message }); }
+  if (!provider.isConfigured()) return res.status(503).json({ error: 'No AI provider configured' });
+
+  const { prompt } = req.body;
+  if (!prompt?.trim()) return res.status(400).json({ error: 'Prompt is required' });
+
+  try {
+    const existing = await prisma.campaign.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Campaign not found' });
+    if (!canEditCampaign(existing, req.authUser)) return res.status(403).json({ error: 'Access denied' });
+
+    const { raw } = await provider.generateDMResponse({
+      systemPrompt: `You are a creative D&D 2024 campaign designer. Given a prompt, generate a rich campaign outline in JSON format with exactly these fields:
+{
+  "name": "Campaign title",
+  "setting": "World/location description (2-3 paragraphs)",
+  "openingScene": "The very first scene the players encounter (1-2 paragraphs)",
+  "hooks": ["hook 1", "hook 2", "hook 3"],
+  "npcs": [{"name": "NPC Name", "description": "Role and personality"}]
+}
+Return only valid JSON, no markdown, no extra text.`,
+      userPrompt: prompt.trim(),
+    });
+
+    let generated;
+    try {
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      generated = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    } catch {
+      return res.status(502).json({ error: 'AI returned invalid JSON — try again or edit manually' });
+    }
+
+    const updated = await prisma.campaign.update({
+      where: { id: req.params.id },
+      data: {
+        name: generated.name ?? existing.name,
+        setting: generated.setting ?? existing.setting,
+        openingScene: generated.openingScene ?? existing.openingScene,
+        hooks: generated.hooks ?? existing.hooks,
+        npcs: generated.npcs ?? existing.npcs,
+      },
+      select: { ...CAMPAIGN_SELECT, createdById: true },
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error('AI generate error:', err.message);
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// ── Rules ──────────────────────────────────────────────────────────────────
+
+const DEFAULT_RULES = [
+  {
+    title: 'Respect Everyone at the Table',
+    body: 'Treat every player and the DM with kindness and respect. Real-world insults, harassment, or targeted aggression are not acceptable — in character or out.',
+    order: 1,
+  },
+  {
+    title: 'Collaborate, Don\'t Compete',
+    body: 'This is a cooperative game. Work together as a party. Stealing from teammates, sabotaging plans, or intentionally disrupting other players\' moments undermines the fun for everyone.',
+    order: 2,
+  },
+  {
+    title: 'Share the Spotlight',
+    body: 'Every player deserves moments to shine. Be mindful of how much airtime you\'re taking. Encourage quieter players and give space for everyone\'s character to develop.',
+    order: 3,
+  },
+  {
+    title: 'Communicate Openly',
+    body: 'If something in the game makes you uncomfortable, say so — to the DM privately or to the group. Likewise, celebrate what\'s working. Good communication keeps the game fun for everyone.',
+    order: 4,
+  },
+  {
+    title: 'Good Sportsmanship',
+    body: 'Accept both success and failure gracefully. Dice don\'t always go your way — that\'s what makes the story interesting. Avoid arguing with DM rulings mid-game; bring concerns up after the session.',
+    order: 5,
+  },
+  {
+    title: 'Come Prepared',
+    body: 'Know your character\'s abilities, have your sheet up to date, and be ready when it\'s your turn. Showing up prepared is a sign of respect for everyone\'s time.',
+    order: 6,
+  },
+  {
+    title: 'What Happens at the Table, Stays There',
+    body: 'Campaign secrets, plot twists, and in-game drama belong at the table. Don\'t spoil story moments for absent players, and keep out-of-character knowledge separate from in-character decisions.',
+    order: 7,
+  },
+];
+
+// Seed default rules if the table is empty
+async function seedRules() {
+  try {
+    const count = await prisma.rule.count();
+    if (count === 0) {
+      await prisma.rule.createMany({ data: DEFAULT_RULES });
+      console.log('Seeded default rules.');
+    }
+  } catch (err) {
+    console.warn('Could not seed rules:', err.message);
+  }
+}
+
+// GET /api/rules — public
+app.get('/api/rules', async (_req, res) => {
+  try {
+    const rules = await prisma.rule.findMany({ orderBy: { order: 'asc' } });
+    res.json(rules);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/rules — SUPER_DM only
+app.post('/api/rules', requireAuth, async (req, res) => {
+  if (req.authUser.role !== 'SUPER_DM') return res.status(403).json({ error: 'Super DM only' });
+  const { title, body, order } = req.body ?? {};
+  if (!title?.trim() || !body?.trim()) return res.status(400).json({ error: 'title and body required' });
+  try {
+    const maxOrder = await prisma.rule.aggregate({ _max: { order: true } });
+    const rule = await prisma.rule.create({
+      data: { title: title.trim(), body: body.trim(), order: order ?? (maxOrder._max.order ?? 0) + 1 },
+    });
+    res.json(rule);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/rules/:id — SUPER_DM only
+app.patch('/api/rules/:id', requireAuth, async (req, res) => {
+  if (req.authUser.role !== 'SUPER_DM') return res.status(403).json({ error: 'Super DM only' });
+  const { title, body, order } = req.body ?? {};
+  try {
+    const rule = await prisma.rule.update({
+      where: { id: req.params.id },
+      data: {
+        ...(title !== undefined && { title: title.trim() }),
+        ...(body !== undefined && { body: body.trim() }),
+        ...(order !== undefined && { order }),
+      },
+    });
+    res.json(rule);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/rules/:id — SUPER_DM only
+app.delete('/api/rules/:id', requireAuth, async (req, res) => {
+  if (req.authUser.role !== 'SUPER_DM') return res.status(403).json({ error: 'Super DM only' });
+  try {
+    await prisma.rule.delete({ where: { id: req.params.id } });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/health', (req, res) => {
   let provider;
   try {
@@ -457,6 +774,7 @@ if (isProduction) {
 }
 
 const server = app.listen(PORT, () => {
+  seedRules();
   try {
     const provider = getProvider();
     console.log(`PB & Jay running on port ${PORT}`);

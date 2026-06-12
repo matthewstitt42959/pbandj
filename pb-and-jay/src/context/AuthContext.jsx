@@ -17,6 +17,10 @@ async function apiFetch(path, options = {}) {
       ...options.headers,
     },
   });
+  const contentType = res.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) {
+    throw new Error('Server unavailable — make sure the backend is running on port 3001');
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;

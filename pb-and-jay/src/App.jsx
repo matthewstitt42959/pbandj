@@ -5,7 +5,6 @@ import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
 import HomePage from './pages/HomePage';
 import GameBoard from './pages/GameBoard';
-import SettingsPage from './pages/SettingsPage';
 import NotFound from './pages/NotFound';
 import LoginPage from './pages/LoginPage';
 import AuthCallback from './pages/AuthCallback';
@@ -16,6 +15,9 @@ import CharacterCreate from './pages/CharacterCreate';
 import CharacterSheet from './pages/CharacterSheet';
 import DashboardPage from './pages/DashboardPage';
 import DmPage from './pages/DmPage';
+import CampaignBuilderPage from './pages/CampaignBuilderPage';
+import CampaignListPage from './pages/CampaignListPage';
+import RulesPage from './pages/RulesPage';
 
 function App() {
   return (
@@ -27,6 +29,7 @@ function App() {
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<HomePage />} />
+              <Route path="/rules" element={<RulesPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -46,11 +49,17 @@ function App() {
               <Route path="/game" element={
                 <PrivateRoute><GameBoard /></PrivateRoute>
               } />
-              <Route path="/settings" element={
-                <PrivateRoute><SettingsPage /></PrivateRoute>
-              } />
               <Route path="/dm" element={
                 <PrivateRoute><DmPage /></PrivateRoute>
+              } />
+              <Route path="/campaigns" element={
+                <PrivateRoute><CampaignListPage /></PrivateRoute>
+              } />
+              <Route path="/campaigns/new" element={
+                <PrivateRoute><CampaignBuilderPage /></PrivateRoute>
+              } />
+              <Route path="/campaigns/:id" element={
+                <PrivateRoute><CampaignBuilderPage /></PrivateRoute>
               } />
 
               <Route path="*" element={<NotFound />} />
