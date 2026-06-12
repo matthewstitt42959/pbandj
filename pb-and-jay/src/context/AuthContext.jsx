@@ -13,8 +13,8 @@ async function fetchProfile(token) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);       // Supabase auth user
-  const [profile, setProfile] = useState(null); // our DB User record
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (session) => {
@@ -39,25 +39,27 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       loadProfile(session);
     });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       loadProfile(session);
     });
-
     return () => subscription.unsubscribe();
   }, [loadProfile]);
 
-  const sendMagicLink = async (email) => {
+  // Sign in with email + password. Returns the profile (or null if no profile yet).
+  const signIn = async (email, password) => {
     if (!supabase) throw new Error('Auth service not configured');
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
+    const { data: { session }, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    try {
+      const p = await fetchProfile(session.access_token);
+      setProfile(p);
+      return p;
+    } catch {
+      return null;
+    }
   };
 
   const signOut = async () => {
@@ -67,16 +69,16 @@ export function AuthProvider({ children }) {
     setProfile(null);
   };
 
-  // Called after /register completes to refresh profile without full reload
   const refreshProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       const p = await fetchProfile(session.access_token);
       setProfile(p);
+      return p;
     }
+    return null;
   };
 
-  // Expose the current access token for authenticated API calls
   const getToken = async () => {
     if (!supabase) return null;
     const { data: { session } } = await supabase.auth.getSession();
@@ -84,7 +86,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, sendMagicLink, signOut, refreshProfile, getToken }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut, refreshProfile, getToken }}>
       {children}
     </AuthContext.Provider>
   );

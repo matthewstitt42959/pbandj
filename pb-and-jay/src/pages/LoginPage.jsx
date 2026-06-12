@@ -1,81 +1,86 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './LoginPage.css';
 
 const LoginPage = () => {
-  const { sendMagicLink } = useAuth();
-  const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await sendMagicLink(email.trim().toLowerCase());
-      setSent(true);
+      const profile = await signIn(form.email.trim().toLowerCase(), form.password);
+      const hasCharacter = profile?.characters?.some(c => !c.isRetired);
+      navigate(hasCharacter ? '/dashboard' : '/character/create', { replace: true });
     } catch (err) {
-      setError(err.message || 'Something went wrong. Try again.');
+      setError(err.message === 'Invalid login credentials'
+        ? 'Email or password is incorrect.'
+        : err.message || 'Sign in failed. Try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (sent) {
-    return (
-      <div className="auth-page">
-        <div className="auth-card">
-          <div className="auth-card__icon">📬</div>
-          <h1 className="auth-card__title">Check your email</h1>
-          <p className="auth-card__body">
-            We sent a magic link to <strong>{email}</strong>. Click it to sign in — no password needed.
-          </p>
-          <p className="auth-card__hint">
-            Didn't get it? Check your spam folder, or{' '}
-            <button className="auth-link-btn" onClick={() => setSent(false)}>try again</button>.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-card__icon">⚔️</div>
-        <h1 className="auth-card__title">PB & Jay</h1>
-        <p className="auth-card__subtitle">AI-powered tabletop adventure</p>
-        <p className="auth-card__body">
-          Enter your email and we'll send you a magic link — no password required.
-        </p>
+        <div className="auth-card__logo">
+          <span className="auth-card__logo-pb">PB</span>
+          <span className="auth-card__logo-amp">&amp;</span>
+          <span className="auth-card__logo-jay">Jay</span>
+        </div>
+        <p className="auth-card__subtitle">AI-Powered Tabletop Adventure</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <label className="auth-label" htmlFor="email">Email address</label>
           <input
             id="email"
+            name="email"
             type="email"
             className="auth-input"
             placeholder="you@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            value={form.email}
+            onChange={handleChange}
             required
             autoFocus
+            autoComplete="email"
           />
+
+          <label className="auth-label" htmlFor="password" style={{ marginTop: '0.75rem' }}>Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            className="auth-input"
+            placeholder="Your password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            autoComplete="current-password"
+          />
+
           {error && <p className="auth-error">{error}</p>}
+
           <button
             type="submit"
             className="btn btn--primary auth-submit"
-            disabled={loading || !email.trim()}
+            disabled={loading || !form.email.trim() || !form.password}
           >
-            {loading ? 'Sending...' : 'Send magic link'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
         <p className="auth-card__footer">
-          New here? You'll create your account after clicking the link.
+          New adventurer?{' '}
+          <Link to="/register" className="auth-link">Create an account</Link>
         </p>
       </div>
     </div>

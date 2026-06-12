@@ -104,6 +104,25 @@
   font-size: 1rem;
 }
 
+/* PB & Jay wordmark */
+.auth-card__logo {
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+  line-height: 1;
+}
+
+.auth-card__logo-pb { color: #ffc857; }
+.auth-card__logo-amp { color: #78c0e0; margin: 0 0.12em; }
+.auth-card__logo-jay { color: #e8e6f0; }
+
+.auth-link {
+  color: #78c0e0;
+  text-decoration: none;
+}
+.auth-link:hover { text-decoration: underline; }
+
 .auth-link-btn {
   background: none;
   border: none;
