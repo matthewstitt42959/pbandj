@@ -374,6 +374,41 @@ app.post('/api/characters/:id/assign', requireAuth, async (req, res) => {
   }
 });
 
+const HIT_DICE = {
+  barbarian: 12, fighter: 10, paladin: 10, ranger: 10,
+  monk: 8, cleric: 8, druid: 8, rogue: 8, warlock: 8, bard: 8,
+  sorcerer: 6, wizard: 6,
+};
+function serverHitDie(cls) { return HIT_DICE[cls?.toLowerCase()] ?? 8; }
+
+// DM-only: level up all characters currently assigned to the campaign
+app.post('/api/campaign/levelup', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') {
+    return res.status(403).json({ error: 'DM access required' });
+  }
+  try {
+    const assigned = await prisma.character.findMany({
+      where: { campaignId: { not: null }, isRetired: false },
+    });
+    const updates = await Promise.all(
+      assigned.map(async (char) => {
+        const hitDie = serverHitDie(char.class);
+        const conScore = char.abilityScores?.con ?? 10;
+        const conMod = Math.floor((conScore - 10) / 2);
+        const gain = Math.max(1, Math.floor(hitDie / 2) + 1 + conMod);
+        return prisma.character.update({
+          where: { id: char.id },
+          data: { level: char.level + 1, maxHp: char.maxHp + gain, hp: char.hp + gain },
+        });
+      })
+    );
+    res.json({ leveled: updates.length, characters: updates });
+  } catch (err) {
+    console.error('Level up error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/characters/:id/unassign', requireAuth, async (req, res) => {
   try {
     const existing = await prisma.character.findFirst({

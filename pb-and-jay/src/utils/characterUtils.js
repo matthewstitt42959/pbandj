@@ -61,6 +61,60 @@ export function buildSkillsFromProficiencies(skills) {
   return Object.fromEntries(ALL_SKILLS.map(s => [s, profSet.has(s)]));
 }
 
+const HIT_DICE = {
+  barbarian: 12,
+  fighter: 10, paladin: 10, ranger: 10,
+  monk: 8, cleric: 8, druid: 8, rogue: 8, warlock: 8, bard: 8,
+  sorcerer: 6, wizard: 6,
+};
+
+/**
+ * Hit die size for a given class name (case-insensitive).
+ * Defaults to d8 for unknown classes.
+ * @param {string} className
+ */
+export function getHitDie(className) {
+  return HIT_DICE[className?.toLowerCase()] ?? 8;
+}
+
+/**
+ * HP gained when leveling up: average hit die roll (rounded up) + CON modifier.
+ * Minimum 1.
+ * @param {number} hitDie
+ * @param {number} conScore
+ */
+export function hpGainPerLevel(hitDie, conScore) {
+  const conMod = getModifier(conScore);
+  return Math.max(1, Math.floor(hitDie / 2) + 1 + conMod);
+}
+
+/**
+ * Level up a game-format character (hp: {current, max}, abilities: {con: {score}}).
+ * @param {{ level: number, class: string, hp: {current: number, max: number}, abilities: {con: {score: number}} }} char
+ */
+export function levelUpGameChar(char) {
+  const hitDie = getHitDie(char.class);
+  const conScore = char.abilities?.con?.score ?? 10;
+  const gain = hpGainPerLevel(hitDie, conScore);
+  return {
+    ...char,
+    level: char.level + 1,
+    hp: { current: char.hp.current + gain, max: char.hp.max + gain },
+  };
+}
+
+/**
+ * Level up a DB-format character (hp: number, maxHp: number, abilityScores: {con: number}).
+ * Returns only the fields that change (for PATCH).
+ * @param {{ level: number, class: string, hp: number, maxHp: number, abilityScores: {con: number} }} char
+ */
+export function levelUpDbChar(char) {
+  const hitDie = getHitDie(char.class);
+  const conScore = char.abilityScores?.con ?? 10;
+  const gain = hpGainPerLevel(hitDie, conScore);
+  return { level: char.level + 1, maxHp: char.maxHp + gain, hp: char.hp + gain };
+}
+
 /**
  * Suggest ability score assignment for a class
  * @param {string[]} primaryAbilities - e.g. ['str', 'con']

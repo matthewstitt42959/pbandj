@@ -7,6 +7,10 @@ import {
   applyBackgroundBonuses,
   buildSkillsFromProficiencies,
   suggestAbilityAssignment,
+  getHitDie,
+  hpGainPerLevel,
+  levelUpGameChar,
+  levelUpDbChar,
 } from './characterUtils';
 
 describe('getModifier', () => {
@@ -88,6 +92,62 @@ describe('buildSkillsFromProficiencies', () => {
     const skills = buildSkillsFromProficiencies(['Animal Handling', 'Sleight of Hand']);
     expect(skills.animalHandling).toBe(true);
     expect(skills.sleightOfHand).toBe(true);
+  });
+});
+
+describe('getHitDie', () => {
+  it('barbarian = d12', () => expect(getHitDie('Barbarian')).toBe(12));
+  it('fighter = d10', () => expect(getHitDie('Fighter')).toBe(10));
+  it('wizard = d6', () => expect(getHitDie('Wizard')).toBe(6));
+  it('cleric = d8', () => expect(getHitDie('Cleric')).toBe(8));
+  it('rogue = d8', () => expect(getHitDie('Rogue')).toBe(8));
+  it('unknown class defaults to d8', () => expect(getHitDie('Paladin of the Moon')).toBe(8));
+  it('handles undefined gracefully', () => expect(getHitDie(undefined)).toBe(8));
+});
+
+describe('hpGainPerLevel', () => {
+  it('d8 with neutral CON = 5', () => expect(hpGainPerLevel(8, 10)).toBe(5));
+  it('d12 barbarian with CON 16 (+3) = 10', () => expect(hpGainPerLevel(12, 16)).toBe(10));
+  it('d6 wizard with CON 8 (-1) = 3', () => expect(hpGainPerLevel(6, 8)).toBe(3));
+  it('minimum 1 even with terrible CON', () => expect(hpGainPerLevel(6, 1)).toBe(1));
+});
+
+describe('levelUpGameChar', () => {
+  const morg = {
+    name: 'Morg', class: 'Barbarian', level: 3,
+    hp: { current: 34, max: 38 },
+    abilities: { con: { score: 16, modifier: 3 } },
+  };
+
+  it('increments level by 1', () => {
+    expect(levelUpGameChar(morg).level).toBe(4);
+  });
+  it('increases maxHp by hit die avg + CON mod', () => {
+    // d12 avg = 7, CON mod = +3 → +10
+    expect(levelUpGameChar(morg).hp.max).toBe(48);
+  });
+  it('increases currentHp by same amount', () => {
+    expect(levelUpGameChar(morg).hp.current).toBe(44);
+  });
+  it('does not mutate the original', () => {
+    levelUpGameChar(morg);
+    expect(morg.level).toBe(3);
+  });
+});
+
+describe('levelUpDbChar', () => {
+  const kaelin = {
+    class: 'Wizard', level: 3,
+    hp: 14, maxHp: 18,
+    abilityScores: { con: 12 },
+  };
+
+  it('returns level + 1', () => expect(levelUpDbChar(kaelin).level).toBe(4));
+  it('increases maxHp correctly — d6 avg=4, CON 12 mod=+1 → +5', () => {
+    expect(levelUpDbChar(kaelin).maxHp).toBe(23);
+  });
+  it('increases current hp by same gain', () => {
+    expect(levelUpDbChar(kaelin).hp).toBe(19);
   });
 });
 

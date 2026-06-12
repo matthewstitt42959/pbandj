@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useGame } from '../context/GameContext';
 import './DashboardPage.css';
 
 const MAX_ACTIVE = 2;
@@ -87,6 +88,7 @@ function CharacterCard({ character, onRetire, onAssign, onUnassign, retiring, as
 
 const DashboardPage = () => {
   const { user, authFetch, signOut } = useAuth();
+  const { setPlayerCharacter } = useGame();
   const navigate = useNavigate();
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -117,6 +119,7 @@ const DashboardPage = () => {
     try {
       const updated = await authFetch(`/api/characters/${id}/assign`, { method: 'POST', body: JSON.stringify({ campaignId: 'singleton' }) });
       setCharacters(prev => prev.map(c => c.id === id ? updated : c));
+      setPlayerCharacter(updated);
       navigate('/game');
     } finally {
       setAssigning(null);

@@ -15,6 +15,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import CharacterCreate from './pages/CharacterCreate';
 import CharacterSheet from './pages/CharacterSheet';
 import DashboardPage from './pages/DashboardPage';
+import DmPage from './pages/DmPage';
 
 function App() {
   return (
@@ -47,6 +48,9 @@ function App() {
               } />
               <Route path="/settings" element={
                 <PrivateRoute><SettingsPage /></PrivateRoute>
+              } />
+              <Route path="/dm" element={
+                <PrivateRoute><DmPage /></PrivateRoute>
               } />
 
               <Route path="*" element={<NotFound />} />

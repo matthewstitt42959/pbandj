@@ -5,31 +5,68 @@ import './Navbar.css';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const close = () => setMenuOpen(false);
+
+  const handleSignOut = () => { close(); signOut(); };
 
   return (
     <nav className="nav-bar">
-      <div className="nav-header">
+      <div className="nav-inner">
         <NavLink to="/" className="nav-title" onClick={close}>
           PB & Jay
         </NavLink>
-        <button className="hamburger" onClick={() => setMenuOpen((prev) => !prev)} aria-label="Toggle Menu">
-          ☰
-        </button>
+
+        <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
+          <li><NavLink to="/" end onClick={close}>Home</NavLink></li>
+          {user && (
+            <>
+              <li><NavLink to="/dashboard" onClick={close}>My Characters</NavLink></li>
+              <li><NavLink to="/game" onClick={close}>Game Board</NavLink></li>
+              {(user.role === 'DM' || user.role === 'SUPER_DM') && (
+                <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
+              )}
+              <li><NavLink to="/settings" onClick={close}>Setup</NavLink></li>
+            </>
+          )}
+        </ul>
+
+        <div className="nav-auth">
+          {user ? (
+            <>
+              <span className="nav-auth__username">@{user.username}</span>
+              <button className="nav-auth__btn" onClick={handleSignOut}>Sign out</button>
+            </>
+          ) : (
+            <NavLink to="/login" className="nav-auth__btn nav-auth__btn--signin" onClick={close}>
+              Sign in
+            </NavLink>
+          )}
+          <button className="hamburger" onClick={() => setMenuOpen(p => !p)} aria-label="Toggle Menu">
+            ☰
+          </button>
+        </div>
       </div>
-      <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
-        <li><NavLink to="/" end onClick={close}>Home</NavLink></li>
-        {user ? (
-          <>
-            <li><NavLink to="/dashboard" onClick={close}>My Characters</NavLink></li>
-            <li><NavLink to="/game" onClick={close}>Game Board</NavLink></li>
-            <li><NavLink to="/settings" onClick={close}>Setup</NavLink></li>
-          </>
-        ) : (
-          <li><NavLink to="/login" onClick={close}>Sign In</NavLink></li>
-        )}
-      </ul>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <ul className="nav-links nav-links--mobile">
+          <li><NavLink to="/" end onClick={close}>Home</NavLink></li>
+          {user ? (
+            <>
+              <li><NavLink to="/dashboard" onClick={close}>My Characters</NavLink></li>
+              <li><NavLink to="/game" onClick={close}>Game Board</NavLink></li>
+              {(user.role === 'DM' || user.role === 'SUPER_DM') && (
+                <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
+              )}
+              <li><NavLink to="/settings" onClick={close}>Setup</NavLink></li>
+              <li><button className="nav-mobile-signout" onClick={handleSignOut}>Sign out</button></li>
+            </>
+          ) : (
+            <li><NavLink to="/login" onClick={close}>Sign in</NavLink></li>
+          )}
+        </ul>
+      )}
     </nav>
   );
 };

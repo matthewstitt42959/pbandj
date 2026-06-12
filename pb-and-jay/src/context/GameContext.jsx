@@ -3,8 +3,48 @@ import mockCharacters from '../data/mockCharacters';
 import { createNewCampaign } from '../data/defaultCampaign';
 import { requestDMResponse, requestPlayerResponse } from '../services/aiDM';
 import { rollDice, parseRollCommand } from '../services/dice';
+import { levelUpGameChar } from '../utils/characterUtils';
 
 const STORAGE_KEY = 'pb-and-jay-game';
+
+const SKILL_KEYS = [
+  'acrobatics', 'animalHandling', 'arcana', 'athletics', 'deception',
+  'history', 'insight', 'intimidation', 'investigation', 'medicine',
+  'nature', 'perception', 'performance', 'persuasion', 'religion',
+  'sleightOfHand', 'stealth', 'survival',
+];
+
+export function mapDbCharToGame(dbChar) {
+  const scores = dbChar.abilityScores ?? {};
+  const modOf = s => Math.floor((s - 10) / 2);
+  const profMap = dbChar.skills ?? {};
+
+  const inventory = (Array.isArray(dbChar.inventory) ? dbChar.inventory : [])
+    .map(i => typeof i === 'string' ? i : [i.name, (i.qty ?? 1) > 1 ? `(×${i.qty})` : '', i.notes].filter(Boolean).join(' '));
+
+  const spells = (Array.isArray(dbChar.spells) ? dbChar.spells : [])
+    .map(s => typeof s === 'string' ? s : s.name);
+
+  return {
+    name: dbChar.name,
+    isAI: false,
+    class: dbChar.class,
+    level: dbChar.level,
+    hp: { current: dbChar.hp, max: dbChar.maxHp },
+    ac: dbChar.ac,
+    speed: 30,
+    abilities: Object.fromEntries(
+      ['str', 'dex', 'con', 'int', 'wis', 'cha'].map(k => [
+        k, { score: scores[k] ?? 10, modifier: modOf(scores[k] ?? 10) },
+      ])
+    ),
+    skills: Object.fromEntries(SKILL_KEYS.map(sk => [sk, (profMap[sk] ?? 0) > 0])),
+    inventory,
+    spells,
+    conditions: Array.isArray(dbChar.conditions) ? dbChar.conditions : [],
+    dbId: dbChar.id,
+  };
+}
 
 const initialState = {
   characters: mockCharacters,
@@ -114,6 +154,20 @@ function gameReducer(state, action) {
         ...state,
         characters: state.characters.map((char, i) =>
           i === action.index ? { ...char, ...action.updates } : char
+        ),
+      };
+
+    case 'LEVEL_UP_ALL':
+      return {
+        ...state,
+        characters: state.characters.map(levelUpGameChar),
+      };
+
+    case 'SET_PLAYER_CHARACTER':
+      return {
+        ...state,
+        characters: state.characters.map((char, i) =>
+          i === 0 ? { ...action.character, isAI: false } : char
         ),
       };
 
@@ -283,6 +337,14 @@ export function GameProvider({ children }) {
     dispatch({ type: 'UPDATE_CHARACTER', index, updates });
   }, []);
 
+  const setPlayerCharacter = useCallback((dbChar) => {
+    dispatch({ type: 'SET_PLAYER_CHARACTER', character: mapDbCharToGame(dbChar) });
+  }, []);
+
+  const levelUpParty = useCallback(() => {
+    dispatch({ type: 'LEVEL_UP_ALL' });
+  }, []);
+
   const submitDMPost = useCallback(
     (content) => {
       if (!state.campaign || !content.trim()) return;
@@ -304,6 +366,8 @@ export function GameProvider({ children }) {
     submitCharacterPost,
     submitDMPost,
     updateCharacter,
+    setPlayerCharacter,
+    levelUpParty,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
