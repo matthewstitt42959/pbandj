@@ -1,23 +1,19 @@
-import supabaseAdmin from './supabase-admin.js';
+import jwt from 'jsonwebtoken';
 
-/** Verifies the Supabase JWT from the Authorization header. */
-export async function requireAuth(req, res, next) {
-  if (!supabaseAdmin) {
-    return res.status(503).json({ error: 'Auth service not configured' });
-  }
+const JWT_SECRET = process.env.SESSION_SECRET || 'pbandj-secret';
 
+export function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Missing authorization token' });
+    return res.status(401).json({ error: 'Authentication required' });
   }
-
   const token = authHeader.slice(7);
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-
-  if (error || !user) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    // Keep id/email shape so existing endpoints work without changes
+    req.authUser = { id: payload.userId, email: payload.email, username: payload.username, role: payload.role };
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Session expired — please sign in again' });
   }
-
-  req.authUser = { id: user.id, email: user.email };
-  next();
 }

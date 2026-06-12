@@ -21,10 +21,11 @@ enum UserRole {
 }
 
 model User {
-  id          String      @id           // Supabase auth user UUID
+  id          String      @id @default(cuid())
   email       String      @unique
   username    String      @unique
   displayName String
+  password    String
   role        UserRole    @default(PLAYER)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -42,7 +43,7 @@ model Character {
   background    String
   backstory     String?
   level         Int       @default(1)
-  abilityScores Json      // { str, dex, con, int, wis, cha }
+  abilityScores Json
   hp            Int
   maxHp         Int
   ac            Int       @default(10)

@@ -1,92 +1,71 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
+const TOKEN_KEY = 'pb-and-jay-token';
 const AuthContext = createContext(null);
 
-async function fetchProfile(token) {
-  const res = await fetch('/api/users/me', {
-    headers: { Authorization: `Bearer ${token}` },
+function getToken() { return localStorage.getItem(TOKEN_KEY); }
+function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+
+async function apiFetch(path, options = {}) {
+  const token = getToken();
+  const res = await fetch(path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
   });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error('Failed to load profile');
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [user, setUser] = useState(null);   // { id, email, username, displayName, role, characters }
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = useCallback(async (session) => {
-    if (!session) {
-      setUser(null);
-      setProfile(null);
-      setLoading(false);
-      return;
-    }
-    setUser(session.user);
-    try {
-      const p = await fetchProfile(session.access_token);
-      setProfile(p);
-    } catch {
-      setProfile(null);
-    }
-    setLoading(false);
+  useEffect(() => {
+    if (!getToken()) { setLoading(false); return; }
+    apiFetch('/api/users/me')
+      .then(profile => setUser(profile))
+      .catch(() => clearToken())
+      .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      loadProfile(session);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      loadProfile(session);
-    });
-    return () => subscription.unsubscribe();
-  }, [loadProfile]);
-
-  // Sign in with email + password. Returns the profile (or null if no profile yet).
   const signIn = async (email, password) => {
-    if (!supabase) throw new Error('Auth service not configured');
-    const { data: { session }, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    try {
-      const p = await fetchProfile(session.access_token);
-      setProfile(p);
-      return p;
-    } catch {
-      return null;
-    }
+    const data = await apiFetch('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    setToken(data.token);
+    // Fetch full profile (includes characters)
+    const profile = await apiFetch('/api/users/me');
+    setUser(profile);
+    return profile;
   };
 
-  const signOut = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
+  const register = async ({ email, password, username, displayName }) => {
+    const data = await apiFetch('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, username, displayName }),
+    });
+    setToken(data.token);
+    setUser(data.user);
+    return data.user;
+  };
+
+  const signOut = () => {
+    clearToken();
     setUser(null);
-    setProfile(null);
   };
 
-  const refreshProfile = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      const p = await fetchProfile(session.access_token);
-      setProfile(p);
-      return p;
-    }
-    return null;
-  };
-
-  const getToken = async () => {
-    if (!supabase) return null;
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token ?? null;
-  };
+  // For components that need to make authenticated API calls directly
+  const authFetch = (path, options = {}) => apiFetch(path, options);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut, refreshProfile, getToken }}>
+    <AuthContext.Provider value={{ user, loading, signIn, register, signOut, authFetch }}>
       {children}
     </AuthContext.Provider>
   );

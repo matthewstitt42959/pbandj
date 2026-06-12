@@ -79,6 +79,9 @@ const LoginPage = () => {
         </form>
 
         <p className="auth-card__footer">
+          <Link to="/forgot-password" className="auth-link">Forgot your password?</Link>
+        </p>
+        <p className="auth-card__footer">
           New adventurer?{' '}
           <Link to="/register" className="auth-link">Create an account</Link>
         </p>

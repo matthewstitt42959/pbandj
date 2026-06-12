@@ -10,6 +10,8 @@ import { createHmac } from 'crypto';
 import { getProvider, listProviders } from './providers/index.js';
 import prisma from './prisma.js';
 import { requireAuth } from './auth-middleware.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, '..', 'dist');
@@ -61,6 +63,66 @@ function buildUserPrompt(playerAction, allActed, aiActions) {
     : 'Begin the adventure. Set the opening scene and invite the party to act.';
 }
 
+// --- Custom auth (email + password) ---
+const JWT_SECRET = process.env.SESSION_SECRET || 'pbandj-secret';
+
+function signToken(user) {
+  return jwt.sign(
+    { userId: user.id, email: user.email, username: user.username, role: user.role },
+    JWT_SECRET,
+    { expiresIn: '30d' }
+  );
+}
+
+function safeUser(user) {
+  const { password, ...rest } = user;
+  return rest;
+}
+
+app.post('/api/auth/register', async (req, res) => {
+  const { email, password, username, displayName } = req.body;
+  if (!email || !password || !username || !displayName) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+  const cleanUsername = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (cleanUsername.length < 3) {
+    return res.status(400).json({ error: 'Username must be at least 3 characters (letters, numbers, underscores)' });
+  }
+  try {
+    const hash = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: { email: email.trim().toLowerCase(), password: hash, username: cleanUsername, displayName: displayName.trim() },
+    });
+    res.status(201).json({ token: signToken(user), user: safeUser(user) });
+  } catch (err) {
+    if (err.code === 'P2002') {
+      const field = err.meta?.target?.includes('email') ? 'email' : 'username';
+      return res.status(409).json({ error: `That ${field} is already in use` });
+    }
+    console.error('Register error:', err.message);
+    res.status(500).json({ error: 'Registration failed — please try again' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+  try {
+    const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    res.json({ token: signToken(user), user: safeUser(user) });
+  } catch (err) {
+    console.error('Login error:', err.message);
+    res.status(500).json({ error: 'Login failed — please try again' });
+  }
+});
+
+// --- AI DM paywall unlock ---
 app.post('/api/auth/unlock', (req, res) => {
   const password = process.env.AI_DM_PASSWORD;
   if (!password) return res.json({ token: 'open' }); // no lock

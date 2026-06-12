@@ -10,6 +10,8 @@ import NotFound from './pages/NotFound';
 import LoginPage from './pages/LoginPage';
 import AuthCallback from './pages/AuthCallback';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import CharacterCreate from './pages/CharacterCreate';
 import DashboardPage from './pages/DashboardPage';
 
@@ -25,6 +27,8 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/auth/reset" element={<ResetPasswordPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
 
               {/* Auth-required routes */}
