@@ -1,0 +1,9 @@
+.register-card {
+  max-width: 460px;
+}
+
+.register-hint {
+  font-size: 0.78rem;
+  color: #6a7088;
+  margin: 0.15rem 0 0;
+}

@@ -9,6 +9,7 @@ import { parseWorldFacts } from './parseWorldFacts.js';
 import { createHmac } from 'crypto';
 import { getProvider, listProviders } from './providers/index.js';
 import prisma from './prisma.js';
+import { requireAuth } from './auth-middleware.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, '..', 'dist');
@@ -152,6 +153,124 @@ app.post('/api/game', async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Game save error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- User profile endpoints ---
+
+app.get('/api/users/me', requireAuth, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.authUser.id },
+      include: { characters: { orderBy: { createdAt: 'desc' } } },
+    });
+    if (!user) return res.status(404).json({ error: 'Profile not found' });
+    res.json(user);
+  } catch (err) {
+    console.error('GET /api/users/me error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/users/me', requireAuth, async (req, res) => {
+  const { username, displayName } = req.body;
+  if (!username || !displayName) {
+    return res.status(400).json({ error: 'username and displayName are required' });
+  }
+  try {
+    const user = await prisma.user.create({
+      data: { id: req.authUser.id, email: req.authUser.email, username, displayName },
+    });
+    res.status(201).json(user);
+  } catch (err) {
+    if (err.code === 'P2002') {
+      return res.status(409).json({ error: 'Username already taken — please choose another' });
+    }
+    console.error('POST /api/users/me error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Character endpoints ---
+
+app.get('/api/characters', requireAuth, async (req, res) => {
+  try {
+    const characters = await prisma.character.findMany({
+      where: { userId: req.authUser.id },
+      orderBy: [{ isRetired: 'asc' }, { createdAt: 'desc' }],
+    });
+    res.json(characters);
+  } catch (err) {
+    console.error('GET /api/characters error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/characters', requireAuth, async (req, res) => {
+  const { name, species, class: charClass, background, backstory,
+    level, abilityScores, hp, maxHp, ac, skills } = req.body;
+
+  if (!name || !species || !charClass || !background || !abilityScores || hp == null || maxHp == null) {
+    return res.status(400).json({ error: 'Missing required character fields' });
+  }
+
+  try {
+    const character = await prisma.character.create({
+      data: {
+        userId: req.authUser.id,
+        name, species,
+        class: charClass,
+        background, backstory,
+        level: level ?? 1,
+        abilityScores,
+        hp, maxHp,
+        ac: ac ?? 10,
+        skills: skills ?? {},
+        inventory: [],
+        spells: [],
+        conditions: [],
+      },
+    });
+    res.status(201).json(character);
+  } catch (err) {
+    console.error('POST /api/characters error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/characters/:id', requireAuth, async (req, res) => {
+  try {
+    const existing = await prisma.character.findFirst({
+      where: { id: req.params.id, userId: req.authUser.id },
+    });
+    if (!existing) return res.status(404).json({ error: 'Character not found' });
+
+    const updated = await prisma.character.update({
+      where: { id: req.params.id },
+      data: req.body,
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error('PATCH /api/characters/:id error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/characters/:id/retire', requireAuth, async (req, res) => {
+  try {
+    const existing = await prisma.character.findFirst({
+      where: { id: req.params.id, userId: req.authUser.id },
+    });
+    if (!existing) return res.status(404).json({ error: 'Character not found' });
+
+    const updated = await prisma.character.update({
+      where: { id: req.params.id },
+      data: { isRetired: true, retiredAt: new Date() },
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error('POST /api/characters/:id/retire error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

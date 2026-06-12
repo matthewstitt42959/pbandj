@@ -1,0 +1,277 @@
+.dash-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+  gap: 1rem;
+}
+
+.dash-header__title {
+  font-size: 1.6rem;
+  color: #ffc857;
+  margin: 0;
+}
+
+.dash-header__sub {
+  color: #6a7088;
+  font-size: 0.85rem;
+  margin: 0.2rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dash-signout {
+  font-size: 0.85rem;
+}
+
+/* ── Section ── */
+
+.dash-section {
+  margin-bottom: 2.5rem;
+}
+
+.dash-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.dash-section__title {
+  font-size: 1rem;
+  color: #9aa0b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dash-section__head .dash-section__title {
+  margin-bottom: 0;
+}
+
+.dash-count {
+  background: rgba(120, 192, 224, 0.15);
+  color: #78c0e0;
+  border-radius: 20px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+/* ── Campaign card ── */
+
+.dash-campaign-card {
+  background: rgba(120, 192, 224, 0.06);
+  border: 1px solid rgba(120, 192, 224, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dash-campaign-card h3 {
+  color: #e8e6f0;
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.dash-campaign-card p {
+  color: #6a7088;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* ── Character grid ── */
+
+.dash-char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.dash-char-grid--retired {
+  margin-top: 0.75rem;
+  opacity: 0.65;
+}
+
+.dash-char-card {
+  background: rgba(30, 29, 48, 0.8);
+  border: 1px solid rgba(120, 192, 224, 0.12);
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dash-char-card--retired {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dash-char-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.dash-char-card__name {
+  font-size: 1rem;
+  color: #ffc857;
+  margin: 0;
+}
+
+.dash-char-card__sub {
+  font-size: 0.78rem;
+  color: #78c0e0;
+  margin: 0.2rem 0 0;
+}
+
+.dash-char-card__retired-badge {
+  font-size: 0.65rem;
+  color: #6a7088;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dash-char-card__vitals {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.82rem;
+  color: #9aa0b8;
+}
+
+.dash-vital strong {
+  color: #e8e6f0;
+  font-size: 0.95rem;
+}
+
+.dash-char-card__scores {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.25rem;
+}
+
+.dash-score {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  padding: 0.35rem 0.2rem;
+  text-align: center;
+}
+
+.dash-score__abbr {
+  display: block;
+  font-size: 0.6rem;
+  color: #6a7088;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.dash-score__val {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #e8e6f0;
+}
+
+.dash-score__mod {
+  display: block;
+  font-size: 0.65rem;
+  color: #78c0e0;
+}
+
+.dash-char-card__backstory {
+  font-size: 0.78rem;
+  color: #6a7088;
+  font-style: italic;
+  margin: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 0.5rem;
+  line-height: 1.5;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dash-char-card__retire-btn {
+  background: none;
+  border: none;
+  color: #4a4868;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  font-family: inherit;
+  margin-top: auto;
+  transition: color 0.15s;
+}
+
+.dash-char-card__retire-btn:hover {
+  color: #ff8a80;
+}
+
+/* ── States ── */
+
+.dash-loading {
+  color: #6a7088;
+  font-size: 0.9rem;
+}
+
+.dash-empty {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px dashed rgba(120, 192, 224, 0.15);
+  border-radius: 10px;
+  padding: 2.5rem;
+  text-align: center;
+  color: #6a7088;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dash-retired-section {
+  margin-top: 1.25rem;
+}
+
+.dash-retired-toggle {
+  background: none;
+  border: none;
+  color: #6a7088;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.dash-retired-toggle:hover {
+  color: #9aa0b8;
+}
+
+@media (max-width: 600px) {
+  .dash-campaign-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dash-campaign-card .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
