@@ -208,21 +208,98 @@
   overflow: hidden;
 }
 
-.dash-char-card__retire-btn {
-  background: none;
-  border: none;
-  color: #4a4868;
-  font-size: 0.75rem;
-  cursor: pointer;
-  text-align: left;
-  padding: 0;
-  font-family: inherit;
-  margin-top: auto;
-  transition: color 0.15s;
+/* ── Badges ── */
+
+.dash-char-card__badges {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.dash-char-card__retire-btn:hover {
-  color: #ff8a80;
+.dash-badge {
+  font-size: 0.62rem;
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.dash-badge--retired {
+  color: #6a7088;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dash-badge--ingame {
+  color: #a8e6cf;
+  border: 1px solid rgba(168, 230, 207, 0.3);
+  background: rgba(168, 230, 207, 0.08);
+}
+
+.dash-badge--free {
+  color: #78c0e0;
+  border: 1px solid rgba(120, 192, 224, 0.25);
+  background: rgba(120, 192, 224, 0.07);
+}
+
+/* ── Vitals ── */
+
+.dash-vital {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 40px;
+}
+
+.dash-vital__val {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e8e6f0;
+}
+
+.dash-vital__label {
+  font-size: 0.6rem;
+  color: #6a7088;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Actions row ── */
+
+.dash-char-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dash-char-card__bg {
+  font-size: 0.72rem;
+  color: #6a7088;
+  margin: 0.1rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dash-retire-btn {
+  margin-left: auto;
+}
+
+.dash-retire-btn:hover {
+  color: #ff8a80 !important;
+  border-color: rgba(255, 138, 128, 0.4) !important;
+}
+
+/* ── Limit message ── */
+
+.dash-limit-msg {
+  font-size: 0.78rem;
+  color: #6a7088;
+  font-style: italic;
 }
 
 /* ── States ── */

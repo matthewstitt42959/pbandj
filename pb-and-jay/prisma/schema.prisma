@@ -51,6 +51,7 @@ model Character {
   spells        Json      @default("[]")
   conditions    Json      @default("[]")
   skills        Json      @default("{}")
+  campaignId    String?             // null = unassigned
   isRetired     Boolean   @default(false)
   retiredAt     DateTime?
   createdAt     DateTime  @default(now())

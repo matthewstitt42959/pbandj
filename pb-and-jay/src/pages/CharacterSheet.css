@@ -1,0 +1,615 @@
+/* ── Page shell ── */
+
+.cs-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 6rem;
+}
+
+.cs-loading,
+.cs-error {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #9aa0b8;
+}
+
+/* ── Top bar ── */
+
+.cs-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.cs-back-link {
+  color: #78c0e0;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: opacity 0.15s;
+}
+
+.cs-back-link:hover {
+  opacity: 0.75;
+}
+
+.cs-top-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cs-save-msg {
+  font-size: 0.8rem;
+  color: #a8e6cf;
+}
+
+.cs-save-msg--err {
+  color: #ff8a80;
+}
+
+/* ── Header ── */
+
+.cs-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.cs-header__name {
+  font-size: 1.8rem;
+  color: #ffc857;
+  margin: 0;
+}
+
+.cs-header__meta {
+  color: #78c0e0;
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0;
+}
+
+/* ── Tabs ── */
+
+.cs-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(120, 192, 224, 0.15);
+  margin-bottom: 1.75rem;
+  overflow-x: auto;
+}
+
+.cs-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #6a7088;
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.cs-tab:hover {
+  color: #9aa0b8;
+}
+
+.cs-tab--active {
+  color: #78c0e0;
+  border-bottom-color: #78c0e0;
+}
+
+/* ── Shared tab body ── */
+
+.cs-tab-body {
+  min-height: 300px;
+}
+
+/* ── Editable fields ── */
+
+.cs-editable {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-bottom: 1px dashed rgba(120, 192, 224, 0.3);
+  transition: border-color 0.15s;
+}
+
+.cs-editable:hover {
+  border-bottom-color: #78c0e0;
+}
+
+.cs-edit-icon {
+  font-size: 0.65rem;
+  color: #4a4868;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.cs-editable:hover .cs-edit-icon {
+  opacity: 1;
+}
+
+.cs-editable--empty {
+  color: #4a4868;
+}
+
+.cs-edit-wrap {
+  display: inline-block;
+}
+
+.cs-edit-input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #78c0e0;
+  border-radius: 4px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0.2rem 0.4rem;
+  outline: none;
+  width: 100%;
+}
+
+.cs-edit-textarea {
+  min-height: 120px;
+  width: 100%;
+  resize: vertical;
+  display: block;
+}
+
+/* ── Generic field label ── */
+
+.cs-field__label {
+  display: block;
+  font-size: 0.65rem;
+  color: #6a7088;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.2rem;
+}
+
+.cs-field__val {
+  font-size: 0.95rem;
+  color: #e8e6f0;
+}
+
+/* ── Overview: identity grid ── */
+
+.cs-identity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid rgba(120, 192, 224, 0.08);
+}
+
+.cs-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Combat stats row ── */
+
+.cs-combat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.cs-combat-divider {
+  color: #4a4868;
+  font-size: 1.2rem;
+}
+
+.cs-stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(120, 192, 224, 0.12);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  min-width: 72px;
+}
+
+.cs-stat-box--sep {
+  margin-left: 0.75rem;
+}
+
+.cs-stat-box__val {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #e8e6f0;
+}
+
+.cs-stat-box__label {
+  font-size: 0.6rem;
+  color: #6a7088;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.15rem;
+}
+
+/* ── Ability scores grid ── */
+
+.cs-scores-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.cs-score-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(120, 192, 224, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem 0.4rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.cs-score-card__label {
+  font-size: 0.55rem;
+  color: #6a7088;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cs-score-card__mod {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #78c0e0;
+}
+
+.cs-score-card__val {
+  font-size: 0.8rem;
+  color: #9aa0b8;
+}
+
+/* ── Conditions ── */
+
+.cs-sub-heading {
+  font-size: 0.75rem;
+  color: #6a7088;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.6rem;
+}
+
+.cs-conditions {
+  margin-top: 1rem;
+}
+
+.cs-condition-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.cs-condition-btn {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  color: #6a7088;
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.cs-condition-btn:hover {
+  color: #9aa0b8;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.cs-condition-btn--active {
+  background: rgba(255, 138, 128, 0.15);
+  border-color: rgba(255, 138, 128, 0.4);
+  color: #ff8a80;
+}
+
+/* ── Skills tab ── */
+
+.cs-skills__hint {
+  font-size: 0.75rem;
+  color: #6a7088;
+  margin: 0 0 1rem;
+  font-style: italic;
+}
+
+.cs-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cs-skill-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.cs-skill-row:hover {
+  background: rgba(120, 192, 224, 0.06);
+}
+
+.cs-skill-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #4a4868;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cs-skill-dot--prof {
+  background: #78c0e0;
+  border-color: #78c0e0;
+}
+
+.cs-skill-dot--expert {
+  background: #ffc857;
+  border-color: #ffc857;
+}
+
+.cs-skill-name {
+  flex: 1;
+  font-size: 0.88rem;
+  color: #e8e6f0;
+}
+
+.cs-skill-ability {
+  font-size: 0.72rem;
+  color: #6a7088;
+  width: 36px;
+}
+
+.cs-skill-bonus {
+  font-size: 0.88rem;
+  color: #78c0e0;
+  font-weight: 700;
+  width: 32px;
+  text-align: right;
+}
+
+/* ── Inventory & spells shared ── */
+
+.cs-add-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.cs-add-row--multi {
+  flex-wrap: wrap;
+}
+
+.cs-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(120, 192, 224, 0.2);
+  border-radius: 6px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.75rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.cs-input:focus {
+  border-color: #78c0e0;
+}
+
+.cs-select {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(120, 192, 224, 0.2);
+  border-radius: 6px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.5rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.cs-empty-msg {
+  color: #6a7088;
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+.cs-remove-btn {
+  background: none;
+  border: none;
+  color: #4a4868;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.cs-remove-btn:hover {
+  color: #ff8a80;
+}
+
+/* ── Inventory rows ── */
+
+.cs-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cs-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.cs-item-name {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #e8e6f0;
+}
+
+.cs-item-qty {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: #9aa0b8;
+  width: 52px;
+}
+
+.cs-item-notes {
+  flex: 1;
+  font-size: 0.8rem;
+  color: #6a7088;
+}
+
+/* ── Spell rows ── */
+
+.cs-spell-group {
+  margin-bottom: 1.25rem;
+}
+
+.cs-spell-level-heading {
+  font-size: 0.7rem;
+  color: #6a7088;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cs-spell-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 5px;
+  transition: background 0.1s;
+}
+
+.cs-spell-row:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.cs-spell-name {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #e8e6f0;
+}
+
+.cs-spell-notes {
+  flex: 1;
+  font-size: 0.8rem;
+  color: #6a7088;
+}
+
+/* ── Story tab ── */
+
+.cs-story {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cs-story-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cs-story-field .cs-editable {
+  display: block;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: #9aa0b8;
+  font-size: 0.9rem;
+  min-height: 80px;
+  border: none;
+  border-left: 2px solid rgba(120, 192, 224, 0.2);
+  padding-left: 0.75rem;
+}
+
+.cs-story-field .cs-edit-textarea {
+  width: 100%;
+  min-height: 200px;
+}
+
+/* ── Save bar (sticky bottom) ── */
+
+.cs-save-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(18, 17, 35, 0.95);
+  border-top: 1px solid rgba(120, 192, 224, 0.2);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 2rem;
+  z-index: 100;
+  font-size: 0.85rem;
+  color: #9aa0b8;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 640px) {
+  .cs-scores-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .cs-combat-row {
+    gap: 0.5rem;
+  }
+
+  .cs-stat-box {
+    min-width: 60px;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .cs-tabs {
+    gap: 0;
+  }
+
+  .cs-tab {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.78rem;
+  }
+
+  .cs-add-row--multi .cs-select {
+    order: 2;
+  }
+}

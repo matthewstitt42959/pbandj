@@ -373,7 +373,7 @@ function StepReview({ form }) {
 
 const CharacterCreate = () => {
   const navigate = useNavigate();
-  const { getToken } = useAuth();
+  const { authFetch } = useAuth();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -408,17 +408,12 @@ const CharacterCreate = () => {
     setSaving(true);
     setError('');
     try {
-      const token = await getToken();
       const skills = buildSkillsFromProficiencies(bg?.skills ?? []);
       const hp = calculateMaxHP(cl.hitDie, finalScores.con ?? 10, 1);
       const ac = calculateUnarmoredAC(finalScores.dex ?? 10);
 
-      const res = await fetch('/api/characters', {
+      await authFetch('/api/characters', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           name: form.name.trim(),
           species: form.species,
@@ -431,9 +426,6 @@ const CharacterCreate = () => {
           skills,
         }),
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to save character');
 
       navigate('/dashboard', { replace: true });
     } catch (err) {

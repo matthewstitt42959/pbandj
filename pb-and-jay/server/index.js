@@ -269,12 +269,32 @@ app.get('/api/characters', requireAuth, async (req, res) => {
   }
 });
 
+app.get('/api/characters/:id', requireAuth, async (req, res) => {
+  try {
+    const character = await prisma.character.findFirst({
+      where: { id: req.params.id, userId: req.authUser.id },
+    });
+    if (!character) return res.status(404).json({ error: 'Character not found' });
+    res.json(character);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/characters', requireAuth, async (req, res) => {
   const { name, species, class: charClass, background, backstory,
     level, abilityScores, hp, maxHp, ac, skills } = req.body;
 
   if (!name || !species || !charClass || !background || !abilityScores || hp == null || maxHp == null) {
     return res.status(400).json({ error: 'Missing required character fields' });
+  }
+
+  // Enforce 2-character limit
+  const activeCount = await prisma.character.count({
+    where: { userId: req.authUser.id, isRetired: false },
+  });
+  if (activeCount >= 2) {
+    return res.status(409).json({ error: 'You can have at most 2 active characters. Retire one first.' });
   }
 
   try {
@@ -333,6 +353,39 @@ app.post('/api/characters/:id/retire', requireAuth, async (req, res) => {
     res.json(updated);
   } catch (err) {
     console.error('POST /api/characters/:id/retire error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/characters/:id/assign', requireAuth, async (req, res) => {
+  const { campaignId } = req.body;
+  try {
+    const existing = await prisma.character.findFirst({
+      where: { id: req.params.id, userId: req.authUser.id },
+    });
+    if (!existing) return res.status(404).json({ error: 'Character not found' });
+    const updated = await prisma.character.update({
+      where: { id: req.params.id },
+      data: { campaignId: campaignId ?? 'singleton' },
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/characters/:id/unassign', requireAuth, async (req, res) => {
+  try {
+    const existing = await prisma.character.findFirst({
+      where: { id: req.params.id, userId: req.authUser.id },
+    });
+    if (!existing) return res.status(404).json({ error: 'Character not found' });
+    const updated = await prisma.character.update({
+      where: { id: req.params.id },
+      data: { campaignId: null },
+    });
+    res.json(updated);
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

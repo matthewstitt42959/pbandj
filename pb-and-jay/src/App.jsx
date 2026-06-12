@@ -13,6 +13,7 @@ import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import CharacterCreate from './pages/CharacterCreate';
+import CharacterSheet from './pages/CharacterSheet';
 import DashboardPage from './pages/DashboardPage';
 
 function App() {
@@ -34,6 +35,9 @@ function App() {
               {/* Auth-required routes */}
               <Route path="/character/create" element={
                 <PrivateRoute><CharacterCreate /></PrivateRoute>
+              } />
+              <Route path="/character/:id" element={
+                <PrivateRoute><CharacterSheet /></PrivateRoute>
               } />
               <Route path="/dashboard" element={
                 <PrivateRoute><DashboardPage /></PrivateRoute>
