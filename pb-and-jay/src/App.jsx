@@ -24,12 +24,10 @@ function App() {
               {/* Public routes */}
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
 
               {/* Auth-required routes */}
-              <Route path="/register" element={
-                <PrivateRoute><RegisterPage /></PrivateRoute>
-              } />
               <Route path="/character/create" element={
                 <PrivateRoute><CharacterCreate /></PrivateRoute>
               } />
