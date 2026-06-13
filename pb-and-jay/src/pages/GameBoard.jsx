@@ -11,6 +11,8 @@ import DiceRoller from '../components/DiceRoller';
 import SiteOpediaPanel from '../components/SiteOpediaPanel';
 import { checkAIStatus } from '../services/aiDM';
 import AiUnlockModal from '../components/AiUnlockModal';
+import DmAssist from '../components/DmAssist';
+import { useAuth } from '../context/AuthContext';
 import './Gameboard.css';
 
 const TABS = [
@@ -42,6 +44,8 @@ const GameBoard = () => {
     resetCampaign,
   } = useGame();
 
+  const { user } = useAuth();
+  const isDm = user?.role === 'DM' || user?.role === 'SUPER_DM';
   const [activeTab, setActiveTab] = useState('stats');
   const [postAs, setPostAs] = useState('character');
   const [aiAvailable, setAiAvailable] = useState(false);
@@ -51,6 +55,7 @@ const GameBoard = () => {
   const [mobileTab, setMobileTab] = useState('log');
   const [logScrollKey, setLogScrollKey] = useState(0);
   const [diceInsert, setDiceInsert] = useState(null);
+  const [assistInsert, setAssistInsert] = useState(null);
 
   const handleMobileTab = (tab) => {
     setMobileTab(tab);
@@ -229,7 +234,7 @@ const GameBoard = () => {
 
           <PostComposer
             authorName={postAs === 'dm' ? 'DM' : activeCharacter.name}
-            appendText={postAs === 'character' ? diceInsert : null}
+            appendText={postAs === 'character' ? diceInsert : (postAs === 'dm' ? assistInsert : null)}
             onSubmit={handlePost}
             disabled={isLoadingDM}
             error={playMode === 'ai' ? dmError : null}
@@ -246,6 +251,15 @@ const GameBoard = () => {
                 : 'Describe your action... (tip: type /roll 1d20+3 for dice rolls)'
             }
           />
+
+          {isDm && postAs === 'dm' && (
+            <DmAssist
+              campaign={campaign}
+              posts={posts}
+              characters={characters}
+              onInsert={(text) => setAssistInsert({ text, ts: Date.now() })}
+            />
+          )}
         </section>
 
         <aside className={`action-panel${mobileTab !== 'stats' ? ' mobile-hidden' : ''}`}>

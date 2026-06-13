@@ -3,7 +3,7 @@ import mockCharacters from '../data/mockCharacters';
 import { createNewCampaign } from '../data/defaultCampaign';
 import { requestDMResponse, requestPlayerResponse } from '../services/aiDM';
 import { rollDice, parseRollCommand } from '../services/dice';
-import { levelUpGameChar } from '../utils/characterUtils';
+import { levelUpGameChar, generateCompanionStats } from '../utils/characterUtils';
 
 const STORAGE_KEY = 'pb-and-jay-game';
 
@@ -48,6 +48,7 @@ export function mapDbCharToGame(dbChar) {
 
 const initialState = {
   characters: mockCharacters,
+  benchedCompanions: [],
   campaign: null,
   posts: [],
   worldFacts: [],
@@ -68,7 +69,7 @@ function migrateState(saved) {
       ...char,
     }));
   }
-  return { playMode: 'manual', sessionsAtLevel: 0, totalSessions: 0, ...saved };
+  return { playMode: 'manual', sessionsAtLevel: 0, totalSessions: 0, benchedCompanions: [], ...saved };
 }
 
 function loadLocalGame() {
@@ -166,19 +167,60 @@ function gameReducer(state, action) {
         totalSessions: state.totalSessions + 1,
       };
 
-    case 'LEVEL_UP_ALL':
-      return {
-        ...state,
-        characters: state.characters.map(levelUpGameChar),
-        sessionsAtLevel: 0,
-      };
-
     case 'SET_PLAYER_CHARACTER':
       return {
         ...state,
         characters: state.characters.map((char, i) =>
           i === 0 ? { ...action.character, isAI: false } : char
         ),
+      };
+
+    case 'ADD_TO_PARTY': {
+      const companion = state.benchedCompanions.find(c => c.name === action.name);
+      if (!companion) return state;
+      const aiSlots = state.characters.filter((_, i) => i !== 0).length;
+      if (aiSlots >= 4) return state; // party full (max 5 including player)
+      return {
+        ...state,
+        characters: [...state.characters, { ...companion, isAI: true }],
+        benchedCompanions: state.benchedCompanions.filter(c => c.name !== action.name),
+      };
+    }
+
+    case 'BENCH_COMPANION': {
+      const companion = state.characters.find((c, i) => i !== 0 && c.name === action.name);
+      if (!companion) return state;
+      return {
+        ...state,
+        characters: state.characters.filter((c, i) => i === 0 || c.name !== action.name),
+        benchedCompanions: [...state.benchedCompanions, companion],
+        activeCharacterIndex: 0, // reset to player if benched char was selected
+      };
+    }
+
+    case 'CREATE_COMPANION': {
+      const comp = action.companion;
+      const aiSlots = state.characters.filter((_, i) => i !== 0).length;
+      const goToParty = aiSlots < 4;
+      return {
+        ...state,
+        characters: goToParty ? [...state.characters, comp] : state.characters,
+        benchedCompanions: goToParty ? state.benchedCompanions : [...state.benchedCompanions, comp],
+      };
+    }
+
+    case 'DELETE_COMPANION':
+      return {
+        ...state,
+        benchedCompanions: state.benchedCompanions.filter(c => c.name !== action.name),
+      };
+
+    case 'LEVEL_UP_ALL':
+      return {
+        ...state,
+        characters: state.characters.map(levelUpGameChar),
+        benchedCompanions: state.benchedCompanions.map(levelUpGameChar),
+        sessionsAtLevel: 0,
       };
 
     default:
@@ -359,6 +401,27 @@ export function GameProvider({ children }) {
     dispatch({ type: 'MARK_SESSION' });
   }, []);
 
+  const addToParty = useCallback((name) => {
+    dispatch({ type: 'ADD_TO_PARTY', name });
+  }, []);
+
+  const benchCompanion = useCallback((name) => {
+    dispatch({ type: 'BENCH_COMPANION', name });
+  }, []);
+
+  const createCompanion = useCallback(({ name, className, personality }) => {
+    const currentLevel = state.characters[0]?.level ?? 1;
+    const stats = generateCompanionStats(className, currentLevel);
+    dispatch({
+      type: 'CREATE_COMPANION',
+      companion: { ...stats, name, class: className, personality: personality ?? '', isAI: true },
+    });
+  }, [state.characters]);
+
+  const deleteCompanion = useCallback((name) => {
+    dispatch({ type: 'DELETE_COMPANION', name });
+  }, []);
+
   const submitDMPost = useCallback(
     (content) => {
       if (!state.campaign || !content.trim()) return;
@@ -383,6 +446,10 @@ export function GameProvider({ children }) {
     setPlayerCharacter,
     levelUpParty,
     markSessionComplete,
+    addToParty,
+    benchCompanion,
+    createCompanion,
+    deleteCompanion,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

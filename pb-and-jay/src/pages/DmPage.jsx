@@ -4,13 +4,18 @@ import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import './DmPage.css';
 
+const DND_CLASSES = [
+  'Barbarian','Bard','Cleric','Druid','Fighter',
+  'Monk','Paladin','Ranger','Rogue','Sorcerer','Warlock','Wizard',
+];
+
 const CONDITIONS = [
   'Blinded', 'Charmed', 'Deafened', 'Exhaustion', 'Frightened',
   'Grappled', 'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified',
   'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious',
 ];
 
-function AiCompanionCard({ character, index, onUpdate }) {
+function AiCompanionCard({ character, index, onUpdate, onBench }) {
   const [hpDraft, setHpDraft] = useState('');
   const [editingHp, setEditingHp] = useState(false);
 
@@ -42,7 +47,10 @@ function AiCompanionCard({ character, index, onUpdate }) {
             Level {level} {character.class}
           </p>
         </div>
-        <span className="dm-badge dm-badge--ai">AI</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+          <span className="dm-badge dm-badge--ai">AI</span>
+          <button className="dm-bench-btn" onClick={() => onBench(character.name)} title="Move to bench">Bench</button>
+        </div>
       </div>
 
       <div className="dm-companion-card__vitals">
@@ -103,7 +111,29 @@ function sessionsRecommended(level) {
 
 const DmPage = () => {
   const { user, authFetch } = useAuth();
-  const { campaign, characters, levelUpParty, markSessionComplete, updateCharacter, sessionsAtLevel, totalSessions } = useGame();
+  const {
+    campaign, characters, benchedCompanions,
+    levelUpParty, markSessionComplete, updateCharacter,
+    addToParty, benchCompanion, createCompanion, deleteCompanion,
+    sessionsAtLevel, totalSessions,
+  } = useGame();
+
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newClass, setNewClass] = useState('Fighter');
+  const [newPersonality, setNewPersonality] = useState('');
+
+  const partyAiCount = characters.filter((_, i) => i !== 0).length;
+  const partyFull = partyAiCount >= 4;
+
+  const handleCreate = () => {
+    if (!newName.trim()) return;
+    createCompanion({ name: newName.trim(), className: newClass, personality: newPersonality.trim() });
+    setNewName('');
+    setNewClass('Fighter');
+    setNewPersonality('');
+    setShowCreateForm(false);
+  };
   const [leveling, setLeveling] = useState(false);
   const [levelMsg, setLevelMsg] = useState('');
 
@@ -240,11 +270,90 @@ const DmPage = () => {
                 character={char}
                 index={index}
                 onUpdate={handleUpdateCompanion}
+                onBench={benchCompanion}
               />
             ))}
           </div>
         </section>
       )}
+
+      {/* Companion Roster — bench + create */}
+      <section className="dm-section">
+        <div className="dm-section__head">
+          <h2 className="dm-section__title" style={{ margin: 0 }}>Companion Roster</h2>
+          <button className="btn btn--ghost btn--sm" onClick={() => setShowCreateForm(s => !s)}>
+            {showCreateForm ? 'Cancel' : '+ New Companion'}
+          </button>
+        </div>
+
+        {showCreateForm && (
+          <div className="dm-create-form">
+            <input
+              className="dm-create-input"
+              placeholder="Name"
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
+            />
+            <select
+              className="dm-create-select"
+              value={newClass}
+              onChange={e => setNewClass(e.target.value)}
+            >
+              {DND_CLASSES.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <input
+              className="dm-create-input"
+              placeholder="Personality (optional) — e.g. gruff but loyal, speaks in riddles"
+              value={newPersonality}
+              onChange={e => setNewPersonality(e.target.value)}
+            />
+            <p className="dm-create-hint">
+              Stats auto-generated for the class at party level {characters[0]?.level ?? 1}.
+              {partyFull ? ' Party is full — companion goes to the bench.' : ''}
+            </p>
+            <button className="btn btn--primary btn--sm" onClick={handleCreate} disabled={!newName.trim()}>
+              Create Companion
+            </button>
+          </div>
+        )}
+
+        {benchedCompanions.length > 0 && (
+          <div className="dm-bench">
+            <p className="dm-bench__label">On the bench</p>
+            <div className="dm-bench-list">
+              {benchedCompanions.map(c => (
+                <div key={c.name} className="dm-bench-row">
+                  <div className="dm-bench-row__info">
+                    <span className="dm-bench-row__name">{c.name}</span>
+                    <span className="dm-bench-row__meta">Lv {c.level} {c.class}</span>
+                    {c.personality && <span className="dm-bench-row__personality">{c.personality}</span>}
+                  </div>
+                  <div className="dm-bench-row__actions">
+                    {!partyFull && (
+                      <button className="btn btn--ghost btn--xs" onClick={() => addToParty(c.name)}>
+                        Add to Party
+                      </button>
+                    )}
+                    <button
+                      className="btn btn--danger btn--xs"
+                      onClick={() => { if (window.confirm(`Remove ${c.name} permanently?`)) deleteCompanion(c.name); }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {benchedCompanions.length === 0 && partyAiCount === 0 && !showCreateForm && (
+          <p className="dm-section__hint">No companions in the game. Create one above to add intelligent NPCs.</p>
+        )}
+        {partyFull && (
+          <p className="dm-section__hint">Party full (4 AI + player). Bench an active companion to swap.</p>
+        )}
+      </section>
 
       {/* Campaign management link */}
       <section className="dm-section">

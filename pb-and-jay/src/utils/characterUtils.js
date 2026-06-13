@@ -115,6 +115,72 @@ export function levelUpDbChar(char) {
   return { level: char.level + 1, maxHp: char.maxHp + gain, hp: char.hp + gain };
 }
 
+// Class stat priorities: [str, dex, con, int, wis, cha]
+const CLASS_STAT_ARRAYS = {
+  barbarian: [16, 13, 15,  8, 11,  9],
+  fighter:   [16, 13, 14, 10, 12,  9],
+  paladin:   [16, 10, 13,  9, 12, 15],
+  ranger:    [13, 16, 13, 10, 15,  9],
+  rogue:     [10, 17, 13, 13, 12, 11],
+  monk:      [13, 16, 13, 10, 15,  9],
+  cleric:    [12, 10, 14, 10, 17, 13],
+  druid:     [10, 13, 14, 12, 17, 11],
+  bard:      [10, 14, 13, 12, 11, 17],
+  warlock:   [10, 14, 13, 12, 11, 17],
+  sorcerer:  [ 8, 13, 14, 12, 11, 17],
+  wizard:    [ 8, 14, 13, 17, 12, 10],
+};
+
+const EMPTY_SKILLS = {
+  acrobatics: false, animalHandling: false, arcana: false, athletics: false,
+  deception: false, history: false, insight: false, intimidation: false,
+  investigation: false, medicine: false, nature: false, perception: false,
+  performance: false, persuasion: false, religion: false,
+  sleightOfHand: false, stealth: false, survival: false,
+};
+
+/**
+ * Generate stat block for a new AI companion based on class and level.
+ * Returns a full game-format character (minus name/personality).
+ */
+export function generateCompanionStats(className, level) {
+  const cls = className?.toLowerCase() ?? 'fighter';
+  const [str, dex, con, int_, wis, cha] = CLASS_STAT_ARRAYS[cls] ?? CLASS_STAT_ARRAYS.fighter;
+  const mod = s => Math.floor((s - 10) / 2);
+
+  const hitDie = getHitDie(cls);
+  const conMod = mod(con);
+  const maxHp = Math.max(1, (hitDie + conMod) + (level - 1) * Math.max(1, Math.floor(hitDie / 2) + 1 + conMod));
+
+  // AC: approximate based on typical class armour choice
+  let ac;
+  if (['fighter', 'paladin', 'cleric'].includes(cls)) ac = 16;
+  else if (['ranger', 'rogue', 'monk'].includes(cls)) ac = 14 + Math.min(mod(dex), 2);
+  else if (cls === 'barbarian') ac = 10 + mod(dex) + mod(con);
+  else ac = 10 + mod(dex); // wizard, sorcerer, warlock, druid, bard
+
+  return {
+    isAI: true,
+    class: className,
+    level,
+    hp: { current: maxHp, max: maxHp },
+    ac,
+    speed: cls === 'monk' ? 35 : 30,
+    abilities: {
+      str: { score: str, modifier: mod(str) },
+      dex: { score: dex, modifier: mod(dex) },
+      con: { score: con, modifier: mod(con) },
+      int: { score: int_, modifier: mod(int_) },
+      wis: { score: wis, modifier: mod(wis) },
+      cha: { score: cha, modifier: mod(cha) },
+    },
+    inventory: [],
+    spells: [],
+    conditions: [],
+    skills: { ...EMPTY_SKILLS },
+  };
+}
+
 /**
  * Suggest ability score assignment for a class
  * @param {string[]} primaryAbilities - e.g. ['str', 'con']

@@ -687,6 +687,65 @@ async function seedRules() {
   }
 }
 
+// ── DM Assist (writing helper, not full AI DM) ─────────────────────────────
+
+app.post('/api/dm/assist', requireAuth, async (req, res) => {
+  if (!['DM', 'SUPER_DM'].includes(req.authUser.role)) {
+    return res.status(403).json({ error: 'DM only' });
+  }
+
+  let provider;
+  try {
+    provider = getProvider();
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+
+  if (!provider.isConfigured()) {
+    return res.status(503).json({ error: `No API key configured. Add ${provider.envKey} to your environment.` });
+  }
+
+  const { prompt, campaign, posts, characters } = req.body ?? {};
+  if (!prompt?.trim()) return res.status(400).json({ error: 'prompt required' });
+
+  const recentPosts = (posts ?? [])
+    .slice(-6)
+    .map(p => `[${p.author}] ${p.content}`)
+    .join('\n');
+
+  const partyLine = (characters ?? [])
+    .map(c => `${c.name} (${c.class} Lv${c.level})`)
+    .join(', ');
+
+  const systemPrompt = `You are a writing assistant helping a Dungeon Master write better tabletop narration. Your job is to give short, immediately usable suggestions — the DM pastes what they want and discards the rest.
+
+Current campaign: ${campaign?.name ?? 'Unknown'}
+Scene: ${campaign?.currentScene ?? ''}
+Party: ${partyLine || 'Unknown'}
+
+Recent log:
+${recentPosts || 'Session just started.'}
+
+Rules:
+- Be brief. 1–4 sentences max unless the DM explicitly asks for more.
+- Write in the style of a skilled human DM — direct, vivid, a little dry.
+- Give the DM something they can use immediately. No caveats, no explanations, just the goods.
+- If the request is for NPC dialogue, just write the dialogue.
+- If the request is for a scene description, just describe it.
+- Do not narrate what the players do — only what the world and NPCs do.`;
+
+  try {
+    const { raw } = await provider.generateDMResponse({
+      systemPrompt,
+      userPrompt: prompt.trim(),
+    });
+    res.json({ suggestion: raw.trim() });
+  } catch (err) {
+    console.error('DM assist error:', err.message);
+    res.status(502).json({ error: err.message });
+  }
+});
+
 // GET /api/rules — public
 app.get('/api/rules', async (_req, res) => {
   try {

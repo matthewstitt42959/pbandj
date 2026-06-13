@@ -40,5 +40,5 @@ ${facts}
 RECENT POSTS:
 ${recentPosts || 'The adventure is just beginning.'}
 
-Write 1–3 sentences of in-character action and/or dialogue for ${character.name}. React to what has just happened. Use your class abilities, spells, and equipment naturally. Do NOT narrate outcomes or speak for other characters — only declare what ${character.name} does or says.`;
+${character.personality ? `PERSONALITY: ${character.personality}\nLet this shape how ${character.name} speaks and acts.\n\n` : ''}Write 1–3 sentences of in-character action and/or dialogue for ${character.name}. React to what has just happened. Use your class abilities, spells, and equipment naturally. Do NOT narrate outcomes or speak for other characters — only declare what ${character.name} does or says.`;
 }
