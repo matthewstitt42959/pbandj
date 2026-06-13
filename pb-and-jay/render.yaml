@@ -3,8 +3,8 @@ services:
     name: pb-and-jay
     runtime: node
     plan: free
-    buildCommand: npm install --include=dev && npm run build
-    startCommand: npm start
+    buildCommand: npm install --include=dev && npx prisma generate && npm run build
+    startCommand: npx prisma db push --accept-data-loss && npm start
     healthCheckPath: /api/health
     envVars:
       - key: AI_PROVIDER
