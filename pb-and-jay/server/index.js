@@ -54,13 +54,14 @@ function buildUserPrompt(playerAction, allActed, aiActions) {
       ? aiActions.map(a => `${a.character}: ${a.action}`).join('\n')
       : null;
     const actionBlock = actionLines
-      ? `The party took the following actions this round:\n\n${actionLines}\n\n`
-      : 'All players have taken their turns. ';
-    return `${actionBlock}Narrate the outcome of their combined actions in an engaging way, then describe what happens next and invite the party to respond.`;
+      ? `Party actions this round:\n${actionLines}\n\n`
+      : 'Everyone has acted. ';
+    return `${actionBlock}Resolve what happens. Keep it tight — only go long if the moment earns it.`;
   }
-  return playerAction
-    ? `The player (${playerAction.author}) posts:\n"${playerAction.content}"\n\nRespond as the DM.`
-    : 'Begin the adventure. Set the opening scene and invite the party to act.';
+  if (!playerAction) {
+    return 'Start the session. Set the opening scene — vivid but brief. End somewhere that makes them want to act.';
+  }
+  return `${playerAction.author} posts: "${playerAction.content}"\n\nRespond as the DM. Short and reactive unless this is a big moment.`;
 }
 
 // --- Custom auth (email + password) ---
