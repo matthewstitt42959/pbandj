@@ -159,6 +159,17 @@
   color: #9aa0b8;
 }
 
+.auth-debug {
+  font-size: 0.72rem;
+  color: #6a7088;
+  font-family: monospace;
+  word-break: break-all;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+
 .auth-submit {
   width: 100%;
   margin-top: 0.5rem;

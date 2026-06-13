@@ -24,27 +24,32 @@ function friendlyError(msg) {
 const LoginPage = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [debugInfo, setDebugInfo] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setDebugInfo('');
 
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail) { setError('Please enter your email address.'); return; }
-    if (!password) { setError('Please enter your password.'); return; }
+    // Read directly from the DOM — handles mobile autofill which bypasses onChange
+    const emailVal = (e.target.email?.value ?? '').trim().toLowerCase();
+    const passwordVal = e.target.password?.value ?? '';
+
+    if (!emailVal) { setError('Please enter your email address.'); return; }
+    if (!passwordVal) { setError('Please enter your password.'); return; }
 
     setLoading(true);
     try {
-      const profile = await signIn(trimmedEmail, password);
+      const profile = await signIn(emailVal, passwordVal);
       const hasCharacter = profile?.characters?.some(c => !c.isRetired);
       navigate(hasCharacter ? '/dashboard' : '/character/create', { replace: true });
     } catch (err) {
       setError(friendlyError(err.message));
+      // Temporary debug line — shows the raw error so we can diagnose
+      setDebugInfo(`[debug] ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -69,8 +74,6 @@ const LoginPage = () => {
             inputMode="email"
             className="auth-input"
             placeholder="you@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
             autoComplete="email"
             autoCapitalize="none"
             autoCorrect="off"
@@ -85,8 +88,6 @@ const LoginPage = () => {
               type={showPassword ? 'text' : 'password'}
               className="auth-input auth-input--password"
               placeholder="Your password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
               autoComplete="current-password"
             />
             <button
@@ -102,8 +103,12 @@ const LoginPage = () => {
           {error && (
             <div className="auth-error-box" role="alert">
               <span className="auth-error-icon">!</span>
-              {error}
+              <span>{error}</span>
             </div>
+          )}
+
+          {debugInfo && (
+            <p className="auth-debug">{debugInfo}</p>
           )}
 
           <button
