@@ -9,17 +9,22 @@ function clearToken() { localStorage.removeItem(TOKEN_KEY); }
 
 async function apiFetch(path, options = {}) {
   const token = getToken();
-  const res = await fetch(path, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  let res;
+  try {
+    res = await fetch(path, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+  } catch {
+    throw new Error('No connection — check your internet and try again.');
+  }
   const contentType = res.headers.get('content-type') ?? '';
   if (!contentType.includes('application/json')) {
-    throw new Error('Server unavailable — make sure the backend is running on port 3001');
+    throw new Error('Server error — please try again in a moment.');
   }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Request failed');
