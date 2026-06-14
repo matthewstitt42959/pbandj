@@ -35,17 +35,22 @@ const GameBoard = () => {
     isLoadingDM,
     loadingPlayerIndex,
     dmError,
+    roundPosters,
     setActiveCharacter,
     setPlayMode,
     toggleCharacterAI,
     submitCharacterPost,
     submitDMPost,
+    runAiRound,
     addPost,
     resetCampaign,
   } = useGame();
 
   const { user } = useAuth();
   const isDm = user?.role === 'DM' || user?.role === 'SUPER_DM';
+
+  // All human characters have posted at least once this round
+  const allHumansPosted = characters.filter(c => !c.isAI).every(c => roundPosters.includes(c.name));
   const [activeTab, setActiveTab] = useState('stats');
   const [postAs, setPostAs] = useState('character');
   const [aiAvailable, setAiAvailable] = useState(false);
@@ -148,7 +153,7 @@ const GameBoard = () => {
       )}
       {playMode === 'ai' && (
         <p className="gameboard-banner gameboard-banner--ai">
-          AI mode — <strong>{characters[0].name}</strong> is you. AI plays all other characters unless you take control of a slot.
+          AI mode — post your action, then click <strong>Get DM Response</strong> when the party is ready.
         </p>
       )}
 
@@ -237,20 +242,32 @@ const GameBoard = () => {
             appendText={postAs === 'character' ? diceInsert : (postAs === 'dm' ? assistInsert : null)}
             onSubmit={handlePost}
             disabled={isLoadingDM}
-            error={playMode === 'ai' ? dmError : null}
-            submitLabel={
-              postAs === 'dm'
-                ? 'Post DM Narration'
-                : playMode === 'ai'
-                  ? 'Post & Ask AI'
-                  : 'Post Action'
-            }
+            submitLabel={postAs === 'dm' ? 'Post DM Narration' : 'Post Action'}
             placeholder={
               postAs === 'dm'
                 ? 'Write what happens next — scene description, NPC dialogue, consequences...'
                 : 'Describe your action... (tip: type /roll 1d20+3 for dice rolls)'
             }
           />
+
+          {playMode === 'ai' && (
+            <div className="dm-response-row">
+              <button
+                className="btn btn--primary"
+                onClick={runAiRound}
+                disabled={isLoadingDM || !allHumansPosted}
+                title={!allHumansPosted ? 'Post your action first' : 'Run AI companions then get DM narration'}
+              >
+                {isLoadingDM ? 'DM is responding...' : 'Get DM Response'}
+              </button>
+              {!allHumansPosted && !isLoadingDM && (
+                <span className="dm-response-hint">Post your action first</span>
+              )}
+              {dmError && (
+                <p className="dm-response-error">{dmError}</p>
+              )}
+            </div>
+          )}
 
           {isDm && postAs === 'dm' && (
             <DmAssist

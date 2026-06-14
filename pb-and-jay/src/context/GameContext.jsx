@@ -59,6 +59,7 @@ const initialState = {
   dmError: null,
   sessionsAtLevel: 0,
   totalSessions: 0,
+  roundPosters: [],
   initialized: false,
 };
 
@@ -69,7 +70,7 @@ function migrateState(saved) {
       ...char,
     }));
   }
-  return { playMode: 'manual', sessionsAtLevel: 0, totalSessions: 0, benchedCompanions: [], ...saved };
+  return { playMode: 'manual', sessionsAtLevel: 0, totalSessions: 0, benchedCompanions: [], roundPosters: [], ...saved };
 }
 
 function loadLocalGame() {
@@ -80,6 +81,21 @@ function loadLocalGame() {
   } catch {
     return null;
   }
+}
+
+async function withRetry(fn, maxAttempts = 3, baseDelayMs = 1200) {
+  let lastErr;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (attempt < maxAttempts - 1) {
+        await new Promise(r => setTimeout(r, baseDelayMs * (attempt + 1)));
+      }
+    }
+  }
+  throw lastErr;
 }
 
 function applyRollToContent(content) {
@@ -223,6 +239,13 @@ function gameReducer(state, action) {
         sessionsAtLevel: 0,
       };
 
+    case 'RECORD_ROUND_POST':
+      if (state.roundPosters.includes(action.name)) return state;
+      return { ...state, roundPosters: [...state.roundPosters, action.name] };
+
+    case 'CLEAR_ROUND':
+      return { ...state, roundPosters: [] };
+
     default:
       return state;
   }
@@ -309,78 +332,12 @@ export function GameProvider({ children }) {
   }, []);
 
   const submitCharacterPost = useCallback(
-    async (content) => {
+    (content) => {
       if (!state.campaign) return;
-
       const character = state.characters[state.activeCharacterIndex];
       const finalContent = applyRollToContent(content);
-      const humanPost = addPost(character.name, finalContent, 'player');
-
-      if (state.playMode !== 'ai') return;
-
-      // Snapshot state for this entire round so mid-chain renders don't cause stale reads
-      const { campaign, characters, worldFacts } = state;
-      let runningPosts = [...state.posts, humanPost];
-
-      dispatch({ type: 'SET_LOADING_DM', loading: true, error: null });
-
-      // AI players take their turns sequentially — collected silently, not shown in log
-      const aiActions = [];
-      for (let i = 0; i < characters.length; i++) {
-        const char = characters[i];
-        if (!char.isAI) continue;
-
-        dispatch({ type: 'SET_LOADING_PLAYER', index: i });
-
-        try {
-          const { action } = await requestPlayerResponse({
-            character: char,
-            campaign,
-            posts: runningPosts,
-            characters,
-            worldFacts,
-          });
-          aiActions.push({ character: char.name, action });
-          // Add to running context so DM sees all actions, but don't put in the visible log
-          runningPosts = [...runningPosts, {
-            id: `ctx-${Date.now()}-${i}`,
-            author: char.name,
-            type: 'player',
-            content: action,
-            timestamp: Date.now(),
-          }];
-        } catch (err) {
-          dispatch({ type: 'SET_LOADING_DM', loading: false, error: `${char.name}: ${err.message}` });
-          dispatch({ type: 'SET_LOADING_PLAYER', index: null });
-          return;
-        }
-      }
-
-      dispatch({ type: 'SET_LOADING_PLAYER', index: null });
-
-      // DM narrates the full round, with AI actions attached for the expandable accordion
-      try {
-        const { narrative, facts } = await requestDMResponse({
-          campaign,
-          posts: runningPosts,
-          characters,
-          worldFacts,
-          playerAction: { author: character.name, content: finalContent },
-          allActed: characters.some((c) => c.isAI),
-          aiActions,
-        });
-
-        addPost('DM', narrative, 'dm', aiActions.length ? aiActions : null);
-
-        if (facts?.length) {
-          dispatch({ type: 'ADD_WORLD_FACTS', facts });
-        }
-      } catch (err) {
-        dispatch({ type: 'SET_LOADING_DM', loading: false, error: err.message });
-        return;
-      }
-
-      dispatch({ type: 'SET_LOADING_DM', loading: false, error: null });
+      addPost(character.name, finalContent, 'player');
+      dispatch({ type: 'RECORD_ROUND_POST', name: character.name });
     },
     [state, addPost]
   );
@@ -430,10 +387,71 @@ export function GameProvider({ children }) {
     [state.campaign, addPost]
   );
 
+  // Runs AI companion turns (visible) then AI DM response.
+  // Retries each network call up to 3x on failure.
+  // Companions that already posted this round (from a prior failed attempt) are skipped.
+  const runAiRound = useCallback(
+    async () => {
+      if (!state.campaign || state.isLoadingDM) return;
+
+      const { campaign, characters, worldFacts, posts, roundPosters } = state;
+      let runningPosts = [...posts];
+
+      dispatch({ type: 'SET_LOADING_DM', loading: true, error: null });
+
+      for (let i = 0; i < characters.length; i++) {
+        const char = characters[i];
+        if (!char.isAI) continue;
+
+        // Skip companions that already posted (handles retry after partial failure)
+        if (roundPosters.includes(char.name)) {
+          const existing = [...posts].reverse().find(p => p.author === char.name);
+          if (existing && !runningPosts.find(p => p.id === existing.id)) {
+            runningPosts = [...runningPosts, existing];
+          }
+          continue;
+        }
+
+        dispatch({ type: 'SET_LOADING_PLAYER', index: i });
+
+        try {
+          const { action } = await withRetry(() =>
+            requestPlayerResponse({ character: char, campaign, posts: runningPosts, characters, worldFacts })
+          );
+          const companionPost = addPost(char.name, action, 'player');
+          dispatch({ type: 'RECORD_ROUND_POST', name: char.name });
+          runningPosts = [...runningPosts, companionPost];
+        } catch (err) {
+          dispatch({ type: 'SET_LOADING_DM', loading: false, error: `${char.name} couldn't post — tap "Get DM Response" to retry.` });
+          dispatch({ type: 'SET_LOADING_PLAYER', index: null });
+          return;
+        }
+      }
+
+      dispatch({ type: 'SET_LOADING_PLAYER', index: null });
+
+      try {
+        const { narrative, facts } = await withRetry(() =>
+          requestDMResponse({ campaign, posts: runningPosts, characters, worldFacts, allActed: characters.some(c => c.isAI) })
+        );
+        addPost('DM', narrative, 'dm');
+        if (facts?.length) dispatch({ type: 'ADD_WORLD_FACTS', facts });
+      } catch (err) {
+        dispatch({ type: 'SET_LOADING_DM', loading: false, error: 'DM response failed — tap "Get DM Response" to retry.' });
+        return;
+      }
+
+      dispatch({ type: 'SET_LOADING_DM', loading: false, error: null });
+      dispatch({ type: 'CLEAR_ROUND' });
+    },
+    [state, addPost]
+  );
+
   const value = {
     ...state,
     activeCharacter: state.characters[state.activeCharacterIndex],
     isManualMode: state.playMode === 'manual',
+    hasPostedThisRound: (name) => state.roundPosters.includes(name),
     startCampaign,
     resetCampaign,
     setActiveCharacter,
@@ -442,6 +460,7 @@ export function GameProvider({ children }) {
     addPost,
     submitCharacterPost,
     submitDMPost,
+    runAiRound,
     updateCharacter,
     setPlayerCharacter,
     levelUpParty,

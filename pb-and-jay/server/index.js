@@ -48,20 +48,19 @@ if (!isProduction) {
 }
 app.use(express.json({ limit: '1mb' }));
 
-function buildUserPrompt(playerAction, allActed, aiActions) {
-  if (allActed) {
-    const actionLines = aiActions?.length
-      ? aiActions.map(a => `${a.character}: ${a.action}`).join('\n')
-      : null;
-    const actionBlock = actionLines
-      ? `Party actions this round:\n${actionLines}\n\n`
-      : 'Everyone has acted. ';
-    return `${actionBlock}Resolve what happens. Keep it tight — only go long if the moment earns it.`;
-  }
-  if (!playerAction) {
+function buildUserPrompt(posts) {
+  const recent = (posts ?? []).slice(-8);
+  const lastPlayerPosts = recent.filter(p => p.type !== 'dm');
+
+  if (lastPlayerPosts.length === 0) {
     return 'Start the session. Set the opening scene — vivid but brief. End somewhere that makes them want to act.';
   }
-  return `${playerAction.author} posts: "${playerAction.content}"\n\nRespond as the DM. Short and reactive unless this is a big moment.`;
+
+  const actionLines = lastPlayerPosts
+    .map(p => `${p.author}: "${p.content}"`)
+    .join('\n');
+
+  return `The party just acted:\n${actionLines}\n\nWrite the DM response. React directly to what they did. Match their energy — short posts get short responses. Do not contradict or override any player action.`;
 }
 
 // --- Custom auth (email + password) ---
@@ -148,12 +147,12 @@ app.post('/api/dm/respond', requireAiAuth, async (req, res) => {
     });
   }
 
-  const { campaign, posts, characters, worldFacts, playerAction, allActed, aiActions } = req.body;
+  const { campaign, posts, characters, worldFacts } = req.body;
 
   try {
     const { raw } = await provider.generateDMResponse({
       systemPrompt: buildDMPrompt({ campaign, posts, characters, worldFacts }),
-      userPrompt: buildUserPrompt(playerAction, allActed, aiActions),
+      userPrompt: buildUserPrompt(posts),
     });
 
     const { narrative, facts } = parseWorldFacts(raw);

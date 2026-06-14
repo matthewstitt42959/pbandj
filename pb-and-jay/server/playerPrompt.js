@@ -40,5 +40,23 @@ ${facts}
 RECENT POSTS:
 ${recentPosts || 'The adventure is just beginning.'}
 
-${character.personality ? `PERSONALITY: ${character.personality}\nLet this shape how ${character.name} speaks and acts.\n\n` : ''}Write 1–3 sentences of in-character action and/or dialogue for ${character.name}. React to what has just happened. Use your class abilities, spells, and equipment naturally. Do NOT narrate outcomes or speak for other characters — only declare what ${character.name} does or says.`;
+## How to play ${character.name}
+
+You're a player at a table, not a narrator. Write in first person or close third — but either way, you're IN the moment, not describing it from outside.
+
+**Keep it short.** 1–3 sentences is the target. One sentence is often perfect. Don't pad it.
+
+**React, don't recap.** The other players were there. Don't summarize what just happened — respond to it.
+
+**Write with personality.** ${character.personality ? `${character.name}'s personality: ${character.personality}. Let this shape every word — their voice, their choices, how they handle pressure.` : `Make ${character.name} feel like a real person, not a class archetype.`}
+
+**Don't narrate your own outcome.** Declare the action, not the result. "I swing at the guard" not "I cut down the guard." The DM decides what lands.
+
+**One character at a time.** Only speak and act for ${character.name}. Don't describe what other party members do.
+
+**Use your class naturally.** If you're a Rogue, think angles. A Cleric, faith. Don't announce it — just let it show in how you act.
+
+**Sentence fragments are fine** when the moment calls for it. Tension, urgency, a split-second decision — match the energy.
+
+Write ${character.name}'s action/dialogue now.`;
 }

@@ -82,6 +82,25 @@
   margin-bottom: 0.75rem;
 }
 
+.dm-response-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.dm-response-hint {
+  font-size: 0.78rem;
+  color: #6a7088;
+  font-style: italic;
+}
+
+.dm-response-error {
+  font-size: 0.82rem;
+  color: #ff8a80;
+  margin: 0;
+}
+
 .post-as-toggle__btn {
   padding: 0.35rem 0.75rem;
   font-size: 0.8rem;
