@@ -787,6 +787,13 @@
   margin-bottom: 1.5rem;
 }
 
+.party-empty {
+  font-size: 0.8rem;
+  color: #6a7088;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
 /* Spectator / read-only view */
 .spectator-notice {
   display: flex;

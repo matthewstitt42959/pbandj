@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
-import mockCharacters from '../data/mockCharacters';
 import { createNewCampaign } from '../data/defaultCampaign';
 import { requestDMResponse, requestPlayerResponse } from '../services/aiDM';
 import { rollDice, parseRollCommand } from '../services/dice';
@@ -47,7 +46,7 @@ export function mapDbCharToGame(dbChar) {
 }
 
 const initialState = {
-  characters: mockCharacters,
+  characters: [],
   benchedCompanions: [],
   campaign: null,
   posts: [],
@@ -72,7 +71,11 @@ function migrateState(saved) {
     saved.posts = [];
     saved.worldFacts = [];
   }
-  if (saved.characters) {
+  // Wipe persisted mock characters (no dbId = not a real DB character)
+  if (saved.characters?.length && !saved.characters[0].dbId) {
+    saved.characters = [];
+  }
+  if (saved.characters?.length) {
     saved.characters = saved.characters.map((char, i) => ({
       isAI: i !== 0,
       ...char,
@@ -138,6 +141,9 @@ function gameReducer(state, action) {
 
     case 'RESET_CAMPAIGN':
       return { ...initialState, characters: state.characters, initialized: true };
+
+    case 'LOAD_CAMPAIGN_CHARACTERS':
+      return { ...state, characters: action.characters, activeCharacterIndex: 0 };
 
     case 'SET_CHARACTER':
       return { ...state, activeCharacterIndex: action.index };
@@ -422,6 +428,23 @@ export function GameProvider({ children }) {
     dispatch({ type: 'DELETE_COMPANION', name });
   }, []);
 
+  // Load real characters from the active campaign. currentUserId marks which char belongs to the viewer.
+  const loadCampaignCharacters = useCallback((dbChars, currentUserId) => {
+    const characters = dbChars.map((c, i) => ({
+      ...mapDbCharToGame(c),
+      isAI: c.userId !== currentUserId,
+      ownerId: c.userId,
+      ownerName: c.user?.displayName ?? c.user?.username ?? '',
+    }));
+    // Put the current user's character first if present
+    const myIndex = characters.findIndex(c => !c.isAI);
+    if (myIndex > 0) {
+      const [mine] = characters.splice(myIndex, 1);
+      characters.unshift(mine);
+    }
+    dispatch({ type: 'LOAD_CAMPAIGN_CHARACTERS', characters });
+  }, []);
+
   const submitDMPost = useCallback(
     (content) => {
       if (!state.campaign || !content.trim()) return;
@@ -512,6 +535,7 @@ export function GameProvider({ children }) {
     benchCompanion,
     createCompanion,
     deleteCompanion,
+    loadCampaignCharacters,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

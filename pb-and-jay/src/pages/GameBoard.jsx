@@ -45,19 +45,30 @@ const GameBoard = () => {
     runAiRound,
     addPost,
     resetCampaign,
+    loadCampaignCharacters,
   } = useGame();
 
-  const { user } = useAuth();
+  const { user, authFetch } = useAuth();
   const isDm = user?.role === 'DM' || user?.role === 'SUPER_DM';
   const isAssigned = isDm || (
     Array.isArray(user?.characters) &&
     user.characters.some(c => !c.isRetired && c.campaignId === campaign?.id)
   );
 
+  // Load real campaign characters whenever the active campaign changes
+  useEffect(() => {
+    if (!campaign?.id || !user) return;
+    authFetch(`/api/campaigns/${campaign.id}/characters`)
+      .then(chars => loadCampaignCharacters(chars, user.id))
+      .catch(() => {});
+  }, [campaign?.id, user?.id]);
+
   // All human characters have posted at least once this round
-  const allHumansPosted = characters.filter(c => !c.isAI).every(c => roundPosters.includes(c.name));
+  const humanChars = characters.filter(c => !c.isAI);
+  const allHumansPosted = humanChars.length === 0 || humanChars.every(c => roundPosters.includes(c.name));
   const [activeTab, setActiveTab] = useState('stats');
-  const [postAs, setPostAs] = useState('character');
+  const hasOwnCharacter = characters.some(c => !c.isAI);
+  const [postAs, setPostAs] = useState(isDm && !hasOwnCharacter ? 'dm' : 'character');
   const [aiAvailable, setAiAvailable] = useState(false);
   const [aiLocked, setAiLocked] = useState(false);
   const [aiAuthenticated, setAiAuthenticated] = useState(false);
@@ -216,8 +227,11 @@ const GameBoard = () => {
       <div className="gameboard-wrapper">
         <aside className={`character-panel${mobileTab !== 'party' ? ' mobile-hidden' : ''}`}>
           <h3>Party</h3>
+          {characters.length === 0 && (
+            <p className="party-empty">No players assigned yet.</p>
+          )}
           {characters.map((char, index) => (
-            <div key={char.name} className="character-row">
+            <div key={char.dbId ?? char.name} className="character-row">
               <button
                 className={`character-btn ${index === activeCharacterIndex ? 'active' : ''}`}
                 onClick={() => setActiveCharacter(index)}
@@ -225,7 +239,7 @@ const GameBoard = () => {
                 <div className="character-btn__top">
                   <span className="character-btn__name">{char.name}</span>
                   <span className={`character-badge ${char.isAI ? 'character-badge--ai' : 'character-badge--human'}`}>
-                    {index === 0 ? 'You' : char.isAI ? 'AI' : 'Human'}
+                    {!char.isAI ? 'You' : char.ownerName || 'Player'}
                   </span>
                 </div>
                 <span className="character-btn__class">{char.class} {char.level}</span>
@@ -233,7 +247,7 @@ const GameBoard = () => {
               {index === loadingPlayerIndex && (
                 <span className="character-thinking">{char.name} is acting…</span>
               )}
-              {index !== 0 && (
+              {char.isAI && (
                 <button
                   className="character-control-btn"
                   onClick={() => toggleCharacterAI(index)}
@@ -253,34 +267,40 @@ const GameBoard = () => {
           <EncounterLog posts={posts} isLoading={isLoadingDM} scrollKey={logScrollKey} />
 
           <div className="post-as-toggle">
-            <button
-              type="button"
-              className={`post-as-toggle__btn ${postAs === 'character' ? 'active' : ''}`}
-              onClick={() => setPostAs('character')}
-            >
-              Character
-            </button>
-            <button
-              type="button"
-              className={`post-as-toggle__btn ${postAs === 'dm' ? 'active' : ''}`}
-              onClick={() => setPostAs('dm')}
-            >
-              DM Narration
-            </button>
+            {activeCharacter && (
+              <button
+                type="button"
+                className={`post-as-toggle__btn ${postAs === 'character' ? 'active' : ''}`}
+                onClick={() => setPostAs('character')}
+              >
+                Character
+              </button>
+            )}
+            {isDm && (
+              <button
+                type="button"
+                className={`post-as-toggle__btn ${postAs === 'dm' ? 'active' : ''}`}
+                onClick={() => setPostAs('dm')}
+              >
+                DM Narration
+              </button>
+            )}
           </div>
 
-          <PostComposer
-            authorName={postAs === 'dm' ? 'DM' : activeCharacter.name}
-            appendText={postAs === 'character' ? diceInsert : (postAs === 'dm' ? assistInsert : null)}
-            onSubmit={handlePost}
-            disabled={isLoadingDM}
-            submitLabel={postAs === 'dm' ? 'Post DM Narration' : 'Post Action'}
-            placeholder={
-              postAs === 'dm'
-                ? 'Write what happens next — scene description, NPC dialogue, consequences...'
-                : 'Describe your action... (tip: type /roll 1d20+3 for dice rolls)'
-            }
-          />
+          {(activeCharacter || isDm) && (
+            <PostComposer
+              authorName={postAs === 'dm' ? 'DM' : activeCharacter?.name}
+              appendText={postAs === 'character' ? diceInsert : (postAs === 'dm' ? assistInsert : null)}
+              onSubmit={handlePost}
+              disabled={isLoadingDM}
+              submitLabel={postAs === 'dm' ? 'Post DM Narration' : 'Post Action'}
+              placeholder={
+                postAs === 'dm'
+                  ? 'Write what happens next — scene description, NPC dialogue, consequences...'
+                  : 'Describe your action... (tip: type /roll 1d20+3 for dice rolls)'
+              }
+            />
+          )}
 
           {playMode === 'ai' && (
             <div className="dm-response-row">

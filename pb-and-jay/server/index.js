@@ -719,14 +719,27 @@ Return only valid JSON, no markdown, no extra text.`,
 
 // ── DM — Player management ────────────────────────────────────────────────
 
-// All players + their characters — for DMs to manage campaign rosters
+// Characters assigned to a specific campaign (any authenticated user can read)
+app.get('/api/campaigns/:id/characters', requireAuth, async (req, res) => {
+  try {
+    const characters = await prisma.character.findMany({
+      where: { campaignId: req.params.id, isRetired: false },
+      include: { user: { select: { id: true, username: true, displayName: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+    res.json(characters);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// All users + their characters — for DMs to manage campaign rosters
 app.get('/api/dm/players', requireAuth, async (req, res) => {
   if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
   try {
     const players = await prisma.user.findMany({
-      where: { role: 'PLAYER' },
       select: {
-        id: true, username: true, displayName: true,
+        id: true, username: true, displayName: true, role: true,
         characters: {
           where: { isRetired: false },
           select: { id: true, name: true, class: true, level: true, campaignId: true },
@@ -735,7 +748,7 @@ app.get('/api/dm/players', requireAuth, async (req, res) => {
       },
       orderBy: { displayName: 'asc' },
     });
-    res.json(players);
+    res.json(players.filter(p => p.characters.length > 0));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
