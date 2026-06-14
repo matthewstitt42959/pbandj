@@ -272,7 +272,24 @@ export function GameProvider({ children }) {
         if (res.ok) {
           const { state } = await res.json();
           if (state) {
-            dispatch({ type: 'INIT', payload: migrateState(state) });
+            const migrated = migrateState(state);
+            // If saved state has no campaign, check for an active one in the DB
+            if (!migrated.campaign) {
+              try {
+                const cr = await fetch('/api/campaigns/active');
+                if (cr.ok) {
+                  const active = await cr.json();
+                  if (active) {
+                    migrated.campaign = {
+                      name: active.name,
+                      setting: active.setting,
+                      currentScene: active.openingScene,
+                    };
+                  }
+                }
+              } catch {}
+            }
+            dispatch({ type: 'INIT', payload: migrated });
             return;
           }
         }
@@ -280,6 +297,22 @@ export function GameProvider({ children }) {
         // Server unreachable — fall through to localStorage
       }
       const local = loadLocalGame();
+      // If local state has no campaign, try the active campaign from the API
+      if (local && !local.campaign) {
+        try {
+          const cr = await fetch('/api/campaigns/active');
+          if (cr.ok) {
+            const active = await cr.json();
+            if (active) {
+              local.campaign = {
+                name: active.name,
+                setting: active.setting,
+                currentScene: active.openingScene,
+              };
+            }
+          }
+        } catch {}
+      }
       dispatch({ type: 'INIT', payload: local ?? {} });
     }
     init();

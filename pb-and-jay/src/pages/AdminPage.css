@@ -163,3 +163,39 @@
   gap: 0.75rem;
   justify-content: flex-end;
 }
+
+/* Campaign section */
+.admin-section {
+  margin-top: 3rem;
+}
+
+.admin-section__title {
+  font-size: 1.25rem;
+  color: #ffc857;
+  margin: 0 0 0.35rem;
+}
+
+.admin-section__desc {
+  font-size: 0.85rem;
+  color: #6a7088;
+  margin: 0 0 1.25rem;
+}
+
+.admin-row--active td { background: rgba(168, 230, 207, 0.05); }
+
+.admin-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.admin-badge--active {
+  background: rgba(168, 230, 207, 0.15);
+  color: #a8e6cf;
+  border: 1px solid rgba(168, 230, 207, 0.3);
+}

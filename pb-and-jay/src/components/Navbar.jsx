@@ -33,10 +33,7 @@ const Navbar = () => {
                 </>
               )}
               {user.role === 'SUPER_DM' && (
-                <>
-                  <li><NavLink to="/wiki" onClick={close}>World Wiki</NavLink></li>
-                  <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
-                </>
+                <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
               )}
             </>
           )}
@@ -76,10 +73,7 @@ const Navbar = () => {
                 </>
               )}
               {user.role === 'SUPER_DM' && (
-                <>
-                  <li><NavLink to="/wiki" onClick={close}>World Wiki</NavLink></li>
-                  <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
-                </>
+                <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
               )}
               <li><button className="nav-mobile-signout" onClick={handleSignOut}>Sign out</button></li>
             </>

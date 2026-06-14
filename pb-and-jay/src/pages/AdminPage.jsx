@@ -3,6 +3,53 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AdminPage.css';
 
+function CampaignRow({ campaign, authFetch, onUpdated }) {
+  const [busy, setBusy] = useState(false);
+
+  const handleActivate = async () => {
+    setBusy(true);
+    try {
+      const updated = await authFetch(`/api/campaigns/${campaign.id}/activate`, { method: 'POST' });
+      onUpdated(updated);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDeactivate = async () => {
+    setBusy(true);
+    try {
+      const updated = await authFetch(`/api/campaigns/${campaign.id}/deactivate`, { method: 'POST' });
+      onUpdated(updated);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <tr className={`admin-row ${campaign.isActive ? 'admin-row--active' : ''}`}>
+      <td>
+        <span className="admin-display-name">{campaign.name}</span>
+        {campaign.isActive && <span className="admin-badge admin-badge--active">ACTIVE</span>}
+      </td>
+      <td className="admin-email">{campaign.dm?.displayName ?? '—'}</td>
+      <td>{campaign.createdBy?.displayName}</td>
+      <td className="admin-date">{new Date(campaign.createdAt).toLocaleDateString()}</td>
+      <td>
+        {campaign.isActive ? (
+          <button className="btn btn--ghost btn--xs" onClick={handleDeactivate} disabled={busy}>
+            {busy ? '...' : 'Deactivate'}
+          </button>
+        ) : (
+          <button className="btn btn--primary btn--xs" onClick={handleActivate} disabled={busy}>
+            {busy ? '...' : 'Set Active'}
+          </button>
+        )}
+      </td>
+    </tr>
+  );
+}
+
 const ROLES = ['PLAYER', 'DM', 'SUPER_DM'];
 
 function TempPasswordModal({ username, password, onClose }) {
@@ -108,13 +155,27 @@ const AdminPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [campaigns, setCampaigns] = useState([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
 
   useEffect(() => {
     authFetch('/api/admin/users')
       .then(data => setUsers(data.users))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
+
+    authFetch('/api/campaigns')
+      .then(data => setCampaigns(data))
+      .catch(() => {})
+      .finally(() => setCampaignsLoading(false));
   }, []);
+
+  const handleCampaignUpdated = (updated) => {
+    setCampaigns(prev => prev.map(c => {
+      if (updated.isActive) return { ...c, isActive: c.id === updated.id };
+      return c.id === updated.id ? updated : c;
+    }));
+  };
 
   if (!user) return <Navigate to="/login" />;
   if (user.role !== 'SUPER_DM') return <Navigate to="/dashboard" />;
@@ -163,6 +224,40 @@ const AdminPage = () => {
           </table>
         </div>
       )}
+
+      <section className="admin-section">
+        <h2 className="admin-section__title">Campaign Management</h2>
+        <p className="admin-section__desc">Set which approved campaign is active on the Game Board.</p>
+        {campaignsLoading ? (
+          <p className="admin-loading">Loading campaigns...</p>
+        ) : campaigns.length === 0 ? (
+          <p className="admin-loading">No campaigns yet.</p>
+        ) : (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Campaign</th>
+                  <th>DM</th>
+                  <th>Created By</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {campaigns.map(c => (
+                  <CampaignRow
+                    key={c.id}
+                    campaign={c}
+                    authFetch={authFetch}
+                    onUpdated={handleCampaignUpdated}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 };
