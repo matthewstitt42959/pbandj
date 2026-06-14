@@ -1,73 +1,116 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
-import { defaultCampaign } from '../data/defaultCampaign';
+import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
   const { campaign, startCampaign } = useGame();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  const isDm = user?.role === 'DM' || user?.role === 'SUPER_DM';
+  const activeChars = user?.characters?.filter(c => c.status !== 'RETIRED') ?? [];
 
   const handleStart = () => {
     startCampaign();
     navigate('/game');
   };
 
-  const handleContinue = () => {
-    navigate('/game');
-  };
+  if (!user) {
+    return (
+      <div className="homepage">
+        <header className="homepage__hero">
+          <h1 className="homepage__title">PB & Jay</h1>
+          <p className="homepage__tagline">
+            Play-by-post D&amp;D — AI dungeon master, real adventures
+          </p>
+          <div className="homepage__hero-actions">
+            <Link to="/login" className="btn btn--primary">Sign In</Link>
+            <Link to="/register" className="btn btn--ghost">Create Account</Link>
+          </div>
+        </header>
+
+        <div className="homepage__grid homepage__grid--3col">
+          <section className="homepage__card">
+            <h2>Build a Character</h2>
+            <p>Choose your race, class, and backstory. Your character persists across sessions and campaigns.</p>
+          </section>
+          <section className="homepage__card">
+            <h2>Join a Campaign</h2>
+            <p>The DM sets the world, writes the opening scene, and invites the party. You just show up ready to play.</p>
+          </section>
+          <section className="homepage__card">
+            <h2>AI DM or Manual</h2>
+            <p>Post your action. When the party is ready, the AI narrates what happens — or the DM writes it themselves.</p>
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="homepage">
-      <header className="homepage__hero">
+      <header className="homepage__hero homepage__hero--compact">
         <h1 className="homepage__title">PB & Jay</h1>
         <p className="homepage__tagline">
-          Play-by-post D&amp;D — run the story yourself, or add an AI DM later
+          Welcome back, {user.displayName || user.username}
         </p>
       </header>
 
       <div className="homepage__grid">
         <section className="homepage__card homepage__card--featured">
-          <h2>Your Adventure Awaits</h2>
-          <p className="homepage__campaign-name">{defaultCampaign.name}</p>
-          <p className="homepage__campaign-desc">{defaultCampaign.setting}</p>
+          <h2>Jump In</h2>
+          <div className="homepage__quick-links">
+            {campaign ? (
+              <button className="btn btn--primary btn--large" onClick={() => navigate('/game')}>
+                Continue Adventure
+              </button>
+            ) : (
+              <button className="btn btn--primary btn--large" onClick={handleStart}>
+                Begin Adventure
+              </button>
+            )}
+            {isDm && (
+              <Link to="/dm" className="btn btn--ghost btn--large">DM Panel</Link>
+            )}
+            <Link to="/dashboard" className="btn btn--ghost btn--large">Dashboard</Link>
+            <Link to="/campaigns" className="btn btn--ghost btn--large">Campaigns</Link>
+          </div>
+        </section>
 
-          <div className="homepage__party">
-            <span className="homepage__party-label">Your party of five:</span>
-            <div className="homepage__party-chips">
-              {['Kaelin', 'Morg', 'Sylra', 'Thorne', 'Elira'].map((name) => (
-                <span key={name} className="party-chip">{name}</span>
+        <section className="homepage__card">
+          <h2>Your Characters</h2>
+          {activeChars.length === 0 ? (
+            <p className="homepage__note">You don't have a character yet.</p>
+          ) : (
+            <div className="homepage__char-list">
+              {activeChars.map(c => (
+                <div key={c.id} className="homepage__char-chip">
+                  <span className="homepage__char-name">{c.name}</span>
+                  <span className="homepage__char-class">
+                    {[c.race, c.class].filter(Boolean).join(' ')} — Level {c.level}
+                  </span>
+                </div>
               ))}
             </div>
-          </div>
-
-          {campaign ? (
-            <button className="btn btn--primary btn--large" onClick={handleContinue}>
-              Continue Adventure
-            </button>
-          ) : (
-            <button className="btn btn--primary btn--large" onClick={handleStart}>
-              Begin Adventure
-            </button>
           )}
+          <Link
+            to="/character/create"
+            className="btn btn--ghost btn--sm"
+            style={{ marginTop: '1rem', display: 'inline-flex' }}
+          >
+            {activeChars.length === 0 ? 'Build a Character' : activeChars.length < 2 ? '+ New Character' : 'View on Dashboard'}
+          </Link>
         </section>
 
         <section className="homepage__card">
           <h2>How It Works</h2>
           <ol className="homepage__steps">
-            <li>Begin with the opening scene already in the log</li>
-            <li>Post as any party member — actions and dice rolls</li>
-            <li>Switch to <strong>DM Narration</strong> to write what happens next</li>
-            <li>Optionally enable AI DM later from the game board</li>
+            <li>Build your character — race, class, and backstory</li>
+            <li>Your DM creates a campaign and sets the opening scene</li>
+            <li>Post your action in the encounter log each round</li>
+            <li>When the party is ready, click <strong>Get DM Response</strong> for AI narration — or the DM writes it themselves</li>
           </ol>
-        </section>
-
-        <section className="homepage__card">
-          <h2>Manual play (default)</h2>
-          <p className="status-text status-text--ok">No API key required</p>
-          <p className="homepage__note">
-            You are the DM. Toggle between character posts and DM narration on the game board.
-            See <Link to="/settings">Setup</Link> if you want to try AI later.
-          </p>
         </section>
       </div>
     </div>

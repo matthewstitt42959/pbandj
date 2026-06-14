@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import StatsTab from '../components/Tabs/StatsTab';
 import InventoryTab from '../components/Tabs/InventoryTab';
@@ -24,6 +24,7 @@ const TABS = [
 ];
 
 const GameBoard = () => {
+  const navigate = useNavigate();
   const {
     campaign,
     characters,
@@ -43,6 +44,7 @@ const GameBoard = () => {
     submitDMPost,
     runAiRound,
     addPost,
+    startCampaign,
     resetCampaign,
   } = useGame();
 
@@ -86,8 +88,13 @@ const GameBoard = () => {
       <div className="game-setup">
         <div className="game-setup__card">
           <h2>No Active Campaign</h2>
-          <p>Start an adventure from the home page to begin playing.</p>
-          <Link to="/" className="btn btn--primary">Go Home</Link>
+          <p>No game session is loaded. Start a new sandbox game or continue from the home page.</p>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn--primary" onClick={() => { startCampaign(); navigate('/game'); }}>
+              Start New Game
+            </button>
+            <Link to="/" className="btn btn--ghost">Go Home</Link>
+          </div>
         </div>
       </div>
     );
