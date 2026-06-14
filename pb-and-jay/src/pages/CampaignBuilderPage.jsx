@@ -125,10 +125,15 @@ const CampaignBuilderPage = () => {
 
   const handleGenerate = async () => {
     if (!aiPrompt.trim()) { flash('Enter a prompt first', 'err'); return; }
-    if (!id) { flash('Save the campaign first, then use AI generate', 'err'); return; }
+    if (!form.name.trim()) { flash('Enter a campaign name first', 'err'); return; }
     setGenerating(true);
     try {
-      const updated = await authFetch(`/api/campaigns/${id}/generate`, {
+      let campaignId = id;
+      if (!campaignId) {
+        const created = await authFetch('/api/campaigns', { method: 'POST', body: JSON.stringify(buildPayload()) });
+        campaignId = created.id;
+      }
+      const updated = await authFetch(`/api/campaigns/${campaignId}/generate`, {
         method: 'POST',
         body: JSON.stringify({ prompt: aiPrompt }),
       });
@@ -136,6 +141,7 @@ const CampaignBuilderPage = () => {
       loadIntoForm(updated);
       setShowAiPanel(false);
       flash('AI content generated — review and edit below');
+      if (!id) navigate(`/campaigns/${campaignId}`, { replace: true });
     } catch (err) {
       flash(err.message, 'err');
     } finally {
@@ -199,7 +205,7 @@ const CampaignBuilderPage = () => {
               <button
                 className="btn btn--primary btn--sm"
                 onClick={handleGenerate}
-                disabled={generating || !id}
+                disabled={generating}
               >
                 {generating ? 'Generating...' : 'Generate Campaign'}
               </button>
