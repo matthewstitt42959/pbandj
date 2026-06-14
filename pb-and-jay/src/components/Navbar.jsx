@@ -14,6 +14,7 @@ const Navbar = () => {
     <nav className="nav-bar">
       <div className="nav-inner">
         <NavLink to="/" className="nav-title" onClick={close}>
+          <img src="/bluejay-logo.svg" alt="" className="nav-logo" aria-hidden="true" />
           PB & Jay
         </NavLink>
 

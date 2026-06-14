@@ -26,6 +26,15 @@
   color: #ffc857;
   text-decoration: none;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.nav-logo {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
 }
 
 .nav-title:hover {
