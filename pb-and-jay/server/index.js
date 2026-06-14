@@ -434,6 +434,7 @@ const CAMPAIGN_SELECT = {
   rejectedNote: true, approvedAt: true, createdAt: true, updatedAt: true,
   createdBy: { select: { id: true, username: true, displayName: true } },
   approvedBy: { select: { id: true, username: true, displayName: true } },
+  dm:          { select: { id: true, username: true, displayName: true } },
 };
 
 function canEditCampaign(campaign, authUser) {
@@ -491,6 +492,7 @@ app.post('/api/campaigns', requireAuth, async (req, res) => {
         npcs: req.body.npcs ?? [],
         dmNotes: req.body.dmNotes ?? '',
         createdById: req.authUser.id,
+        dmId: req.authUser.id,
       },
       select: { ...CAMPAIGN_SELECT, createdById: true },
     });
@@ -573,6 +575,39 @@ app.post('/api/campaigns/:id/reject', requireAuth, async (req, res) => {
       where: { id: req.params.id },
       data: { status: 'REJECTED', rejectedNote: note ?? null, approvedById: null, approvedAt: null },
       select: CAMPAIGN_SELECT,
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Assign DM to campaign — SUPER_DM can assign anyone; DM can claim their own campaign
+app.post('/api/campaigns/:id/assign-dm', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  const { userId } = req.body;
+  const targetId = userId ?? req.authUser.id;
+
+  if (req.authUser.role === 'DM' && targetId !== req.authUser.id) {
+    return res.status(403).json({ error: 'DMs can only assign themselves' });
+  }
+
+  try {
+    const existing = await prisma.campaign.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Campaign not found' });
+
+    if (req.authUser.role === 'DM' && existing.createdById !== req.authUser.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const target = await prisma.user.findUnique({ where: { id: targetId }, select: { id: true, role: true } });
+    if (!target) return res.status(404).json({ error: 'User not found' });
+    if (target.role === 'PLAYER') return res.status(400).json({ error: 'Cannot assign a PLAYER as DM' });
+
+    const updated = await prisma.campaign.update({
+      where: { id: req.params.id },
+      data: { dmId: targetId },
+      select: { ...CAMPAIGN_SELECT, createdById: true },
     });
     res.json(updated);
   } catch (err) {
