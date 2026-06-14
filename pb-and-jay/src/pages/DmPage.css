@@ -505,6 +505,122 @@
   background: rgba(255, 138, 128, 0.2);
 }
 
+/* ── Preset enemy row ── */
+
+.dm-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+/* ── Enemy card accent ── */
+
+.dm-enemy-card {
+  border-color: rgba(255, 138, 128, 0.2);
+}
+
+.dm-enemy-card .dm-companion-card__name {
+  color: #ff8a80;
+}
+
+/* ── Initiative tracker ── */
+
+.dm-round-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ffc857;
+  border: 1px solid rgba(255, 200, 87, 0.3);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  margin-left: 0.75rem;
+  vertical-align: middle;
+}
+
+.dm-init-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.75rem;
+}
+
+.dm-init-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dm-init-row--active {
+  background: rgba(255, 200, 87, 0.08);
+  border-color: rgba(255, 200, 87, 0.25);
+}
+
+.dm-init-indicator {
+  width: 1rem;
+  color: #ffc857;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.dm-init-name {
+  flex: 1;
+  font-weight: 600;
+  color: #e8e6f0;
+  font-size: 0.88rem;
+}
+
+.dm-init-name--enemy {
+  color: #ff8a80;
+}
+
+.dm-init-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 0.25rem 0.4rem;
+  width: 60px;
+  outline: none;
+  text-align: center;
+}
+
+.dm-init-input:focus {
+  border-color: rgba(255, 200, 87, 0.35);
+}
+
+/* ── DM Notes ── */
+
+.dm-notes-area {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  padding: 0.75rem 1rem;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.dm-notes-area:focus {
+  border-color: rgba(255, 200, 87, 0.3);
+}
+
+.dm-notes-area::placeholder {
+  color: #4a4f6a;
+}
+
 /* ── Empty state ── */
 
 .dm-no-campaign {

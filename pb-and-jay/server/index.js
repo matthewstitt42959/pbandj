@@ -801,6 +801,45 @@ app.delete('/api/rules/:id', requireAuth, async (req, res) => {
   }
 });
 
+// --- Admin (SUPER_DM only) ---
+
+function requireSuperDM(req, res, next) {
+  if (req.authUser?.role !== 'SUPER_DM') return res.status(403).json({ error: 'Forbidden' });
+  next();
+}
+
+function generateTempPassword() {
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+app.get('/api/admin/users', requireAuth, requireSuperDM, async (_req, res) => {
+  const users = await prisma.user.findMany({
+    select: { id: true, email: true, username: true, displayName: true, role: true, createdAt: true },
+    orderBy: { createdAt: 'desc' },
+  });
+  res.json({ users });
+});
+
+app.patch('/api/admin/users/:id/role', requireAuth, requireSuperDM, async (req, res) => {
+  const { role } = req.body;
+  if (!['PLAYER', 'DM', 'SUPER_DM'].includes(role)) return res.status(400).json({ error: 'Invalid role' });
+  if (req.params.id === req.authUser.userId) return res.status(400).json({ error: 'Cannot change your own role' });
+  const user = await prisma.user.update({
+    where: { id: req.params.id },
+    data: { role },
+    select: { id: true, email: true, username: true, displayName: true, role: true, createdAt: true },
+  });
+  res.json({ user });
+});
+
+app.patch('/api/admin/users/:id/password', requireAuth, requireSuperDM, async (req, res) => {
+  const tempPassword = generateTempPassword();
+  const hash = await bcrypt.hash(tempPassword, 10);
+  await prisma.user.update({ where: { id: req.params.id }, data: { password: hash } });
+  res.json({ tempPassword });
+});
+
 app.get('/api/health', (req, res) => {
   let provider;
   try {

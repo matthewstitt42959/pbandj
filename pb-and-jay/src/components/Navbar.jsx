@@ -30,6 +30,9 @@ const Navbar = () => {
                   <li><NavLink to="/campaigns" onClick={close}>Campaigns</NavLink></li>
                 </>
               )}
+              {user.role === 'SUPER_DM' && (
+                <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
+              )}
             </>
           )}
         </ul>
@@ -65,6 +68,9 @@ const Navbar = () => {
                   <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
                   <li><NavLink to="/campaigns" onClick={close}>Campaigns</NavLink></li>
                 </>
+              )}
+              {user.role === 'SUPER_DM' && (
+                <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
               )}
               <li><button className="nav-mobile-signout" onClick={handleSignOut}>Sign out</button></li>
             </>

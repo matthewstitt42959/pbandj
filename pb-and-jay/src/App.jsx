@@ -15,6 +15,7 @@ import CharacterCreate from './pages/CharacterCreate';
 import CharacterSheet from './pages/CharacterSheet';
 import DashboardPage from './pages/DashboardPage';
 import DmPage from './pages/DmPage';
+import AdminPage from './pages/AdminPage';
 import CampaignBuilderPage from './pages/CampaignBuilderPage';
 import CampaignListPage from './pages/CampaignListPage';
 import RulesPage from './pages/RulesPage';
@@ -51,6 +52,9 @@ function App() {
               } />
               <Route path="/dm" element={
                 <PrivateRoute><DmPage /></PrivateRoute>
+              } />
+              <Route path="/admin" element={
+                <PrivateRoute><AdminPage /></PrivateRoute>
               } />
               <Route path="/campaigns" element={
                 <PrivateRoute><CampaignListPage /></PrivateRoute>

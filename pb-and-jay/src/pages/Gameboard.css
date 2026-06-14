@@ -82,6 +82,105 @@
   margin-bottom: 0.75rem;
 }
 
+/* ── Scene starters ── */
+
+.dm-scene-starters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.dm-scene-label {
+  font-size: 0.7rem;
+  color: #6a7088;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 0.25rem;
+}
+
+/* ── DM private dice ── */
+
+.dm-private-dice {
+  margin-top: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dm-private-dice__toggle {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.15);
+  border: none;
+  color: #6a7088;
+  font-family: inherit;
+  font-size: 0.78rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.dm-private-dice__toggle:hover { color: #9aa0b8; }
+
+.dm-private-dice__panel {
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dm-private-dice__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.dm-dice-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.4rem;
+  width: 48px;
+  text-align: center;
+  outline: none;
+}
+
+.dm-dice-sep {
+  color: #6a7088;
+  font-size: 0.82rem;
+}
+
+.dm-private-dice__result {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 200, 87, 0.06);
+  border: 1px solid rgba(255, 200, 87, 0.15);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.dm-dice-notation { color: #6a7088; }
+.dm-dice-rolls { color: #9aa0b8; }
+.dm-dice-total { color: #ffc857; font-weight: 700; font-size: 1rem; flex: 1; }
+
+.dm-dice-clear {
+  background: none;
+  border: none;
+  color: #6a7088;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.3rem;
+}
+
 .dm-response-row {
   display: flex;
   flex-direction: column;

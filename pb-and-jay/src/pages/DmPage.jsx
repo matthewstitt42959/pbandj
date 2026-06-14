@@ -1,8 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
+import { rollDice } from '../services/dice';
 import './DmPage.css';
+
+const ENCOUNTER_KEY = 'pb-and-jay-encounter';
+const NOTES_KEY = 'pb-and-jay-dm-notes';
+
+const PRESET_ENEMIES = [
+  { name: 'Goblin', hp: 7, ac: 15 },
+  { name: 'Orc', hp: 15, ac: 13 },
+  { name: 'Hobgoblin', hp: 11, ac: 18 },
+  { name: 'Bugbear', hp: 27, ac: 14 },
+  { name: 'Bandit', hp: 11, ac: 12 },
+  { name: 'Guard', hp: 11, ac: 16 },
+  { name: 'Skeleton', hp: 13, ac: 13 },
+  { name: 'Zombie', hp: 22, ac: 8 },
+  { name: 'Wolf', hp: 11, ac: 13 },
+  { name: 'Giant Spider', hp: 26, ac: 14 },
+  { name: 'Cultist', hp: 9, ac: 12 },
+  { name: 'Troll', hp: 84, ac: 15 },
+];
 
 const DND_CLASSES = [
   'Barbarian','Bard','Cleric','Druid','Fighter',
@@ -14,6 +33,66 @@ const CONDITIONS = [
   'Grappled', 'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified',
   'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious',
 ];
+
+function EnemyCard({ enemy, onUpdate, onRemove }) {
+  const [editingHp, setEditingHp] = useState(false);
+  const [hpDraft, setHpDraft] = useState('');
+
+  const commitHp = () => {
+    const val = parseInt(hpDraft, 10);
+    if (!isNaN(val)) onUpdate(enemy.id, { hp: { ...enemy.hp, current: Math.max(0, Math.min(val, enemy.hp.max)) } });
+    setEditingHp(false);
+  };
+
+  const toggleCondition = (c) => {
+    const conds = enemy.conditions ?? [];
+    onUpdate(enemy.id, { conditions: conds.includes(c) ? conds.filter(x => x !== c) : [...conds, c] });
+  };
+
+  const hpPct = Math.max(0, (enemy.hp.current / enemy.hp.max) * 100);
+  const hpColor = hpPct > 50 ? '#7dcea0' : hpPct > 25 ? '#f0b429' : '#e55';
+
+  return (
+    <div className="dm-companion-card dm-enemy-card">
+      <div className="dm-companion-card__header">
+        <div>
+          <h3 className="dm-companion-card__name">{enemy.name}</h3>
+          <p className="dm-companion-card__meta">AC {enemy.ac}</p>
+        </div>
+        <button className="dm-bench-btn" style={{ color: '#ff8a80' }} onClick={() => onRemove(enemy.id)} title="Remove">✕</button>
+      </div>
+      <div className="dm-companion-card__vitals">
+        <div className="dm-vital-group">
+          <span className="dm-vital-label">HP</span>
+          {editingHp ? (
+            <input className="dm-hp-input" type="number" value={hpDraft} autoFocus min={0} max={enemy.hp.max}
+              onChange={e => setHpDraft(e.target.value)}
+              onBlur={commitHp}
+              onKeyDown={e => { if (e.key === 'Enter') commitHp(); if (e.key === 'Escape') setEditingHp(false); }} />
+          ) : (
+            <button className="dm-hp-btn" onClick={() => { setHpDraft(String(enemy.hp.current)); setEditingHp(true); }}>
+              {enemy.hp.current} / {enemy.hp.max}
+            </button>
+          )}
+          <div className="dm-hp-bar"><div className="dm-hp-bar__fill" style={{ width: `${hpPct}%`, background: hpColor }} /></div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn--ghost btn--xs" onClick={() => onUpdate(enemy.id, { hp: { ...enemy.hp, current: Math.max(0, enemy.hp.current - 1) } })}>−1</button>
+          <button className="btn btn--ghost btn--xs" onClick={() => onUpdate(enemy.id, { hp: { ...enemy.hp, current: Math.max(0, enemy.hp.current - 5) } })}>−5</button>
+          <button className="btn btn--ghost btn--xs" onClick={() => onUpdate(enemy.id, { hp: { ...enemy.hp, current: Math.max(0, enemy.hp.current - 10) } })}>−10</button>
+        </div>
+      </div>
+      <div className="dm-conditions">
+        <span className="dm-vital-label">Conditions</span>
+        <div className="dm-condition-grid">
+          {CONDITIONS.map(c => (
+            <button key={c} className={`dm-cond-btn ${(enemy.conditions ?? []).includes(c) ? 'dm-cond-btn--active' : ''}`} onClick={() => toggleCondition(c)}>{c}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function AiCompanionCard({ character, index, onUpdate, onBench }) {
   const [hpDraft, setHpDraft] = useState('');
@@ -122,6 +201,77 @@ const DmPage = () => {
   const [newName, setNewName] = useState('');
   const [newClass, setNewClass] = useState('Fighter');
   const [newPersonality, setNewPersonality] = useState('');
+
+  // --- Encounter enemies ---
+  const [enemies, setEnemies] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(ENCOUNTER_KEY) ?? '[]'); } catch { return []; }
+  });
+  const [enemyForm, setEnemyForm] = useState({ name: '', hp: '', ac: '' });
+  const [showEnemyForm, setShowEnemyForm] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(ENCOUNTER_KEY, JSON.stringify(enemies));
+  }, [enemies]);
+
+  const addPreset = (preset) => {
+    const e = { id: `e-${Date.now()}`, name: preset.name, hp: { current: preset.hp, max: preset.hp }, ac: preset.ac, conditions: [] };
+    setEnemies(prev => [...prev, e]);
+  };
+  const addCustomEnemy = () => {
+    const hp = parseInt(enemyForm.hp, 10) || 10;
+    const ac = parseInt(enemyForm.ac, 10) || 10;
+    if (!enemyForm.name.trim()) return;
+    setEnemies(prev => [...prev, { id: `e-${Date.now()}`, name: enemyForm.name.trim(), hp: { current: hp, max: hp }, ac, conditions: [] }]);
+    setEnemyForm({ name: '', hp: '', ac: '' });
+    setShowEnemyForm(false);
+  };
+  const updateEnemy = useCallback((id, updates) => {
+    setEnemies(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
+  }, []);
+  const removeEnemy = (id) => setEnemies(prev => prev.filter(e => e.id !== id));
+  const clearEncounter = () => { if (window.confirm('Clear all enemies?')) setEnemies([]); };
+
+  // --- Initiative tracker ---
+  const [combatActive, setCombatActive] = useState(false);
+  const [initOrder, setInitOrder] = useState([]);
+  const [currentTurn, setCurrentTurn] = useState(0);
+  const [round, setRound] = useState(1);
+
+  const startCombat = () => {
+    const entries = [
+      ...characters.map(c => ({ id: `c-${c.name}`, name: c.name, initiative: 0, isEnemy: false })),
+      ...enemies.map(e => ({ id: e.id, name: e.name, initiative: 0, isEnemy: true })),
+    ];
+    setInitOrder(entries);
+    setCurrentTurn(0);
+    setRound(1);
+    setCombatActive(true);
+  };
+  const setInit = (id, val) => {
+    const n = parseInt(val, 10);
+    setInitOrder(prev => {
+      const updated = prev.map(e => e.id === id ? { ...e, initiative: isNaN(n) ? 0 : n } : e);
+      return [...updated].sort((a, b) => b.initiative - a.initiative);
+    });
+  };
+  const rollInitForAll = () => {
+    setInitOrder(prev => {
+      const rolled = prev.map(e => ({ ...e, initiative: Math.floor(Math.random() * 20) + 1 }));
+      return [...rolled].sort((a, b) => b.initiative - a.initiative);
+    });
+  };
+  const nextTurn = () => {
+    setCurrentTurn(prev => {
+      const next = prev + 1;
+      if (next >= initOrder.length) { setRound(r => r + 1); return 0; }
+      return next;
+    });
+  };
+  const endCombat = () => { setCombatActive(false); setInitOrder([]); setCurrentTurn(0); setRound(1); };
+
+  // --- DM Notes ---
+  const [notes, setNotes] = useState(() => localStorage.getItem(NOTES_KEY) ?? '');
+  useEffect(() => { localStorage.setItem(NOTES_KEY, notes); }, [notes]);
 
   const partyAiCount = characters.filter((_, i) => i !== 0).length;
   const partyFull = partyAiCount >= 4;
@@ -353,6 +503,107 @@ const DmPage = () => {
         {partyFull && (
           <p className="dm-section__hint">Party full (4 AI + player). Bench an active companion to swap.</p>
         )}
+      </section>
+
+      {/* Encounter — Enemy Tracker */}
+      <section className="dm-section">
+        <div className="dm-section__head">
+          <h2 className="dm-section__title" style={{ margin: 0 }}>Encounter Enemies</h2>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn btn--ghost btn--sm" onClick={() => setShowEnemyForm(s => !s)}>
+              {showEnemyForm ? 'Cancel' : '+ Custom'}
+            </button>
+            {enemies.length > 0 && (
+              <button className="btn btn--danger btn--xs" onClick={clearEncounter}>Clear All</button>
+            )}
+          </div>
+        </div>
+
+        <div className="dm-preset-row">
+          {PRESET_ENEMIES.map(p => (
+            <button key={p.name} className="btn btn--ghost btn--xs" onClick={() => addPreset(p)}>
+              + {p.name}
+            </button>
+          ))}
+        </div>
+
+        {showEnemyForm && (
+          <div className="dm-create-form">
+            <input className="dm-create-input" placeholder="Name" value={enemyForm.name} onChange={e => setEnemyForm(f => ({ ...f, name: e.target.value }))} />
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input className="dm-create-input" placeholder="HP" type="number" value={enemyForm.hp} onChange={e => setEnemyForm(f => ({ ...f, hp: e.target.value }))} style={{ flex: 1 }} />
+              <input className="dm-create-input" placeholder="AC" type="number" value={enemyForm.ac} onChange={e => setEnemyForm(f => ({ ...f, ac: e.target.value }))} style={{ flex: 1 }} />
+            </div>
+            <button className="btn btn--primary btn--sm" onClick={addCustomEnemy} disabled={!enemyForm.name.trim()}>Add Enemy</button>
+          </div>
+        )}
+
+        {enemies.length > 0 && (
+          <div className="dm-companion-grid" style={{ marginTop: '0.75rem' }}>
+            {enemies.map(enemy => (
+              <EnemyCard key={enemy.id} enemy={enemy} onUpdate={updateEnemy} onRemove={removeEnemy} />
+            ))}
+          </div>
+        )}
+        {enemies.length === 0 && !showEnemyForm && (
+          <p className="dm-section__hint">No enemies. Use the presets above or add a custom enemy.</p>
+        )}
+      </section>
+
+      {/* Initiative Tracker */}
+      <section className="dm-section">
+        <div className="dm-section__head">
+          <h2 className="dm-section__title" style={{ margin: 0 }}>
+            Initiative Order {combatActive && <span className="dm-round-badge">Round {round}</span>}
+          </h2>
+          {!combatActive ? (
+            <button className="btn btn--primary btn--sm" onClick={startCombat}>Start Combat</button>
+          ) : (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button className="btn btn--ghost btn--sm" onClick={rollInitForAll}>Roll All</button>
+              <button className="btn btn--ghost btn--sm" onClick={nextTurn}>Next Turn</button>
+              <button className="btn btn--danger btn--xs" onClick={endCombat}>End Combat</button>
+            </div>
+          )}
+        </div>
+
+        {combatActive && (
+          <div className="dm-init-list">
+            {initOrder.map((entry, idx) => (
+              <div key={entry.id} className={`dm-init-row ${idx === currentTurn ? 'dm-init-row--active' : ''}`}>
+                <span className="dm-init-indicator">{idx === currentTurn ? '▶' : ''}</span>
+                <span className={`dm-init-name ${entry.isEnemy ? 'dm-init-name--enemy' : ''}`}>{entry.name}</span>
+                <input
+                  className="dm-init-input"
+                  type="number"
+                  value={entry.initiative || ''}
+                  placeholder="Init"
+                  onChange={e => setInit(entry.id, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        {!combatActive && (
+          <p className="dm-section__hint">Click Start Combat to pull in all party members and enemies into initiative order.</p>
+        )}
+      </section>
+
+      {/* DM Notes */}
+      <section className="dm-section">
+        <div className="dm-section__head">
+          <h2 className="dm-section__title" style={{ margin: 0 }}>DM Notes</h2>
+          {notes && (
+            <button className="btn btn--ghost btn--xs" onClick={() => { if (window.confirm('Clear notes?')) setNotes(''); }}>Clear</button>
+          )}
+        </div>
+        <textarea
+          className="dm-notes-area"
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          placeholder="Private notes — players never see this. Track NPC secrets, HP, loot, reminders..."
+          rows={6}
+        />
       </section>
 
       {/* Campaign management link */}

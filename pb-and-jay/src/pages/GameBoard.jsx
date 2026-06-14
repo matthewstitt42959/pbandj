@@ -61,6 +61,10 @@ const GameBoard = () => {
   const [logScrollKey, setLogScrollKey] = useState(0);
   const [diceInsert, setDiceInsert] = useState(null);
   const [assistInsert, setAssistInsert] = useState(null);
+  const [dmDiceResult, setDmDiceResult] = useState(null);
+  const [dmDiceCount, setDmDiceCount] = useState(1);
+  const [dmDiceMod, setDmDiceMod] = useState(0);
+  const [showDmDice, setShowDmDice] = useState(false);
 
   const handleMobileTab = (tab) => {
     setMobileTab(tab);
@@ -270,12 +274,89 @@ const GameBoard = () => {
           )}
 
           {isDm && postAs === 'dm' && (
-            <DmAssist
-              campaign={campaign}
-              posts={posts}
-              characters={characters}
-              onInsert={(text) => setAssistInsert({ text, ts: Date.now() })}
-            />
+            <>
+              <DmAssist
+                campaign={campaign}
+                posts={posts}
+                characters={characters}
+                onInsert={(text) => setAssistInsert({ text, ts: Date.now() })}
+              />
+
+              {/* Scene starters */}
+              <div className="dm-scene-starters">
+                <span className="dm-scene-label">Scene starters</span>
+                {[
+                  { label: 'Combat starts', text: 'Roll for initiative.' },
+                  { label: 'Enter location', text: 'You push through and stop.\n\n' },
+                  { label: 'NPC speaks', text: '"Listen carefully," they say, dropping their voice. "What I\'m about to tell you doesn\'t leave this room."\n\n' },
+                  { label: 'Scene ends', text: 'The immediate threat has passed. For now.\n\n' },
+                  { label: 'Ambush', text: 'Something moves in the shadows — then they\'re on you.\n\n' },
+                  { label: 'Travel', text: 'The road stretches ahead. Hours pass.\n\n' },
+                  { label: 'Rest', text: 'You make camp as darkness settles. The fire crackles low.\n\n' },
+                  { label: 'Revelation', text: 'That\'s when it clicks.\n\n' },
+                ].map(s => (
+                  <button
+                    key={s.label}
+                    className="btn btn--ghost btn--xs"
+                    onClick={() => setAssistInsert({ text: s.text, ts: Date.now() })}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* DM private dice roller */}
+              <div className="dm-private-dice">
+                <button className="dm-private-dice__toggle" onClick={() => setShowDmDice(s => !s)}>
+                  {showDmDice ? '▲' : '▼'} DM Dice (private — not logged)
+                </button>
+                {showDmDice && (
+                  <div className="dm-private-dice__panel">
+                    <div className="dm-private-dice__controls">
+                      <input
+                        className="dm-dice-input"
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={dmDiceCount}
+                        onChange={e => setDmDiceCount(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                        title="Number of dice"
+                      />
+                      <span className="dm-dice-sep">×</span>
+                      {[4, 6, 8, 10, 12, 20, 100].map(sides => (
+                        <button
+                          key={sides}
+                          className="btn btn--ghost btn--xs"
+                          onClick={() => {
+                            const rolls = Array.from({ length: dmDiceCount }, () => Math.floor(Math.random() * sides) + 1);
+                            const total = rolls.reduce((a, b) => a + b, 0) + dmDiceMod;
+                            setDmDiceResult({ notation: `${dmDiceCount}d${sides}${dmDiceMod >= 0 ? '+' : ''}${dmDiceMod || ''}`, rolls, total });
+                          }}
+                        >
+                          d{sides}
+                        </button>
+                      ))}
+                      <span className="dm-dice-sep">+</span>
+                      <input
+                        className="dm-dice-input"
+                        type="number"
+                        value={dmDiceMod}
+                        onChange={e => setDmDiceMod(parseInt(e.target.value) || 0)}
+                        title="Modifier"
+                      />
+                    </div>
+                    {dmDiceResult && (
+                      <div className="dm-private-dice__result">
+                        <span className="dm-dice-notation">{dmDiceResult.notation}</span>
+                        <span className="dm-dice-rolls">[{dmDiceResult.rolls.join(', ')}]</span>
+                        <span className="dm-dice-total">= {dmDiceResult.total}</span>
+                        <button className="dm-dice-clear" onClick={() => setDmDiceResult(null)}>✕</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </section>
 
