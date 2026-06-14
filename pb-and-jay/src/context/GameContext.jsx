@@ -63,7 +63,15 @@ const initialState = {
   initialized: false,
 };
 
+const SANDBOX_NAME = 'The Whispering Hollow';
+
 function migrateState(saved) {
+  // Wipe persisted sandbox game — real campaigns only from here on
+  if (saved.campaign?.name === SANDBOX_NAME) {
+    saved.campaign = null;
+    saved.posts = [];
+    saved.worldFacts = [];
+  }
   if (saved.characters) {
     saved.characters = saved.characters.map((char, i) => ({
       isAI: i !== 0,
