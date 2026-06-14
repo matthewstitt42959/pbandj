@@ -336,6 +336,7 @@ const DmPage = () => {
         </div>
       </header>
 
+      {campaign && (<>
       {/* Party level */}
       <section className="dm-section">
         <h2 className="dm-section__title">Party Level</h2>
@@ -504,6 +505,7 @@ const DmPage = () => {
           <p className="dm-section__hint">Party full (4 AI + player). Bench an active companion to swap.</p>
         )}
       </section>
+      </>)}
 
       {/* Encounter — Enemy Tracker */}
       <section className="dm-section">

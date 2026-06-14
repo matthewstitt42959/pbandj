@@ -1,0 +1,233 @@
+.wiki-page {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.wiki-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.wiki-title {
+  font-size: 1.8rem;
+  color: #ffc857;
+  margin-bottom: 0.25rem;
+}
+
+.wiki-subtitle {
+  font-size: 0.85rem;
+  color: #7a7f94;
+}
+
+.wiki-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.wiki-cat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #9aa0b8;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  font-family: inherit;
+}
+
+.wiki-cat-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e8e6f0;
+}
+
+.wiki-cat-btn.active {
+  background: rgba(255, 200, 87, 0.15);
+  border-color: rgba(255, 200, 87, 0.4);
+  color: #ffc857;
+}
+
+.wiki-cat-count {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  font-size: 0.72rem;
+  padding: 0 0.4rem;
+  line-height: 1.5;
+}
+
+.wiki-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wiki-entry {
+  background: rgba(42, 42, 60, 0.8);
+  border: 1px solid rgba(120, 192, 224, 0.15);
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem;
+}
+
+.wiki-entry__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.wiki-entry__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.wiki-entry__title {
+  font-size: 1rem;
+  color: #ffc857;
+  font-weight: 700;
+}
+
+.wiki-entry__cat {
+  background: rgba(120, 192, 224, 0.12);
+  border: 1px solid rgba(120, 192, 224, 0.25);
+  color: #78c0e0;
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wiki-entry__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.wiki-entry__content {
+  font-size: 0.9rem;
+  color: #c8c6d4;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.wiki-entry__content--clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.wiki-expand-btn {
+  background: none;
+  border: none;
+  color: #78c0e0;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  font-family: inherit;
+  margin-top: 0.25rem;
+}
+
+.wiki-expand-btn:hover { text-decoration: underline; }
+
+.wiki-empty {
+  color: #7a7f94;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.wiki-error {
+  color: #ff8a80;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Modal */
+.wiki-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.wiki-modal {
+  background: #1e1e2f;
+  border: 1px solid rgba(120, 192, 224, 0.2);
+  border-radius: 12px;
+  padding: 1.75rem;
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.wiki-modal__title {
+  font-size: 1.1rem;
+  color: #ffc857;
+  margin-bottom: 0.25rem;
+}
+
+.wiki-label {
+  font-size: 0.8rem;
+  color: #9aa0b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+.wiki-input,
+.wiki-select,
+.wiki-textarea {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(120, 192, 224, 0.2);
+  border-radius: 6px;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.wiki-input:focus,
+.wiki-select:focus,
+.wiki-textarea:focus {
+  outline: none;
+  border-color: rgba(255, 200, 87, 0.5);
+}
+
+.wiki-select option { background: #1e1e2f; }
+
+.wiki-textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.wiki-modal__actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}

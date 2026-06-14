@@ -19,6 +19,7 @@ import AdminPage from './pages/AdminPage';
 import CampaignBuilderPage from './pages/CampaignBuilderPage';
 import CampaignListPage from './pages/CampaignListPage';
 import RulesPage from './pages/RulesPage';
+import WikiPage from './pages/WikiPage';
 
 function App() {
   return (
@@ -65,6 +66,7 @@ function App() {
               <Route path="/campaigns/:id" element={
                 <PrivateRoute><CampaignBuilderPage /></PrivateRoute>
               } />
+              <Route path="/wiki" element={<WikiPage />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -18,6 +18,7 @@ const HomePage = () => {
           <p className="homepage__tagline">
             Play-by-post D&amp;D — AI dungeon master, real adventures
           </p>
+          <p className="homepage__universe">Set in the Teraphobia universe &mdash; a Broken Archive world</p>
           <div className="homepage__hero-actions">
             <Link to="/login" className="btn btn--primary">Sign In</Link>
             <Link to="/register" className="btn btn--ghost">Create Account</Link>
@@ -49,6 +50,7 @@ const HomePage = () => {
         <p className="homepage__tagline">
           Welcome back, {user.displayName || user.username}
         </p>
+        <p className="homepage__universe">Set in the Teraphobia universe &mdash; a Broken Archive world</p>
       </header>
 
       <div className="homepage__grid">

@@ -150,8 +150,9 @@ app.post('/api/dm/respond', requireAiAuth, async (req, res) => {
   const { campaign, posts, characters, worldFacts } = req.body;
 
   try {
+    const wikiEntries = await prisma.wikiEntry.findMany({ orderBy: [{ category: 'asc' }, { title: 'asc' }] });
     const { raw } = await provider.generateDMResponse({
-      systemPrompt: buildDMPrompt({ campaign, posts, characters, worldFacts }),
+      systemPrompt: buildDMPrompt({ campaign, posts, characters, worldFacts, wikiEntries }),
       userPrompt: buildUserPrompt(posts),
     });
 
@@ -838,6 +839,45 @@ app.patch('/api/admin/users/:id/password', requireAuth, requireSuperDM, async (r
   const hash = await bcrypt.hash(tempPassword, 10);
   await prisma.user.update({ where: { id: req.params.id }, data: { password: hash } });
   res.json({ tempPassword });
+});
+
+// ── Wiki ──────────────────────────────────────────────────────────────────────
+
+function requireDM(req, res, next) {
+  if (req.authUser?.role === 'DM' || req.authUser?.role === 'SUPER_DM') return next();
+  return res.status(403).json({ error: 'DM access required' });
+}
+
+app.get('/api/wiki', async (_req, res) => {
+  const entries = await prisma.wikiEntry.findMany({ orderBy: [{ category: 'asc' }, { title: 'asc' }] });
+  res.json(entries);
+});
+
+app.post('/api/wiki', requireAuth, requireDM, async (req, res) => {
+  const { title, category, content } = req.body;
+  if (!title?.trim() || !content?.trim()) return res.status(400).json({ error: 'Title and content required' });
+  const entry = await prisma.wikiEntry.create({
+    data: { title: title.trim(), category: (category || 'General').trim(), content: content.trim() },
+  });
+  res.status(201).json(entry);
+});
+
+app.patch('/api/wiki/:id', requireAuth, requireDM, async (req, res) => {
+  const { title, category, content } = req.body;
+  const entry = await prisma.wikiEntry.update({
+    where: { id: req.params.id },
+    data: {
+      ...(title !== undefined && { title: title.trim() }),
+      ...(category !== undefined && { category: category.trim() }),
+      ...(content !== undefined && { content: content.trim() }),
+    },
+  });
+  res.json(entry);
+});
+
+app.delete('/api/wiki/:id', requireAuth, requireDM, async (req, res) => {
+  await prisma.wikiEntry.delete({ where: { id: req.params.id } });
+  res.json({ ok: true });
 });
 
 app.get('/api/health', (req, res) => {

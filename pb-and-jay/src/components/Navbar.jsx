@@ -20,6 +20,7 @@ const Navbar = () => {
         <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
           <li><NavLink to="/" end onClick={close}>Home</NavLink></li>
           <li><NavLink to="/rules" onClick={close}>Rules</NavLink></li>
+          <li><NavLink to="/wiki" onClick={close}>World Wiki</NavLink></li>
           {user && (
             <>
               <li><NavLink to="/dashboard" onClick={close}>My Characters</NavLink></li>
@@ -31,7 +32,10 @@ const Navbar = () => {
                 </>
               )}
               {user.role === 'SUPER_DM' && (
-                <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
+                <>
+                  <li><NavLink to="/wiki" onClick={close}>World Wiki</NavLink></li>
+                  <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
+                </>
               )}
             </>
           )}
@@ -59,6 +63,7 @@ const Navbar = () => {
         <ul className="nav-links nav-links--mobile">
           <li><NavLink to="/" end onClick={close}>Home</NavLink></li>
           <li><NavLink to="/rules" onClick={close}>Rules</NavLink></li>
+          <li><NavLink to="/wiki" onClick={close}>World Wiki</NavLink></li>
           {user ? (
             <>
               <li><NavLink to="/dashboard" onClick={close}>My Characters</NavLink></li>
@@ -70,7 +75,10 @@ const Navbar = () => {
                 </>
               )}
               {user.role === 'SUPER_DM' && (
-                <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
+                <>
+                  <li><NavLink to="/wiki" onClick={close}>World Wiki</NavLink></li>
+                  <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
+                </>
               )}
               <li><button className="nav-mobile-signout" onClick={handleSignOut}>Sign out</button></li>
             </>
