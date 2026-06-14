@@ -1,20 +1,14 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
-  const { campaign, startCampaign } = useGame();
+  const { campaign } = useGame();
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const isDm = user?.role === 'DM' || user?.role === 'SUPER_DM';
   const activeChars = user?.characters?.filter(c => c.status !== 'RETIRED') ?? [];
-
-  const handleStart = () => {
-    startCampaign();
-    navigate('/game');
-  };
 
   if (!user) {
     return (
@@ -62,13 +56,13 @@ const HomePage = () => {
           <h2>Jump In</h2>
           <div className="homepage__quick-links">
             {campaign ? (
-              <button className="btn btn--primary btn--large" onClick={() => navigate('/game')}>
+              <Link to="/game" className="btn btn--primary btn--large">
                 Continue Adventure
-              </button>
+              </Link>
             ) : (
-              <button className="btn btn--primary btn--large" onClick={handleStart}>
-                Begin Adventure
-              </button>
+              <Link to="/campaigns" className="btn btn--primary btn--large">
+                Browse Campaigns
+              </Link>
             )}
             {isDm && (
               <Link to="/dm" className="btn btn--ghost btn--large">DM Panel</Link>

@@ -44,7 +44,6 @@ const GameBoard = () => {
     submitDMPost,
     runAiRound,
     addPost,
-    startCampaign,
     resetCampaign,
   } = useGame();
 
@@ -88,11 +87,9 @@ const GameBoard = () => {
       <div className="game-setup">
         <div className="game-setup__card">
           <h2>No Active Campaign</h2>
-          <p>No game session is loaded. Start a new sandbox game or continue from the home page.</p>
+          <p>Select a campaign to start playing, or return home.</p>
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn--primary" onClick={() => { startCampaign(); navigate('/game'); }}>
-              Start New Game
-            </button>
+            <Link to="/campaigns" className="btn btn--primary">Browse Campaigns</Link>
             <Link to="/" className="btn btn--ghost">Go Home</Link>
           </div>
         </div>
