@@ -717,6 +717,66 @@ Return only valid JSON, no markdown, no extra text.`,
   }
 });
 
+// ── DM — Player management ────────────────────────────────────────────────
+
+// All players + their characters — for DMs to manage campaign rosters
+app.get('/api/dm/players', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  try {
+    const players = await prisma.user.findMany({
+      where: { role: 'PLAYER' },
+      select: {
+        id: true, username: true, displayName: true,
+        characters: {
+          where: { isRetired: false },
+          select: { id: true, name: true, class: true, level: true, campaignId: true },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+      orderBy: { displayName: 'asc' },
+    });
+    res.json(players);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DM assigns any character to a campaign
+app.post('/api/dm/characters/:id/assign', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  const { campaignId } = req.body;
+  if (!campaignId) return res.status(400).json({ error: 'campaignId required' });
+  try {
+    const character = await prisma.character.findUnique({ where: { id: req.params.id } });
+    if (!character) return res.status(404).json({ error: 'Character not found' });
+    const updated = await prisma.character.update({
+      where: { id: req.params.id },
+      data: { campaignId },
+      select: { id: true, name: true, class: true, level: true, campaignId: true },
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DM removes any character from a campaign
+app.post('/api/dm/characters/:id/unassign', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  try {
+    const character = await prisma.character.findUnique({ where: { id: req.params.id } });
+    if (!character) return res.status(404).json({ error: 'Character not found' });
+    const updated = await prisma.character.update({
+      where: { id: req.params.id },
+      data: { campaignId: null },
+      select: { id: true, name: true, class: true, level: true, campaignId: true },
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Rules ──────────────────────────────────────────────────────────────────
 
 const DEFAULT_RULES = [

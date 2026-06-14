@@ -281,6 +281,7 @@ export function GameProvider({ children }) {
                   const active = await cr.json();
                   if (active) {
                     migrated.campaign = {
+                      id: active.id,
                       name: active.name,
                       setting: active.setting,
                       currentScene: active.openingScene,
@@ -305,6 +306,7 @@ export function GameProvider({ children }) {
             const active = await cr.json();
             if (active) {
               local.campaign = {
+                id: active.id,
                 name: active.name,
                 setting: active.setting,
                 currentScene: active.openingScene,

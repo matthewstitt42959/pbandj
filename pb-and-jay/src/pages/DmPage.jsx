@@ -197,6 +197,51 @@ const DmPage = () => {
     sessionsAtLevel, totalSessions,
   } = useGame();
 
+  // Campaign player roster
+  const [players, setPlayers] = useState([]);
+  const [playersLoading, setPlayersLoading] = useState(false);
+  const [playerMsg, setPlayerMsg] = useState(null);
+
+  useEffect(() => {
+    setPlayersLoading(true);
+    authFetch('/api/dm/players')
+      .then(data => setPlayers(data))
+      .catch(() => {})
+      .finally(() => setPlayersLoading(false));
+  }, []);
+
+  const handleAssign = async (characterId) => {
+    if (!campaign?.id) return;
+    try {
+      const updated = await authFetch(`/api/dm/characters/${characterId}/assign`, {
+        method: 'POST',
+        body: JSON.stringify({ campaignId: campaign.id }),
+      });
+      setPlayers(prev => prev.map(p => ({
+        ...p,
+        characters: p.characters.map(c => c.id === updated.id ? updated : c),
+      })));
+      setPlayerMsg({ text: 'Player added to campaign', ok: true });
+    } catch (err) {
+      setPlayerMsg({ text: err.message, ok: false });
+    }
+    setTimeout(() => setPlayerMsg(null), 3000);
+  };
+
+  const handleUnassign = async (characterId) => {
+    try {
+      const updated = await authFetch(`/api/dm/characters/${characterId}/unassign`, { method: 'POST' });
+      setPlayers(prev => prev.map(p => ({
+        ...p,
+        characters: p.characters.map(c => c.id === updated.id ? updated : c),
+      })));
+      setPlayerMsg({ text: 'Player removed from campaign', ok: true });
+    } catch (err) {
+      setPlayerMsg({ text: err.message, ok: false });
+    }
+    setTimeout(() => setPlayerMsg(null), 3000);
+  };
+
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newClass, setNewClass] = useState('Fighter');
@@ -406,6 +451,69 @@ const DmPage = () => {
           </div>
         </section>
       )}
+
+      {/* Campaign player roster */}
+      <section className="dm-section">
+        <div className="dm-section__head">
+          <h2 className="dm-section__title" style={{ margin: 0 }}>Campaign Players</h2>
+          {playerMsg && (
+            <span className={`dm-player-msg ${playerMsg.ok ? 'dm-player-msg--ok' : 'dm-player-msg--err'}`}>
+              {playerMsg.text}
+            </span>
+          )}
+        </div>
+        {!campaign?.id && (
+          <p className="dm-section__hint">No active campaign — activate one from the Admin panel first.</p>
+        )}
+        {campaign?.id && (
+          playersLoading ? (
+            <p className="dm-section__hint">Loading players...</p>
+          ) : players.length === 0 ? (
+            <p className="dm-section__hint">No registered players yet.</p>
+          ) : (
+            <div className="dm-player-list">
+              {players.map(player => (
+                <div key={player.id} className="dm-player-row">
+                  <div className="dm-player-info">
+                    <span className="dm-player-name">{player.displayName}</span>
+                    <span className="dm-player-username">@{player.username}</span>
+                  </div>
+                  {player.characters.length === 0 ? (
+                    <span className="dm-player-no-char">No characters yet</span>
+                  ) : (
+                    <div className="dm-player-chars">
+                      {player.characters.map(char => {
+                        const inCampaign = char.campaignId === campaign.id;
+                        return (
+                          <div key={char.id} className={`dm-player-char ${inCampaign ? 'dm-player-char--in' : ''}`}>
+                            <span className="dm-player-char__name">{char.name}</span>
+                            <span className="dm-player-char__meta">Lv {char.level} {char.class}</span>
+                            {inCampaign ? (
+                              <button
+                                className="btn btn--ghost btn--xs"
+                                onClick={() => handleUnassign(char.id)}
+                              >
+                                Remove
+                              </button>
+                            ) : (
+                              <button
+                                className="btn btn--primary btn--xs"
+                                onClick={() => handleAssign(char.id)}
+                              >
+                                Add to Campaign
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </section>
 
       {/* AI companions */}
       {aiWithIndex.length > 0 && (

@@ -3,8 +3,10 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AdminPage.css';
 
-function CampaignRow({ campaign, authFetch, onUpdated }) {
+function CampaignRow({ campaign, dmUsers, authFetch, onUpdated }) {
   const [busy, setBusy] = useState(false);
+  const [dmId, setDmId] = useState(campaign.dm?.id ?? '');
+  const [assigningDm, setAssigningDm] = useState(false);
 
   const handleActivate = async () => {
     setBusy(true);
@@ -26,13 +28,42 @@ function CampaignRow({ campaign, authFetch, onUpdated }) {
     }
   };
 
+  const handleAssignDm = async (newDmId) => {
+    if (!newDmId) return;
+    setDmId(newDmId);
+    setAssigningDm(true);
+    try {
+      const updated = await authFetch(`/api/campaigns/${campaign.id}/assign-dm`, {
+        method: 'POST',
+        body: JSON.stringify({ userId: newDmId }),
+      });
+      onUpdated(updated);
+    } catch {
+      setDmId(campaign.dm?.id ?? '');
+    } finally {
+      setAssigningDm(false);
+    }
+  };
+
   return (
     <tr className={`admin-row ${campaign.isActive ? 'admin-row--active' : ''}`}>
       <td>
         <span className="admin-display-name">{campaign.name}</span>
         {campaign.isActive && <span className="admin-badge admin-badge--active">ACTIVE</span>}
       </td>
-      <td className="admin-email">{campaign.dm?.displayName ?? '—'}</td>
+      <td>
+        <select
+          className="admin-role-select"
+          value={dmId}
+          disabled={assigningDm}
+          onChange={e => handleAssignDm(e.target.value)}
+        >
+          <option value="" disabled>— Assign DM —</option>
+          {dmUsers.map(u => (
+            <option key={u.id} value={u.id}>{u.displayName}</option>
+          ))}
+        </select>
+      </td>
       <td>{campaign.createdBy?.displayName}</td>
       <td className="admin-date">{new Date(campaign.createdAt).toLocaleDateString()}</td>
       <td>
@@ -182,6 +213,7 @@ const AdminPage = () => {
 
   const counts = { PLAYER: 0, DM: 0, SUPER_DM: 0 };
   users.forEach(u => { counts[u.role] = (counts[u.role] ?? 0) + 1; });
+  const dmUsers = users.filter(u => u.role === 'DM' || u.role === 'SUPER_DM');
 
   return (
     <div className="admin-page">
@@ -249,6 +281,7 @@ const AdminPage = () => {
                   <CampaignRow
                     key={c.id}
                     campaign={c}
+                    dmUsers={dmUsers}
                     authFetch={authFetch}
                     onUpdated={handleCampaignUpdated}
                   />

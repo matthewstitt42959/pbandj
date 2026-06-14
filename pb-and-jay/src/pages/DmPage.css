@@ -665,3 +665,91 @@
     padding-top: 1rem;
   }
 }
+
+/* Campaign player roster */
+.dm-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dm-player-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.dm-player-info {
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.dm-player-name {
+  display: block;
+  font-weight: 600;
+  color: #e8e6f0;
+  font-size: 0.9rem;
+}
+
+.dm-player-username {
+  display: block;
+  font-size: 0.75rem;
+  color: #6a7088;
+  margin-top: 0.1rem;
+}
+
+.dm-player-no-char {
+  font-size: 0.8rem;
+  color: #6a7088;
+  font-style: italic;
+  align-self: center;
+}
+
+.dm-player-chars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.dm-player-char {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dm-player-char--in {
+  background: rgba(168, 230, 207, 0.06);
+  border: 1px solid rgba(168, 230, 207, 0.15);
+}
+
+.dm-player-char__name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #c9c6d8;
+  flex: 1;
+}
+
+.dm-player-char__meta {
+  font-size: 0.75rem;
+  color: #6a7088;
+  white-space: nowrap;
+}
+
+.dm-player-msg {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+}
+
+.dm-player-msg--ok { color: #a8e6cf; }
+.dm-player-msg--err { color: #ff8a80; }
+

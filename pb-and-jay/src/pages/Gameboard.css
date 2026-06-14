@@ -787,6 +787,28 @@
   margin-bottom: 1.5rem;
 }
 
+/* Spectator / read-only view */
+.spectator-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 1.5rem 0;
+  padding: 0.65rem 1rem;
+  background: rgba(255, 200, 87, 0.07);
+  border: 1px solid rgba(255, 200, 87, 0.2);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #9aa0b8;
+}
+
+.spectator-notice__icon { font-size: 1rem; }
+
+.spectator-log-wrap {
+  max-width: 760px;
+  margin: 1.25rem auto 0;
+  padding: 0 1.5rem 4rem;
+}
+
 /* Mobile tab bar — hidden on desktop */
 .mobile-tab-bar {
   display: none;

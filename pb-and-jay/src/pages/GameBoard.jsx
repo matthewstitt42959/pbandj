@@ -49,6 +49,10 @@ const GameBoard = () => {
 
   const { user } = useAuth();
   const isDm = user?.role === 'DM' || user?.role === 'SUPER_DM';
+  const isAssigned = isDm || (
+    Array.isArray(user?.characters) &&
+    user.characters.some(c => !c.isRetired && c.campaignId === campaign?.id)
+  );
 
   // All human characters have posted at least once this round
   const allHumansPosted = characters.filter(c => !c.isAI).every(c => roundPosters.includes(c.name));
@@ -92,6 +96,26 @@ const GameBoard = () => {
             <Link to="/campaigns" className="btn btn--primary">Browse Campaigns</Link>
             <Link to="/" className="btn btn--ghost">Go Home</Link>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAssigned) {
+    return (
+      <div className="gameboard-page">
+        <header className="gameboard-header">
+          <div>
+            <h1 className="gameboard-header__title">{campaign.name}</h1>
+            <p className="gameboard-header__scene">{campaign.currentScene}</p>
+          </div>
+        </header>
+        <div className="spectator-notice">
+          <span className="spectator-notice__icon">👁</span>
+          <span>You're watching this campaign. Contact the DM to be assigned a character and join.</span>
+        </div>
+        <div className="spectator-log-wrap">
+          <EncounterLog posts={posts} isLoading={false} scrollKey={0} />
         </div>
       </div>
     );
