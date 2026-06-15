@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './CampaignListPage.css';
 
@@ -116,6 +116,7 @@ function ApprovalModal({ campaign, onClose, onDone, authFetch }) {
 
 const CampaignListPage = () => {
   const { user, authFetch } = useAuth();
+  const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
@@ -129,6 +130,11 @@ const CampaignListPage = () => {
       .catch(e => setErr(e.message))
       .finally(() => setLoading(false));
   }, [authFetch]);
+
+  const handlePlay = (campaignId) => {
+    localStorage.setItem('pb-and-jay-load-campaign', campaignId);
+    navigate('/game');
+  };
 
   const handleReviewDone = (action) => {
     setCampaigns(prev => prev.map(c =>
@@ -175,6 +181,7 @@ const CampaignListPage = () => {
                 user={user}
                 isSuperDm={isSuperDm}
                 onReview={() => setReviewing(c)}
+                onPlay={handlePlay}
               />
             ))}
           </div>
@@ -193,6 +200,7 @@ const CampaignListPage = () => {
                 user={user}
                 isSuperDm={isSuperDm}
                 onReview={() => setReviewing(c)}
+                onPlay={handlePlay}
               />
             ))}
           </div>
@@ -211,6 +219,7 @@ const CampaignListPage = () => {
                 user={user}
                 isSuperDm={isSuperDm}
                 onReview={() => setReviewing(c)}
+                onPlay={handlePlay}
               />
             ))}
           </div>
@@ -236,10 +245,11 @@ const CampaignListPage = () => {
   );
 };
 
-function CampaignRow({ campaign, user, isSuperDm, onReview }) {
+function CampaignRow({ campaign, user, isSuperDm, onReview, onPlay }) {
   const canEdit = ['DRAFT', 'REJECTED'].includes(campaign.status) || isSuperDm;
   const isPending = campaign.status === 'PENDING_REVIEW';
   const isOwn = campaign.createdBy?.id === user.id;
+  const canPlay = campaign.status === 'APPROVED';
 
   return (
     <div className="cl-campaign-row">
@@ -256,6 +266,9 @@ function CampaignRow({ campaign, user, isSuperDm, onReview }) {
         )}
       </div>
       <div className="cl-campaign-row__actions">
+        {canPlay && (
+          <button className="btn btn--primary btn--xs" onClick={() => onPlay(campaign.id)}>Play</button>
+        )}
         {canEdit && (
           <Link to={`/campaigns/${campaign.id}`} className="btn btn--ghost btn--xs">Edit</Link>
         )}

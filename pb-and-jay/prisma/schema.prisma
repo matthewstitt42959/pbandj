@@ -14,6 +14,12 @@ model Game {
   updatedAt DateTime @updatedAt
 }
 
+model UserGame {
+  userId    String   @id
+  state     Json
+  updatedAt DateTime @updatedAt
+}
+
 enum UserRole {
   PLAYER
   DM

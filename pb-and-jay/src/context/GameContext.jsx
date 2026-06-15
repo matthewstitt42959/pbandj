@@ -281,9 +281,33 @@ export function GameProvider({ children }) {
 
   useEffect(() => {
     async function init() {
+      const tok = localStorage.getItem('pb-and-jay-token');
+      const authHeaders = tok ? { Authorization: `Bearer ${tok}` } : {};
+
+      // If a "Play" action requested a specific campaign, load it fresh
+      const switchId = localStorage.getItem('pb-and-jay-load-campaign');
+      if (switchId) {
+        localStorage.removeItem('pb-and-jay-load-campaign');
+        try {
+          const cr = await fetch(`/api/campaigns/${switchId}`, { headers: authHeaders });
+          if (cr.ok) {
+            const c = await cr.json();
+            dispatch({
+              type: 'INIT',
+              payload: {
+                ...initialState,
+                campaign: { id: c.id, name: c.name, setting: c.setting, currentScene: c.openingScene },
+                initialized: true,
+              },
+            });
+            return;
+          }
+        } catch {}
+      }
+
       // Try server first (enables cross-device sync)
       try {
-        const res = await fetch('/api/game');
+        const res = await fetch('/api/game', { headers: authHeaders });
         if (res.ok) {
           const { state } = await res.json();
           if (state) {
@@ -366,9 +390,10 @@ export function GameProvider({ children }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
 
     const timer = setTimeout(() => {
+      const tok = localStorage.getItem('pb-and-jay-token');
       fetch('/api/game', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) },
         body: JSON.stringify({ state: toSave }),
       }).catch(() => {});
     }, 1000);

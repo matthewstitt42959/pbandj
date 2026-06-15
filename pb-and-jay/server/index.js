@@ -208,8 +208,22 @@ app.post('/api/player/respond', requireAiAuth, async (req, res) => {
   }
 });
 
-app.get('/api/game', async (_req, res) => {
+function getRequestUserId(req) {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) return null;
   try {
+    const payload = jwt.verify(auth.slice(7), JWT_SECRET);
+    return payload.userId ?? null;
+  } catch { return null; }
+}
+
+app.get('/api/game', async (req, res) => {
+  try {
+    const userId = getRequestUserId(req);
+    if (userId) {
+      const game = await prisma.userGame.findUnique({ where: { userId } });
+      return res.json({ state: game?.state ?? null });
+    }
     const game = await prisma.game.findUnique({ where: { id: 'singleton' } });
     res.json({ state: game?.state ?? null });
   } catch (err) {
@@ -222,6 +236,15 @@ app.post('/api/game', async (req, res) => {
   const { state } = req.body;
   if (!state) return res.status(400).json({ error: 'Missing state' });
   try {
+    const userId = getRequestUserId(req);
+    if (userId) {
+      await prisma.userGame.upsert({
+        where: { userId },
+        update: { state },
+        create: { userId, state },
+      });
+      return res.json({ ok: true });
+    }
     await prisma.game.upsert({
       where: { id: 'singleton' },
       update: { state },
