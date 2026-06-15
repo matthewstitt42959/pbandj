@@ -348,9 +348,10 @@ export function GameProvider({ children }) {
       } catch {
         // Server unreachable — fall through to localStorage
       }
-      const local = loadLocalGame();
-      // If local state has no campaign (or a stale one without an id), try the active campaign from the API
-      if (local && !local.campaign?.id) {
+      // Default to empty object so new users (no localStorage) still get the active campaign
+      const local = loadLocalGame() ?? {};
+      // If no campaign or a stale one without an id, fetch the active campaign
+      if (!local.campaign?.id) {
         try {
           const cr = await fetch('/api/campaigns/active');
           if (cr.ok) {
@@ -366,7 +367,7 @@ export function GameProvider({ children }) {
           }
         } catch {}
       }
-      if (local?.campaign?.id && local.posts?.length > 0) {
+      if (local.campaign?.id && local.posts?.length > 0) {
         const tok = localStorage.getItem('pb-and-jay-token');
         for (const p of local.posts) {
           await fetch(`/api/campaigns/${local.campaign.id}/posts`, {
@@ -377,7 +378,7 @@ export function GameProvider({ children }) {
         }
         local.posts = [];
       }
-      dispatch({ type: 'INIT', payload: local ?? {} });
+      dispatch({ type: 'INIT', payload: local });
     }
     init();
   }, []);
