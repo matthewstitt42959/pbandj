@@ -282,8 +282,8 @@ export function GameProvider({ children }) {
           const { state } = await res.json();
           if (state) {
             const migrated = migrateState(state);
-            // If saved state has no campaign, check for an active one in the DB
-            if (!migrated.campaign) {
+            // If saved state has no campaign (or a stale one without an id), fetch the active one
+            if (!migrated.campaign?.id) {
               try {
                 const cr = await fetch('/api/campaigns/active');
                 if (cr.ok) {
@@ -319,8 +319,8 @@ export function GameProvider({ children }) {
         // Server unreachable — fall through to localStorage
       }
       const local = loadLocalGame();
-      // If local state has no campaign, try the active campaign from the API
-      if (local && !local.campaign) {
+      // If local state has no campaign (or a stale one without an id), try the active campaign from the API
+      if (local && !local.campaign?.id) {
         try {
           const cr = await fetch('/api/campaigns/active');
           if (cr.ok) {
@@ -376,12 +376,20 @@ export function GameProvider({ children }) {
     if (!campaignId) return;
 
     const token = () => localStorage.getItem('pb-and-jay-token');
+    let lastPostId = null;
     const fetchPosts = () =>
       fetch(`/api/campaigns/${campaignId}/posts`, {
         headers: { Authorization: `Bearer ${token()}` },
       })
         .then(r => r.ok ? r.json() : null)
-        .then(posts => { if (posts) dispatch({ type: 'SET_POSTS', posts }); })
+        .then(posts => {
+          if (!posts) return;
+          const newestId = posts[posts.length - 1]?.id ?? null;
+          if (newestId !== lastPostId) {
+            lastPostId = newestId;
+            dispatch({ type: 'SET_POSTS', posts });
+          }
+        })
         .catch(() => {});
 
     fetchPosts();

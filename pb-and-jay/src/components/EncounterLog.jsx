@@ -64,14 +64,20 @@ const EncounterLog = ({ posts, isLoading, scrollKey }) => {
     userScrolledUp.current = el.scrollHeight - el.scrollTop - el.clientHeight > 80;
   };
 
+  const scrollToBottom = (smooth = true) => {
+    const el = logRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
+  };
+
   useEffect(() => {
     userScrolledUp.current = false;
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom(true);
   }, [scrollKey]);
 
   useEffect(() => {
     if (!userScrolledUp.current) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      scrollToBottom(true);
     }
   }, [posts, isLoading]);
 
