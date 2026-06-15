@@ -65,6 +65,25 @@ model Campaign {
   updatedAt    DateTime       @updatedAt
 }
 
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model CampaignPost {
+  id         String   @id @default(cuid())
+  campaignId String
+  author     String
+  authorId   String?
+  type       String   @default("player")
+  content    String
+  aiActions  Json?
+  createdAt  DateTime @default(now())
+
+  @@index([campaignId, createdAt])
+}
+
 model Rule {
   id        String   @id @default(cuid())
   title     String

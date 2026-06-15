@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { createNewCampaign } from '../data/defaultCampaign';
 import { requestDMResponse, requestPlayerResponse } from '../services/aiDM';
 import { rollDice, parseRollCommand } from '../services/dice';
@@ -144,6 +144,9 @@ function gameReducer(state, action) {
 
     case 'LOAD_CAMPAIGN_CHARACTERS':
       return { ...state, characters: action.characters, activeCharacterIndex: 0 };
+
+    case 'SET_POSTS':
+      return { ...state, posts: action.posts };
 
     case 'SET_CHARACTER':
       return { ...state, activeCharacterIndex: action.index };
@@ -296,6 +299,18 @@ export function GameProvider({ children }) {
                 }
               } catch {}
             }
+            // One-time migration: save any legacy blob posts to the DB
+            if (migrated.campaign?.id && migrated.posts?.length > 0) {
+              const tok = localStorage.getItem('pb-and-jay-token');
+              for (const p of migrated.posts) {
+                await fetch(`/api/campaigns/${migrated.campaign.id}/posts`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) },
+                  body: JSON.stringify({ author: p.author, type: p.type, content: p.content }),
+                }).catch(() => {});
+              }
+            }
+            migrated.posts = []; // poll will load them from DB
             dispatch({ type: 'INIT', payload: migrated });
             return;
           }
@@ -321,6 +336,17 @@ export function GameProvider({ children }) {
           }
         } catch {}
       }
+      if (local?.campaign?.id && local.posts?.length > 0) {
+        const tok = localStorage.getItem('pb-and-jay-token');
+        for (const p of local.posts) {
+          await fetch(`/api/campaigns/${local.campaign.id}/posts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) },
+            body: JSON.stringify({ author: p.author, type: p.type, content: p.content }),
+          }).catch(() => {});
+        }
+        local.posts = [];
+      }
       dispatch({ type: 'INIT', payload: local ?? {} });
     }
     init();
@@ -328,22 +354,40 @@ export function GameProvider({ children }) {
 
   useEffect(() => {
     if (!state.initialized) return;
-    const { initialized, isLoadingDM, loadingPlayerIndex, dmError, ...toSave } = state;
+    // Exclude posts — they live in the DB now, not the state blob
+    const { initialized, isLoadingDM, loadingPlayerIndex, dmError, posts, ...toSave } = state;
 
-    // Always save locally for fast reload
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
 
-    // Debounced server save for cross-device sync
     const timer = setTimeout(() => {
       fetch('/api/game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ state: toSave }),
-      }).catch(() => {}); // silently ignore if offline
+      }).catch(() => {});
     }, 1000);
 
     return () => clearTimeout(timer);
   }, [state]);
+
+  // Poll for posts from the DB every 5 seconds when a real campaign is active
+  useEffect(() => {
+    const campaignId = state.campaign?.id;
+    if (!campaignId) return;
+
+    const token = () => localStorage.getItem('pb-and-jay-token');
+    const fetchPosts = () =>
+      fetch(`/api/campaigns/${campaignId}/posts`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(posts => { if (posts) dispatch({ type: 'SET_POSTS', posts }); })
+        .catch(() => {});
+
+    fetchPosts();
+    const interval = setInterval(fetchPosts, 5000);
+    return () => clearInterval(interval);
+  }, [state.campaign?.id]);
 
   const startCampaign = useCallback(() => {
     dispatch({ type: 'START_CAMPAIGN' });
@@ -367,18 +411,32 @@ export function GameProvider({ children }) {
     dispatch({ type: 'TOGGLE_CHARACTER_AI', index });
   }, []);
 
-  const addPost = useCallback((author, content, type = 'player', aiActions = null) => {
+  const addPost = useCallback(async (author, content, type = 'player', aiActions = null) => {
+    const campaignId = state.campaign?.id;
+    if (campaignId) {
+      try {
+        const tok = localStorage.getItem('pb-and-jay-token');
+        const res = await fetch(`/api/campaigns/${campaignId}/posts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) },
+          body: JSON.stringify({ author, type, content, aiActions }),
+        });
+        if (res.ok) {
+          const post = await res.json();
+          dispatch({ type: 'ADD_POST', post });
+          return post;
+        }
+      } catch {}
+    }
+    // Fallback for sandbox / offline
     const post = {
       id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      author,
-      type,
-      content,
-      timestamp: Date.now(),
+      author, type, content, timestamp: Date.now(),
       ...(aiActions?.length ? { aiActions } : {}),
     };
     dispatch({ type: 'ADD_POST', post });
     return post;
-  }, []);
+  }, [state.campaign?.id]);
 
   const submitCharacterPost = useCallback(
     (content) => {
@@ -484,7 +542,7 @@ export function GameProvider({ children }) {
           const { action } = await withRetry(() =>
             requestPlayerResponse({ character: char, campaign, posts: runningPosts, characters, worldFacts })
           );
-          const companionPost = addPost(char.name, action, 'player');
+          const companionPost = await addPost(char.name, action, 'player');
           dispatch({ type: 'RECORD_ROUND_POST', name: char.name });
           runningPosts = [...runningPosts, companionPost];
         } catch (err) {
@@ -500,7 +558,7 @@ export function GameProvider({ children }) {
         const { narrative, facts } = await withRetry(() =>
           requestDMResponse({ campaign, posts: runningPosts, characters, worldFacts, allActed: characters.some(c => c.isAI) })
         );
-        addPost('DM', narrative, 'dm');
+        await addPost('DM', narrative, 'dm');
         if (facts?.length) dispatch({ type: 'ADD_WORLD_FACTS', facts });
       } catch (err) {
         dispatch({ type: 'SET_LOADING_DM', loading: false, error: 'DM response failed — tap "Get DM Response" to retry.' });

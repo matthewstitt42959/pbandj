@@ -28,16 +28,30 @@ function makeToken(password) {
   return createHmac('sha256', secret).update(password).digest('hex');
 }
 
-function validateAiToken(token) {
-  const password = process.env.AI_DM_PASSWORD;
-  if (!password) return true; // no lock configured — open access
+// DB-first password lookup with 30s in-memory cache
+let _pwCache = { value: undefined, ts: 0 };
+async function getAiPassword() {
+  if (Date.now() - _pwCache.ts < 30000) return _pwCache.value;
+  try {
+    const row = await prisma.setting.findUnique({ where: { key: 'AI_DM_PASSWORD' } });
+    _pwCache = { value: row?.value ?? process.env.AI_DM_PASSWORD ?? null, ts: Date.now() };
+  } catch {
+    _pwCache = { value: process.env.AI_DM_PASSWORD ?? null, ts: Date.now() };
+  }
+  return _pwCache.value;
+}
+function invalidatePasswordCache() { _pwCache.ts = 0; }
+
+function validateAiToken(token, password) {
+  if (!password) return true;
   if (!token) return false;
   return token === makeToken(password);
 }
 
-function requireAiAuth(req, res, next) {
-  if (!process.env.AI_DM_PASSWORD) return next();
-  if (!validateAiToken(req.headers['x-ai-token'])) {
+async function requireAiAuth(req, res, next) {
+  const password = await getAiPassword();
+  if (!password) return next();
+  if (!validateAiToken(req.headers['x-ai-token'], password)) {
     return res.status(401).json({ error: 'AI DM requires authentication', code: 'UNAUTHORIZED' });
   }
   next();
@@ -123,9 +137,9 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // --- AI DM paywall unlock ---
-app.post('/api/auth/unlock', (req, res) => {
-  const password = process.env.AI_DM_PASSWORD;
-  if (!password) return res.json({ token: 'open' }); // no lock
+app.post('/api/auth/unlock', async (req, res) => {
+  const password = await getAiPassword();
+  if (!password) return res.json({ token: 'open' });
   if (req.body.password !== password) {
     return res.status(401).json({ error: 'Incorrect access code' });
   }
@@ -717,6 +731,60 @@ Return only valid JSON, no markdown, no extra text.`,
   }
 });
 
+// ── Campaign posts ────────────────────────────────────────────────────────
+
+// Get all posts for a campaign — used for polling by all clients
+app.get('/api/campaigns/:id/posts', requireAuth, async (req, res) => {
+  try {
+    const posts = await prisma.campaignPost.findMany({
+      where: { campaignId: req.params.id },
+      orderBy: { createdAt: 'asc' },
+    });
+    res.json(posts.map(p => ({
+      id: p.id,
+      author: p.author,
+      authorId: p.authorId,
+      type: p.type,
+      content: p.content,
+      aiActions: p.aiActions ?? undefined,
+      timestamp: p.createdAt.getTime(),
+    })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create a post
+app.post('/api/campaigns/:id/posts', requireAuth, async (req, res) => {
+  const { author, type, content, aiActions } = req.body;
+  if (!author?.trim() || !content?.trim()) {
+    return res.status(400).json({ error: 'author and content required' });
+  }
+  try {
+    const post = await prisma.campaignPost.create({
+      data: {
+        campaignId: req.params.id,
+        author: author.trim(),
+        authorId: req.authUser.id,
+        type: type ?? 'player',
+        content: content.trim(),
+        aiActions: aiActions ?? undefined,
+      },
+    });
+    res.status(201).json({
+      id: post.id,
+      author: post.author,
+      authorId: post.authorId,
+      type: post.type,
+      content: post.content,
+      aiActions: post.aiActions ?? undefined,
+      timestamp: post.createdAt.getTime(),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── DM — Player management ────────────────────────────────────────────────
 
 // Characters assigned to a specific campaign (any authenticated user can read)
@@ -997,6 +1065,34 @@ app.patch('/api/admin/users/:id/password', requireAuth, requireSuperDM, async (r
   res.json({ tempPassword });
 });
 
+// ── Admin settings ────────────────────────────────────────────────────────────
+
+// Get current AI password status (never return the actual value)
+app.get('/api/admin/settings/ai-password', requireAuth, requireSuperDM, async (_req, res) => {
+  const password = await getAiPassword();
+  res.json({ isSet: !!password });
+});
+
+// Set AI password
+app.post('/api/admin/settings/ai-password', requireAuth, requireSuperDM, async (req, res) => {
+  const { password } = req.body;
+  if (!password?.trim()) return res.status(400).json({ error: 'Password is required' });
+  await prisma.setting.upsert({
+    where: { key: 'AI_DM_PASSWORD' },
+    update: { value: password.trim() },
+    create: { key: 'AI_DM_PASSWORD', value: password.trim() },
+  });
+  invalidatePasswordCache();
+  res.json({ ok: true });
+});
+
+// Clear AI password (open access)
+app.delete('/api/admin/settings/ai-password', requireAuth, requireSuperDM, async (_req, res) => {
+  await prisma.setting.deleteMany({ where: { key: 'AI_DM_PASSWORD' } });
+  invalidatePasswordCache();
+  res.json({ ok: true });
+});
+
 // ── Wiki ──────────────────────────────────────────────────────────────────────
 
 function requireDM(req, res, next) {
@@ -1036,7 +1132,7 @@ app.delete('/api/wiki/:id', requireAuth, requireDM, async (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
   let provider;
   try {
     provider = getProvider();
@@ -1044,8 +1140,9 @@ app.get('/api/health', (req, res) => {
     return res.status(500).json({ ok: false, error: err.message });
   }
 
-  const aiLocked = !!process.env.AI_DM_PASSWORD;
-  const authenticated = validateAiToken(req.headers['x-ai-token']);
+  const password = await getAiPassword();
+  const aiLocked = !!password;
+  const authenticated = validateAiToken(req.headers['x-ai-token'], password);
 
   res.json({
     ok: true,

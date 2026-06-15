@@ -189,6 +189,12 @@ const AdminPage = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [campaignsLoading, setCampaignsLoading] = useState(true);
 
+  // AI password settings
+  const [aiPasswordSet, setAiPasswordSet] = useState(false);
+  const [aiPasswordInput, setAiPasswordInput] = useState('');
+  const [aiPasswordMsg, setAiPasswordMsg] = useState(null);
+  const [aiPasswordBusy, setAiPasswordBusy] = useState(false);
+
   useEffect(() => {
     authFetch('/api/admin/users')
       .then(data => setUsers(data.users))
@@ -199,7 +205,48 @@ const AdminPage = () => {
       .then(data => setCampaigns(data))
       .catch(() => {})
       .finally(() => setCampaignsLoading(false));
+
+    authFetch('/api/admin/settings/ai-password')
+      .then(data => setAiPasswordSet(data.isSet))
+      .catch(() => {});
   }, []);
+
+  const flashAi = (text, ok) => {
+    setAiPasswordMsg({ text, ok });
+    setTimeout(() => setAiPasswordMsg(null), 3500);
+  };
+
+  const handleSetAiPassword = async () => {
+    if (!aiPasswordInput.trim()) return;
+    setAiPasswordBusy(true);
+    try {
+      await authFetch('/api/admin/settings/ai-password', {
+        method: 'POST',
+        body: JSON.stringify({ password: aiPasswordInput.trim() }),
+      });
+      setAiPasswordSet(true);
+      setAiPasswordInput('');
+      flashAi('AI access code set', true);
+    } catch (err) {
+      flashAi(err.message, false);
+    } finally {
+      setAiPasswordBusy(false);
+    }
+  };
+
+  const handleClearAiPassword = async () => {
+    if (!window.confirm('Remove the AI access code? Anyone will be able to use the AI DM.')) return;
+    setAiPasswordBusy(true);
+    try {
+      await authFetch('/api/admin/settings/ai-password', { method: 'DELETE' });
+      setAiPasswordSet(false);
+      flashAi('AI access code removed — AI is now open', true);
+    } catch (err) {
+      flashAi(err.message, false);
+    } finally {
+      setAiPasswordBusy(false);
+    }
+  };
 
   const handleCampaignUpdated = (updated) => {
     setCampaigns(prev => prev.map(c => {
@@ -289,6 +336,50 @@ const AdminPage = () => {
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+
+      <section className="admin-section">
+        <h2 className="admin-section__title">AI DM Settings</h2>
+        <p className="admin-section__desc">
+          Set an access code to restrict who can use the AI Dungeon Master. Leave unset to allow open access.
+        </p>
+        <div className="ai-pw-status">
+          <span className={`ai-pw-badge ${aiPasswordSet ? 'ai-pw-badge--locked' : 'ai-pw-badge--open'}`}>
+            {aiPasswordSet ? 'Locked — access code required' : 'Open — no access code set'}
+          </span>
+        </div>
+        <div className="ai-pw-form">
+          <input
+            className="ai-pw-input"
+            type="password"
+            placeholder="New access code"
+            value={aiPasswordInput}
+            onChange={e => setAiPasswordInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSetAiPassword()}
+            disabled={aiPasswordBusy}
+          />
+          <button
+            className="btn btn--primary btn--sm"
+            onClick={handleSetAiPassword}
+            disabled={aiPasswordBusy || !aiPasswordInput.trim()}
+          >
+            {aiPasswordBusy ? '...' : aiPasswordSet ? 'Update Code' : 'Set Code'}
+          </button>
+          {aiPasswordSet && (
+            <button
+              className="btn btn--ghost btn--sm ai-pw-clear"
+              onClick={handleClearAiPassword}
+              disabled={aiPasswordBusy}
+            >
+              Clear (Open Access)
+            </button>
+          )}
+        </div>
+        {aiPasswordMsg && (
+          <p className={`ai-pw-msg ${aiPasswordMsg.ok ? 'ai-pw-msg--ok' : 'ai-pw-msg--err'}`}>
+            {aiPasswordMsg.text}
+          </p>
         )}
       </section>
     </div>
