@@ -46,6 +46,8 @@ const GameBoard = () => {
     addPost,
     resetCampaign,
     loadCampaignCharacters,
+    editPost,
+    deletePost,
   } = useGame();
 
   const { user, authFetch } = useAuth();
@@ -126,7 +128,7 @@ const GameBoard = () => {
           <span>You're watching this campaign. Contact the DM to be assigned a character and join.</span>
         </div>
         <div className="spectator-log-wrap">
-          <EncounterLog posts={posts} isLoading={false} scrollKey={0} />
+          <EncounterLog posts={posts} isLoading={false} scrollKey={0} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
         </div>
       </div>
     );
@@ -264,7 +266,7 @@ const GameBoard = () => {
 
         <section className={`encounter-log${mobileTab !== 'log' ? ' mobile-hidden' : ''}`}>
           <h3>Encounter Log</h3>
-          <EncounterLog posts={posts} isLoading={isLoadingDM} scrollKey={logScrollKey} />
+          <EncounterLog posts={posts} isLoading={isLoadingDM} scrollKey={logScrollKey} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
 
           <div className="post-as-toggle">
             {activeCharacter && (

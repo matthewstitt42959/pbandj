@@ -148,6 +148,12 @@ function gameReducer(state, action) {
     case 'SET_POSTS':
       return { ...state, posts: action.posts };
 
+    case 'UPDATE_POST':
+      return { ...state, posts: state.posts.map(p => p.id === action.post.id ? action.post : p) };
+
+    case 'REMOVE_POST':
+      return { ...state, posts: state.posts.filter(p => p.id !== action.postId) };
+
     case 'SET_CHARACTER':
       return { ...state, activeCharacterIndex: action.index };
 
@@ -511,6 +517,32 @@ export function GameProvider({ children }) {
     dispatch({ type: 'LOAD_CAMPAIGN_CHARACTERS', characters });
   }, []);
 
+  const editPost = useCallback(async (postId, content) => {
+    const campaignId = state.campaign?.id;
+    if (!campaignId) return;
+    const tok = localStorage.getItem('pb-and-jay-token');
+    const res = await fetch(`/api/campaigns/${campaignId}/posts/${postId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) },
+      body: JSON.stringify({ content }),
+    });
+    if (res.ok) {
+      const post = await res.json();
+      dispatch({ type: 'UPDATE_POST', post });
+    }
+  }, [state.campaign?.id]);
+
+  const deletePost = useCallback(async (postId) => {
+    const campaignId = state.campaign?.id;
+    if (!campaignId) return;
+    const tok = localStorage.getItem('pb-and-jay-token');
+    const res = await fetch(`/api/campaigns/${campaignId}/posts/${postId}`, {
+      method: 'DELETE',
+      headers: { ...(tok ? { Authorization: `Bearer ${tok}` } : {}) },
+    });
+    if (res.ok) dispatch({ type: 'REMOVE_POST', postId });
+  }, [state.campaign?.id]);
+
   const submitDMPost = useCallback(
     (content) => {
       if (!state.campaign || !content.trim()) return;
@@ -590,6 +622,8 @@ export function GameProvider({ children }) {
     setPlayMode,
     toggleCharacterAI,
     addPost,
+    editPost,
+    deletePost,
     submitCharacterPost,
     submitDMPost,
     runAiRound,

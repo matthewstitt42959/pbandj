@@ -785,6 +785,40 @@ app.post('/api/campaigns/:id/posts', requireAuth, async (req, res) => {
   }
 });
 
+// Edit a post (DM / SuperDM only)
+app.patch('/api/campaigns/:id/posts/:postId', requireAuth, async (req, res) => {
+  const role = req.authUser?.role;
+  if (role !== 'DM' && role !== 'SUPER_DM') return res.status(403).json({ error: 'Forbidden' });
+  const { content } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: 'content required' });
+  try {
+    const post = await prisma.campaignPost.update({
+      where: { id: req.params.postId, campaignId: req.params.id },
+      data: { content: content.trim() },
+    });
+    res.json({
+      id: post.id, author: post.author, authorId: post.authorId,
+      type: post.type, content: post.content,
+      aiActions: post.aiActions ?? undefined,
+      timestamp: post.createdAt.getTime(),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete a post (DM / SuperDM only)
+app.delete('/api/campaigns/:id/posts/:postId', requireAuth, async (req, res) => {
+  const role = req.authUser?.role;
+  if (role !== 'DM' && role !== 'SUPER_DM') return res.status(403).json({ error: 'Forbidden' });
+  try {
+    await prisma.campaignPost.delete({ where: { id: req.params.postId, campaignId: req.params.id } });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── DM — Player management ────────────────────────────────────────────────
 
 // Characters assigned to a specific campaign (any authenticated user can read)
