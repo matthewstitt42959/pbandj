@@ -156,35 +156,41 @@ const GameBoard = () => {
           <p className="gameboard-header__scene">{campaign.currentScene}</p>
         </div>
         <div className="gameboard-header__controls">
-          <div className="mode-toggle">
-            <span className="mode-toggle__label">Mode</span>
-            <button
-              type="button"
-              className={`mode-toggle__btn ${playMode === 'manual' ? 'active' : ''}`}
-              onClick={() => setPlayMode('manual')}
-            >
-              Manual
-            </button>
-            <button
-              type="button"
-              className={`mode-toggle__btn ${playMode === 'ai' ? 'active' : ''}`}
-              onClick={() => {
-                if (aiLocked && !aiAuthenticated) {
-                  setShowUnlockModal(true);
-                } else {
-                  setPlayMode('ai');
+          {isDm ? (
+            <div className="mode-toggle">
+              <span className="mode-toggle__label">Mode</span>
+              <button
+                type="button"
+                className={`mode-toggle__btn ${playMode === 'manual' ? 'active' : ''}`}
+                onClick={() => setPlayMode('manual')}
+              >
+                AI-free
+              </button>
+              <button
+                type="button"
+                className={`mode-toggle__btn ${playMode === 'ai' ? 'active' : ''}`}
+                onClick={() => {
+                  if (aiLocked && !aiAuthenticated) {
+                    setShowUnlockModal(true);
+                  } else {
+                    setPlayMode('ai');
+                  }
+                }}
+                disabled={!aiAvailable}
+                title={
+                  !aiAvailable ? 'Add an API key in Setup to enable'
+                  : aiLocked && !aiAuthenticated ? 'Subscription required — click to unlock'
+                  : 'AI assists with narration and companions'
                 }
-              }}
-              disabled={!aiAvailable}
-              title={
-                !aiAvailable ? 'Add an API key in Setup to enable'
-                : aiLocked && !aiAuthenticated ? 'Subscription required — click to unlock'
-                : 'AI responds after each character post'
-              }
-            >
-              {aiLocked && !aiAuthenticated ? '🔒 AI DM' : 'AI DM'}
-            </button>
-          </div>
+              >
+                {aiLocked && !aiAuthenticated ? '🔒 AI Assist' : 'AI Assist'}
+              </button>
+            </div>
+          ) : (
+            <span className="mode-indicator">
+              {playMode === 'manual' ? 'AI-free session' : 'AI-assisted session'}
+            </span>
+          )}
           <button className="btn btn--ghost" onClick={resetCampaign} title="Reset campaign">
             New Campaign
           </button>
@@ -193,12 +199,12 @@ const GameBoard = () => {
 
       {playMode === 'manual' && (
         <p className="gameboard-banner gameboard-banner--manual">
-          Manual mode — write character posts and DM narration yourself. No API needed.
+          AI-free session — the DM is narrating everything directly.
         </p>
       )}
       {playMode === 'ai' && (
         <p className="gameboard-banner gameboard-banner--ai">
-          AI mode — post your action, then click <strong>Get DM Response</strong> when the party is ready.
+          AI-assisted session — post your action, then click <strong>Get DM Response</strong> when the party is ready.
         </p>
       )}
 
@@ -325,12 +331,14 @@ const GameBoard = () => {
 
           {isDm && postAs === 'dm' && (
             <>
-              <DmAssist
-                campaign={campaign}
-                posts={posts}
-                characters={characters}
-                onInsert={(text) => setAssistInsert({ text, ts: Date.now() })}
-              />
+              {playMode === 'ai' && (
+                <DmAssist
+                  campaign={campaign}
+                  posts={posts}
+                  characters={characters}
+                  onInsert={(text) => setAssistInsert({ text, ts: Date.now() })}
+                />
+              )}
 
               {/* Scene starters */}
               <div className="dm-scene-starters">

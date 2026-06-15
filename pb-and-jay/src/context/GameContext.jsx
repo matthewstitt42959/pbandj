@@ -556,7 +556,7 @@ export function GameProvider({ children }) {
   // Companions that already posted this round (from a prior failed attempt) are skipped.
   const runAiRound = useCallback(
     async () => {
-      if (!state.campaign || state.isLoadingDM) return;
+      if (!state.campaign || state.isLoadingDM || state.playMode !== 'ai') return;
 
       const { campaign, characters, worldFacts, posts, roundPosters } = state;
       let runningPosts = [...posts];
