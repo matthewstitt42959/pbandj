@@ -357,6 +357,36 @@
   letter-spacing: 0.03em;
 }
 
+/* ── AI toggle ── */
+
+.cs-ai-toggle {
+  margin-bottom: 1.25rem;
+}
+
+.cs-ai-toggle__label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.cs-ai-toggle__check {
+  width: 14px;
+  height: 14px;
+  accent-color: #a78bfa;
+  cursor: pointer;
+}
+
+.cs-ai-toggle__text {
+  font-size: 0.78rem;
+  color: #6a7088;
+}
+
+.cs-ai-toggle__label:hover .cs-ai-toggle__text {
+  color: #9aa0b8;
+}
+
 /* ── Conditions ── */
 
 .cs-sub-heading {

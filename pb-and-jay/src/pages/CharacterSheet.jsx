@@ -214,6 +214,18 @@ function OverviewTab({ char, onFieldChange }) {
         })}
       </div>
 
+      <div className="cs-ai-toggle">
+        <label className="cs-ai-toggle__label">
+          <input
+            type="checkbox"
+            className="cs-ai-toggle__check"
+            checked={!!char.isAiCharacter}
+            onChange={e => onFieldChange('isAiCharacter', e.target.checked)}
+          />
+          <span className="cs-ai-toggle__text">AI-generated character (hidden from My Characters)</span>
+        </label>
+      </div>
+
       <div className="cs-conditions">
         <h3 className="cs-sub-heading">Conditions</h3>
         <div className="cs-condition-grid">

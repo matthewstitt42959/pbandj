@@ -308,7 +308,7 @@ app.post('/api/users/me', requireAuth, async (req, res) => {
 app.get('/api/characters', requireAuth, async (req, res) => {
   try {
     const characters = await prisma.character.findMany({
-      where: { userId: req.authUser.id },
+      where: { userId: req.authUser.id, isAiCharacter: false },
       orderBy: [{ isRetired: 'asc' }, { createdAt: 'desc' }],
     });
     res.json(characters);
@@ -1125,6 +1125,7 @@ Make each character distinct and interesting. Vary the classes. Return ONLY the 
         data: {
           userId: req.authUser.id,
           campaignId: req.params.id,
+          isAiCharacter: true,
           name: c.name ?? 'Unknown',
           species: c.species ?? 'Human',
           class: c.class ?? 'fighter',

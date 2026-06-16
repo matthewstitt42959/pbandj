@@ -150,6 +150,7 @@ model Character {
   campaign      Campaign? @relation(fields: [campaignId], references: [id])
   isRetired     Boolean   @default(false)
   retiredAt     DateTime?
+  isAiCharacter Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
