@@ -72,6 +72,7 @@ const GameBoard = () => {
   // For AI mode: only require the current viewer's character to have posted
   const allHumansPosted = !myCharacter || roundPosters.includes(myCharacter.name);
   const [activeTab, setActiveTab] = useState('stats');
+  // DMs without their own character default to DM Narration; everyone else posts as their character
   const [postAs, setPostAs] = useState(isDm && !hasOwnCharacter ? 'dm' : 'character');
   const [aiAvailable, setAiAvailable] = useState(false);
   const [aiLocked, setAiLocked] = useState(false);
@@ -264,8 +265,8 @@ const GameBoard = () => {
           <h3>Encounter Log</h3>
           <EncounterLog posts={posts} isLoading={isLoadingDM} scrollKey={logScrollKey} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
 
-          <div className="post-as-toggle">
-            {myCharacter && (
+          {isDm && myCharacter && (
+            <div className="post-as-toggle">
               <button
                 type="button"
                 className={`post-as-toggle__btn ${postAs === 'character' ? 'active' : ''}`}
@@ -273,8 +274,6 @@ const GameBoard = () => {
               >
                 {myCharacter.name}
               </button>
-            )}
-            {isDm && (
               <button
                 type="button"
                 className={`post-as-toggle__btn ${postAs === 'dm' ? 'active' : ''}`}
@@ -282,8 +281,8 @@ const GameBoard = () => {
               >
                 DM Narration
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {(myCharacter || isDm) && (
             <PostComposer
