@@ -18,6 +18,7 @@ import DmPage from './pages/DmPage';
 import AdminPage from './pages/AdminPage';
 import CampaignBuilderPage from './pages/CampaignBuilderPage';
 import CampaignListPage from './pages/CampaignListPage';
+import CampaignManagePage from './pages/CampaignManagePage';
 import RulesPage from './pages/RulesPage';
 import WikiPage from './pages/WikiPage';
 
@@ -65,6 +66,9 @@ function App() {
               } />
               <Route path="/campaigns/:id" element={
                 <PrivateRoute><CampaignBuilderPage /></PrivateRoute>
+              } />
+              <Route path="/campaigns/:id/manage" element={
+                <PrivateRoute><CampaignManagePage /></PrivateRoute>
               } />
               <Route path="/wiki" element={<WikiPage />} />
 

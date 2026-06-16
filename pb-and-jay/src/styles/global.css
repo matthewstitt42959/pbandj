@@ -209,6 +209,13 @@ code {
 }
 .btn--danger:hover:not(:disabled) { background: rgba(255, 138, 128, 0.22); }
 
+.btn--approve {
+  background: rgba(168, 230, 207, 0.12);
+  color: #a8e6cf;
+  border: 1px solid rgba(168, 230, 207, 0.3);
+}
+.btn--approve:hover:not(:disabled) { background: rgba(168, 230, 207, 0.22); }
+
 /* ── Shared back link ── */
 
 .cs-back-link {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useGame } from '../context/GameContext';
 import './CampaignListPage.css';
 
 const STATUS_META = {
@@ -230,6 +231,9 @@ function CampaignRow({ campaign, user, isSuperDm, onReview, onPlay }) {
         {canPlay && (
           <button className="btn btn--primary btn--xs" onClick={() => onPlay(campaign.id)}>Play</button>
         )}
+        {canPlay && isOwn && (
+          <Link to={`/campaigns/${campaign.id}/manage`} className="btn btn--ghost btn--xs">Manage</Link>
+        )}
         {canEdit && (
           <Link to={`/campaigns/${campaign.id}`} className="btn btn--ghost btn--xs">Edit</Link>
         )}
@@ -248,6 +252,7 @@ function CampaignRow({ campaign, user, isSuperDm, onReview, onPlay }) {
 
 const CampaignListPage = () => {
   const { user, authFetch } = useAuth();
+  const { switchCampaign } = useGame();
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
   const [browseCampaigns, setBrowseCampaigns] = useState([]);
@@ -274,7 +279,7 @@ const CampaignListPage = () => {
   }, [user?.role]);
 
   const handlePlay = (campaignId) => {
-    localStorage.setItem('pb-and-jay-load-campaign', campaignId);
+    switchCampaign(campaignId);
     navigate('/game');
   };
 

@@ -966,6 +966,21 @@ app.patch('/api/campaigns/:id/posts/:postId', requireAuth, async (req, res) => {
   }
 });
 
+// Clear all posts for a campaign (DM owner or SuperDM only)
+app.delete('/api/campaigns/:id/posts', requireAuth, async (req, res) => {
+  const role = req.authUser?.role;
+  if (role !== 'DM' && role !== 'SUPER_DM') return res.status(403).json({ error: 'Forbidden' });
+  try {
+    const campaign = await prisma.campaign.findUnique({ where: { id: req.params.id } });
+    if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+    if (role === 'DM' && campaign.createdById !== req.authUser.id) return res.status(403).json({ error: 'Forbidden' });
+    const { count } = await prisma.campaignPost.deleteMany({ where: { campaignId: req.params.id } });
+    res.json({ ok: true, count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Delete a post (DM / SuperDM only)
 app.delete('/api/campaigns/:id/posts/:postId', requireAuth, async (req, res) => {
   const role = req.authUser?.role;
@@ -1047,6 +1062,91 @@ app.post('/api/dm/characters/:id/unassign', requireAuth, async (req, res) => {
     });
     res.json(updated);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// AI generates a party of characters and assigns them to a campaign
+app.post('/api/campaigns/:id/generate-characters', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  let provider;
+  try { provider = getProvider(); } catch (err) { return res.status(500).json({ error: err.message }); }
+  if (!provider.isConfigured()) return res.status(503).json({ error: 'No AI provider configured' });
+
+  const { count = 3, prompt = '' } = req.body;
+
+  try {
+    const campaign = await prisma.campaign.findUnique({ where: { id: req.params.id } });
+    if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+    const existing = await prisma.character.count({ where: { campaignId: req.params.id, isRetired: false } });
+    const MAX_PARTY = 6;
+    const slotsLeft = Math.max(0, MAX_PARTY - existing);
+    if (slotsLeft === 0) return res.status(400).json({ error: `Party is full (${MAX_PARTY}/${MAX_PARTY})` });
+    const clampedCount = Math.min(Math.max(Number(count) || 3, 1), slotsLeft);
+
+    const systemPrompt = `You are a D&D 2024 character creator. Generate a party of ${clampedCount} characters suitable for this campaign.
+Campaign: "${campaign.name}"
+Setting: "${campaign.setting}"
+${prompt ? `Additional guidance: ${prompt}` : ''}
+
+Return a JSON array of exactly ${clampedCount} objects. Each object must have ALL of these fields:
+{
+  "name": "Character name",
+  "species": "Species (e.g. Human, Elf, Dwarf, Halfling, etc.)",
+  "class": "Class (fighter, wizard, cleric, rogue, ranger, paladin, bard, druid, monk, barbarian, warlock, or sorcerer)",
+  "background": "Background (e.g. Acolyte, Criminal, Folk Hero, etc.)",
+  "backstory": "One sentence backstory",
+  "level": 1,
+  "abilityScores": { "str": 14, "dex": 12, "con": 13, "int": 10, "wis": 11, "cha": 9 },
+  "inventory": ["item1", "item2"],
+  "spells": []
+}
+Make each character distinct and interesting. Vary the classes. Return ONLY the JSON array, no markdown.`;
+
+    const { raw } = await provider.generateDMResponse({ systemPrompt, userPrompt: 'Generate the party.' });
+
+    let chars;
+    try {
+      const match = raw.match(/\[[\s\S]*\]/);
+      chars = JSON.parse(match ? match[0] : raw);
+      if (!Array.isArray(chars)) throw new Error('Not an array');
+    } catch {
+      return res.status(502).json({ error: 'AI returned invalid JSON — try again' });
+    }
+
+    const HIT_DICE_GEN = { barbarian: 12, fighter: 10, paladin: 10, ranger: 10, monk: 8, cleric: 8, druid: 8, rogue: 8, warlock: 8, bard: 8, sorcerer: 6, wizard: 6 };
+    const created = await Promise.all(chars.slice(0, clampedCount).map(c => {
+      const scores = c.abilityScores ?? {};
+      const conMod = Math.floor(((scores.con ?? 10) - 10) / 2);
+      const hitDie = HIT_DICE_GEN[c.class?.toLowerCase()] ?? 8;
+      const maxHp = Math.max(1, hitDie + conMod);
+      return prisma.character.create({
+        data: {
+          userId: req.authUser.id,
+          campaignId: req.params.id,
+          name: c.name ?? 'Unknown',
+          species: c.species ?? 'Human',
+          class: c.class ?? 'fighter',
+          background: c.background ?? 'Folk Hero',
+          backstory: c.backstory ?? '',
+          level: 1,
+          abilityScores: scores,
+          hp: maxHp,
+          maxHp,
+          ac: 10 + Math.floor(((scores.dex ?? 10) - 10) / 2),
+          inventory: Array.isArray(c.inventory) ? c.inventory : [],
+          spells: Array.isArray(c.spells) ? c.spells : [],
+          conditions: [],
+          skills: {},
+        },
+        include: { user: { select: { id: true, username: true, displayName: true } } },
+      });
+    }));
+
+    res.json(created);
+  } catch (err) {
+    console.error('generate-characters error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

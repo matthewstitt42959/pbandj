@@ -312,7 +312,7 @@ export function GameProvider({ children }) {
               id: c.id, name: c.name, setting: c.setting,
               currentScene: c.openingScene, isAiGame: c.isAiGame ?? false,
             };
-            if (c.isAiGame && !saved) payload.playMode = 'ai';
+            if (c.isAiGame) payload.playMode = 'ai';
           }
           payload.posts = [];
           dispatch({ type: 'INIT', payload });
@@ -351,6 +351,8 @@ export function GameProvider({ children }) {
                 }
               } catch {}
             }
+            // Always use AI mode for AI campaigns
+            if (migrated.campaign?.isAiGame) migrated.playMode = 'ai';
             // One-time migration: save any legacy blob posts to the DB
             if (migrated.campaign?.id && migrated.posts?.length > 0) {
               const tok = localStorage.getItem('pb-and-jay-token');
@@ -391,6 +393,8 @@ export function GameProvider({ children }) {
           }
         } catch {}
       }
+      // Always use AI mode for AI campaigns
+      if (local.campaign?.isAiGame) local.playMode = 'ai';
       if (local.campaign?.id && local.posts?.length > 0) {
         const tok = localStorage.getItem('pb-and-jay-token');
         for (const p of local.posts) {
@@ -682,6 +686,30 @@ export function GameProvider({ children }) {
     [state, addPost]
   );
 
+  const switchCampaign = useCallback(async (campaignId) => {
+    const tok = localStorage.getItem('pb-and-jay-token');
+    const authHeaders = tok ? { Authorization: `Bearer ${tok}` } : {};
+    try {
+      const [gr, cr] = await Promise.all([
+        fetch(`/api/game?campaign=${encodeURIComponent(campaignId)}`, { headers: authHeaders }),
+        fetch(`/api/campaigns/${campaignId}`, { headers: authHeaders }),
+      ]);
+      const { state: saved } = gr.ok ? await gr.json() : { state: null };
+      const c = cr.ok ? await cr.json() : null;
+      const payload = saved ? migrateState(saved) : { ...initialState };
+      if (c) {
+        payload.campaign = {
+          id: c.id, name: c.name, setting: c.setting,
+          currentScene: c.openingScene, isAiGame: c.isAiGame ?? false,
+        };
+        if (c.isAiGame) payload.playMode = 'ai';
+      }
+      payload.posts = [];
+      localStorage.setItem('pb-and-jay-last-campaign', campaignId);
+      dispatch({ type: 'INIT', payload });
+    } catch {}
+  }, []);
+
   const value = {
     ...state,
     postsReady,
@@ -709,6 +737,7 @@ export function GameProvider({ children }) {
     createCompanion,
     deleteCompanion,
     loadCampaignCharacters,
+    switchCampaign,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
