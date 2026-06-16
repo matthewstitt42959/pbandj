@@ -105,7 +105,7 @@ function PostEntry({ post, canEdit, onEdit, onDelete }) {
   );
 }
 
-const EncounterLog = ({ posts, isLoading, scrollKey, isDm, onEdit, onDelete }) => {
+const EncounterLog = ({ posts, isLoading, postsReady, scrollKey, isDm, onEdit, onDelete }) => {
   const bottomRef = useRef(null);
   const logRef = useRef(null);
   const userScrolledUp = useRef(false);
@@ -135,6 +135,16 @@ const EncounterLog = ({ posts, isLoading, scrollKey, isDm, onEdit, onDelete }) =
 
   return (
     <div className="log-window" ref={logRef} onScroll={handleScroll}>
+      {!postsReady && posts.length === 0 && (
+        <div className="log-empty">
+          <span className="log-empty__text">Loading posts…</span>
+        </div>
+      )}
+      {postsReady && posts.length === 0 && !isLoading && (
+        <div className="log-empty">
+          <span className="log-empty__text">No posts yet. Be the first to write something!</span>
+        </div>
+      )}
       {posts.map((post) => (
         <PostEntry
           key={post.id}

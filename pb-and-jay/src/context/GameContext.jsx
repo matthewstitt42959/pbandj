@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useReducer, useState, useEffect, useCallback, useRef } from 'react';
 import { createNewCampaign } from '../data/defaultCampaign';
 import { requestDMResponse, requestPlayerResponse } from '../services/aiDM';
 import { rollDice, parseRollCommand } from '../services/dice';
@@ -406,11 +406,15 @@ export function GameProvider({ children }) {
     return () => clearTimeout(timer);
   }, [state]);
 
+  // Track whether the first post fetch has completed so the log can show a loading state
+  const [postsReady, setPostsReady] = React.useState(false);
+
   // Poll for posts from the DB every 5 seconds when a real campaign is active
   useEffect(() => {
     const campaignId = state.campaign?.id;
-    if (!campaignId) return;
+    if (!campaignId) { setPostsReady(false); return; }
 
+    setPostsReady(false);
     const token = () => localStorage.getItem('pb-and-jay-token');
     let lastPostId = null;
     const fetchPosts = () =>
@@ -419,6 +423,7 @@ export function GameProvider({ children }) {
       })
         .then(r => r.ok ? r.json() : null)
         .then(posts => {
+          setPostsReady(true);
           if (!posts) return;
           const newestId = posts[posts.length - 1]?.id ?? null;
           if (newestId !== lastPostId) {
@@ -426,7 +431,7 @@ export function GameProvider({ children }) {
             dispatch({ type: 'SET_POSTS', posts });
           }
         })
-        .catch(() => {});
+        .catch(() => { setPostsReady(true); });
 
     fetchPosts();
     const interval = setInterval(fetchPosts, 5000);
@@ -647,6 +652,7 @@ export function GameProvider({ children }) {
 
   const value = {
     ...state,
+    postsReady,
     activeCharacter: state.characters[state.activeCharacterIndex],
     isManualMode: state.playMode === 'manual',
     hasPostedThisRound: (name) => state.roundPosters.includes(name),

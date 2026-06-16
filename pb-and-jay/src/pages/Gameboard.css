@@ -1024,3 +1024,18 @@
     min-height: calc(100dvh - 56px - 130px);
   }
 }
+
+/* Log empty / loading state */
+.log-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  padding: 1.5rem;
+}
+
+.log-empty__text {
+  font-size: 0.85rem;
+  color: #6a7088;
+  font-style: italic;
+}
