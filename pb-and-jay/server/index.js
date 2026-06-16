@@ -274,7 +274,7 @@ app.get('/api/users/me', requireAuth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.authUser.id },
-      include: { characters: { orderBy: { createdAt: 'desc' } } },
+      include: { characters: { where: { isAiCharacter: false }, orderBy: { createdAt: 'desc' } } },
     });
     if (!user) return res.status(404).json({ error: 'Profile not found' });
     res.json(user);
