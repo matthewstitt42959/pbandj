@@ -994,7 +994,8 @@
   .encounter-log {
     display: flex;
     flex-direction: column;
-    height: calc(100dvh - 56px - 130px); /* viewport minus tab bar and headers */
+    height: calc(100dvh - 52px - 56px - 110px); /* navbar + tab bar + gameboard header/banner */
+    overflow-y: auto; /* scroll section to reach composer when DM tools push it down */
     border-radius: 0;
     border-left: none;
     border-right: none;
@@ -1004,7 +1005,8 @@
     flex: 1;
     overflow-y: auto;
     max-height: none;
-    min-height: 0;
+    /* guarantee posts are always readable even when DM tools are expanded */
+    min-height: clamp(200px, 45dvh, 480px);
   }
 
   /* Character panel full width on mobile */
