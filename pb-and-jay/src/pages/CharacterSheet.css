@@ -243,6 +243,77 @@
 
 /* ── Ability scores grid ── */
 
+/* ── Point-buy tracker ── */
+
+.cs-pb-tracker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(120, 192, 224, 0.06);
+  border: 1px solid rgba(120, 192, 224, 0.15);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.cs-pb-tracker--over {
+  background: rgba(255, 138, 128, 0.08);
+  border-color: rgba(255, 138, 128, 0.3);
+}
+
+.cs-pb-tracker--exact {
+  background: rgba(168, 230, 207, 0.07);
+  border-color: rgba(168, 230, 207, 0.25);
+}
+
+.cs-pb-tracker__left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-pb-tracker__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6a7088;
+  white-space: nowrap;
+}
+
+.cs-pb-tracker__bar-wrap {
+  flex: 1;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 40px;
+}
+
+.cs-pb-tracker__bar {
+  height: 100%;
+  background: #78c0e0;
+  border-radius: 3px;
+  transition: width 0.2s;
+}
+
+.cs-pb-tracker--over .cs-pb-tracker__bar { background: #ff8a80; }
+.cs-pb-tracker--exact .cs-pb-tracker__bar { background: #a8e6cf; }
+
+.cs-pb-tracker__count {
+  font-size: 0.78rem;
+  color: #9aa0b8;
+  white-space: nowrap;
+}
+
+.cs-pb-tracker--over .cs-pb-tracker__count { color: #ff8a80; font-weight: 600; }
+.cs-pb-tracker--exact .cs-pb-tracker__count { color: #a8e6cf; }
+
+/* ── Scores grid ── */
+
 .cs-scores-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -278,6 +349,12 @@
 .cs-score-card__val {
   font-size: 0.8rem;
   color: #9aa0b8;
+}
+
+.cs-score-card__cost {
+  font-size: 0.6rem;
+  color: #4a5068;
+  letter-spacing: 0.03em;
 }
 
 /* ── Conditions ── */

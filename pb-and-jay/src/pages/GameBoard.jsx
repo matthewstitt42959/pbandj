@@ -257,6 +257,13 @@ const GameBoard = () => {
                 </div>
                 <span className="character-btn__class">{char.class} {char.level}</span>
               </button>
+              {char.dbId && (
+                <Link
+                  to={`/character/${char.dbId}`}
+                  className="character-edit-link"
+                  title={`Edit ${char.name}`}
+                >✎</Link>
+              )}
             </div>
           ))}
 

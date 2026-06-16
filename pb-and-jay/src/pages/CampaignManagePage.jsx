@@ -58,7 +58,9 @@ function CharacterChip({ char, onRemove }) {
   return (
     <div className="cm-char-chip">
       <div className="cm-char-chip__info">
-        <span className="cm-char-chip__name">{char.name}</span>
+        <span className="cm-char-chip__name">
+          <Link to={`/character/${char.id}`} className="cm-char-chip__link">{char.name}</Link>
+        </span>
         <span className="cm-char-chip__meta">
           {char.class} · Lv {char.level}
           {char.user && ` · ${char.user.displayName ?? char.user.username}`}

@@ -27,6 +27,17 @@ const CONDITION_LIST = [
 const mod = (s) => { const m = Math.floor((s - 10) / 2); return (m >= 0 ? '+' : '') + m; };
 const profBonus = (level) => Math.ceil(level / 4) + 1;
 
+// ── Point-buy helpers ─────────────────────────────────────────────────────────
+
+const POINT_BUY_BUDGET = 27;
+const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
+const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+const POINT_COST = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 };
+
+const scoreCost = (s) => POINT_COST[s] ?? null; // null = outside standard range
+const totalSpent = (scores) =>
+  ABILITY_KEYS.reduce((sum, k) => sum + (POINT_COST[scores[k]] ?? 0), 0);
+
 // ── Inline editable field ─────────────────────────────────────────────────────
 
 function EditField({ label, value, onChange, type = 'text', min, max, multiline }) {
@@ -76,6 +87,45 @@ function EditField({ label, value, onChange, type = 'text', min, max, multiline 
       {value !== '' && value != null ? value : <span className="cs-editable--empty">—</span>}
       <span className="cs-edit-icon">✎</span>
     </span>
+  );
+}
+
+// ── Point-buy tracker ─────────────────────────────────────────────────────────
+
+function PointBuyTracker({ scores, onFieldChange }) {
+  const spent = totalSpent(scores);
+  const remaining = POINT_BUY_BUDGET - spent;
+  const over = remaining < 0;
+  const exact = remaining === 0;
+
+  const applyStandardArray = () => {
+    const next = {};
+    ABILITY_KEYS.forEach((k, i) => { next[k] = STANDARD_ARRAY[i]; });
+    onFieldChange('abilityScores', { ...scores, ...next });
+  };
+
+  return (
+    <div className={`cs-pb-tracker${over ? ' cs-pb-tracker--over' : exact ? ' cs-pb-tracker--exact' : ''}`}>
+      <div className="cs-pb-tracker__left">
+        <span className="cs-pb-tracker__label">Point Buy</span>
+        <div className="cs-pb-tracker__bar-wrap">
+          <div
+            className="cs-pb-tracker__bar"
+            style={{ width: `${Math.min(100, (spent / POINT_BUY_BUDGET) * 100)}%` }}
+          />
+        </div>
+        <span className="cs-pb-tracker__count">
+          {over
+            ? `${Math.abs(remaining)} over budget`
+            : exact
+            ? 'Budget used'
+            : `${remaining} pts remaining`}
+        </span>
+      </div>
+      <button className="btn btn--ghost btn--xs" onClick={applyStandardArray} title="Fill in 15, 14, 13, 12, 10, 8">
+        Standard Array
+      </button>
+    </div>
   );
 }
 
@@ -143,17 +193,25 @@ function OverviewTab({ char, onFieldChange }) {
         </div>
       </div>
 
+      <PointBuyTracker scores={scores} onFieldChange={onFieldChange} />
+
       <div className="cs-scores-grid">
-        {Object.entries(ABILITY_LABELS).map(([k, label]) => (
-          <div key={k} className="cs-score-card">
-            <span className="cs-score-card__label">{label}</span>
-            <span className="cs-score-card__mod">{scores[k] != null ? mod(scores[k]) : '—'}</span>
-            <span className="cs-score-card__val">
-              <EditField label={label} value={scores[k] ?? ''} type="number" min={1} max={30}
-                onChange={v => onFieldChange('abilityScores', { ...scores, [k]: v })} />
-            </span>
-          </div>
-        ))}
+        {Object.entries(ABILITY_LABELS).map(([k, label]) => {
+          const cost = scoreCost(scores[k]);
+          return (
+            <div key={k} className="cs-score-card">
+              <span className="cs-score-card__label">{label}</span>
+              <span className="cs-score-card__mod">{scores[k] != null ? mod(scores[k]) : '—'}</span>
+              <span className="cs-score-card__val">
+                <EditField label={label} value={scores[k] ?? ''} type="number" min={1} max={30}
+                  onChange={v => onFieldChange('abilityScores', { ...scores, [k]: v })} />
+              </span>
+              <span className="cs-score-card__cost" title="Point-buy cost">
+                {cost !== null ? `${cost}pt` : '—'}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <div className="cs-conditions">
