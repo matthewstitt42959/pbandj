@@ -481,7 +481,9 @@ export function GameProvider({ children }) {
   const submitCharacterPost = useCallback(
     (content) => {
       if (!state.campaign) return;
-      const character = state.characters[state.activeCharacterIndex];
+      // Always post as the viewer's own character, not just the selected one
+      const character = state.characters.find(c => c.isOwn) ?? state.characters[state.activeCharacterIndex];
+      if (!character) return;
       const finalContent = applyRollToContent(content);
       addPost(character.name, finalContent, 'player');
       dispatch({ type: 'RECORD_ROUND_POST', name: character.name });
@@ -526,16 +528,18 @@ export function GameProvider({ children }) {
     dispatch({ type: 'DELETE_COMPANION', name });
   }, []);
 
-  // Load real characters from the active campaign. currentUserId marks which char belongs to the viewer.
+  // Load real characters from the active campaign. currentUserId identifies which char belongs to the viewer.
+  // All characters in a real campaign are human — isAI is reserved for future AI-companion feature.
   const loadCampaignCharacters = useCallback((dbChars, currentUserId) => {
-    const characters = dbChars.map((c, i) => ({
+    const characters = dbChars.map(c => ({
       ...mapDbCharToGame(c),
-      isAI: c.userId !== currentUserId,
+      isAI: false,
+      isOwn: c.userId === currentUserId,
       ownerId: c.userId,
       ownerName: c.user?.displayName ?? c.user?.username ?? '',
     }));
     // Put the current user's character first if present
-    const myIndex = characters.findIndex(c => !c.isAI);
+    const myIndex = characters.findIndex(c => c.isOwn);
     if (myIndex > 0) {
       const [mine] = characters.splice(myIndex, 1);
       characters.unshift(mine);

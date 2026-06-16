@@ -65,11 +65,13 @@ const GameBoard = () => {
       .catch(() => {});
   }, [campaign?.id, user?.id]);
 
-  // All human characters have posted at least once this round
-  const humanChars = characters.filter(c => !c.isAI);
-  const allHumansPosted = humanChars.length === 0 || humanChars.every(c => roundPosters.includes(c.name));
+  // The character that belongs to the current viewer (for posting)
+  const myCharacter = characters.find(c => c.isOwn) ?? null;
+  const hasOwnCharacter = !!myCharacter;
+
+  // For AI mode: only require the current viewer's character to have posted
+  const allHumansPosted = !myCharacter || roundPosters.includes(myCharacter.name);
   const [activeTab, setActiveTab] = useState('stats');
-  const hasOwnCharacter = characters.some(c => !c.isAI);
   const [postAs, setPostAs] = useState(isDm && !hasOwnCharacter ? 'dm' : 'character');
   const [aiAvailable, setAiAvailable] = useState(false);
   const [aiLocked, setAiLocked] = useState(false);
@@ -246,24 +248,12 @@ const GameBoard = () => {
               >
                 <div className="character-btn__top">
                   <span className="character-btn__name">{char.name}</span>
-                  <span className={`character-badge ${char.isAI ? 'character-badge--ai' : 'character-badge--human'}`}>
-                    {!char.isAI ? 'You' : char.ownerName || 'Player'}
+                  <span className={`character-badge ${char.isOwn ? 'character-badge--human' : 'character-badge--other'}`}>
+                    {char.isOwn ? 'You' : char.ownerName || 'Player'}
                   </span>
                 </div>
                 <span className="character-btn__class">{char.class} {char.level}</span>
               </button>
-              {index === loadingPlayerIndex && (
-                <span className="character-thinking">{char.name} is acting…</span>
-              )}
-              {char.isAI && (
-                <button
-                  className="character-control-btn"
-                  onClick={() => toggleCharacterAI(index)}
-                  title={char.isAI ? 'Take control of this character' : 'Let AI play this character'}
-                >
-                  {char.isAI ? '→ Take control' : '→ Let AI play'}
-                </button>
-              )}
             </div>
           ))}
 
@@ -275,13 +265,13 @@ const GameBoard = () => {
           <EncounterLog posts={posts} isLoading={isLoadingDM} scrollKey={logScrollKey} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
 
           <div className="post-as-toggle">
-            {activeCharacter && (
+            {myCharacter && (
               <button
                 type="button"
                 className={`post-as-toggle__btn ${postAs === 'character' ? 'active' : ''}`}
                 onClick={() => setPostAs('character')}
               >
-                Character
+                {myCharacter.name}
               </button>
             )}
             {isDm && (
@@ -295,9 +285,9 @@ const GameBoard = () => {
             )}
           </div>
 
-          {(activeCharacter || isDm) && (
+          {(myCharacter || isDm) && (
             <PostComposer
-              authorName={postAs === 'dm' ? 'DM' : activeCharacter?.name}
+              authorName={postAs === 'dm' ? 'DM' : myCharacter?.name}
               appendText={postAs === 'character' ? diceInsert : (postAs === 'dm' ? assistInsert : null)}
               onSubmit={handlePost}
               disabled={isLoadingDM}

@@ -333,6 +333,12 @@
   border: 1px solid rgba(125, 206, 160, 0.3);
 }
 
+.character-badge--other {
+  background: rgba(120, 192, 224, 0.12);
+  color: #78c0e0;
+  border: 1px solid rgba(120, 192, 224, 0.25);
+}
+
 .character-control-btn {
   font-size: 0.68rem;
   color: #6a7088;
