@@ -30,6 +30,7 @@ const GameBoard = () => {
     characters,
     posts,
     postsReady,
+    postsFetchError,
     worldFacts,
     activeCharacter,
     activeCharacterIndex,
@@ -264,7 +265,7 @@ const GameBoard = () => {
 
         <section className={`encounter-log${mobileTab !== 'log' ? ' mobile-hidden' : ''}`}>
           <h3>Encounter Log</h3>
-          <EncounterLog posts={posts} isLoading={isLoadingDM} postsReady={postsReady} scrollKey={logScrollKey} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
+          <EncounterLog posts={posts} isLoading={isLoadingDM} postsReady={postsReady} postsFetchError={postsFetchError} scrollKey={logScrollKey} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
 
           {isDm && myCharacter && (
             <div className="post-as-toggle">

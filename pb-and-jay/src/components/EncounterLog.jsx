@@ -105,7 +105,7 @@ function PostEntry({ post, canEdit, onEdit, onDelete }) {
   );
 }
 
-const EncounterLog = ({ posts, isLoading, postsReady, scrollKey, isDm, onEdit, onDelete }) => {
+const EncounterLog = ({ posts, isLoading, postsReady, postsFetchError, scrollKey, isDm, onEdit, onDelete }) => {
   const bottomRef = useRef(null);
   const logRef = useRef(null);
   const userScrolledUp = useRef(false);
@@ -140,7 +140,14 @@ const EncounterLog = ({ posts, isLoading, postsReady, scrollKey, isDm, onEdit, o
           <span className="log-empty__text">Loading posts…</span>
         </div>
       )}
-      {postsReady && posts.length === 0 && !isLoading && (
+      {postsReady && postsFetchError && (
+        <div className="log-empty">
+          <span className="log-empty__text" style={{ color: '#ff8a80' }}>
+            Could not load posts: {postsFetchError}
+          </span>
+        </div>
+      )}
+      {postsReady && !postsFetchError && posts.length === 0 && !isLoading && (
         <div className="log-empty">
           <span className="log-empty__text">No posts yet. Be the first to write something!</span>
         </div>

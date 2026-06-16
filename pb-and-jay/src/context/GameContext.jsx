@@ -124,8 +124,19 @@ function applyRollToContent(content) {
 
 function gameReducer(state, action) {
   switch (action.type) {
-    case 'INIT':
-      return { ...state, ...action.payload, initialized: true };
+    case 'INIT': {
+      // React Strict Mode double-invokes effects, producing a second INIT for the same campaign
+      // after SET_POSTS has already populated posts. Preserve posts when reinitializing with the
+      // same campaign so the Strict Mode re-mount doesn't wipe what polling just loaded.
+      const sameCampaign =
+        action.payload.campaign?.id && action.payload.campaign.id === state.campaign?.id;
+      return {
+        ...state,
+        ...action.payload,
+        posts: sameCampaign ? state.posts : [],
+        initialized: true,
+      };
+    }
 
     case 'START_CAMPAIGN': {
       const fresh = createNewCampaign();
@@ -407,31 +418,40 @@ export function GameProvider({ children }) {
   }, [state]);
 
   // Track whether the first post fetch has completed so the log can show a loading state
-  const [postsReady, setPostsReady] = React.useState(false);
+  const [postsReady, setPostsReady] = useState(false);
+  const [postsFetchError, setPostsFetchError] = useState(null);
 
   // Poll for posts from the DB every 5 seconds when a real campaign is active
   useEffect(() => {
     const campaignId = state.campaign?.id;
-    if (!campaignId) { setPostsReady(false); return; }
+    if (!campaignId) { setPostsReady(false); setPostsFetchError(null); return; }
 
     setPostsReady(false);
+    setPostsFetchError(null);
     const token = () => localStorage.getItem('pb-and-jay-token');
     let lastPostId = null;
     const fetchPosts = () =>
       fetch(`/api/campaigns/${campaignId}/posts`, {
         headers: { Authorization: `Bearer ${token()}` },
       })
-        .then(r => r.ok ? r.json() : null)
+        .then(async r => {
+          if (r.ok) return r.json();
+          const text = await r.text().catch(() => '');
+          throw new Error(`${r.status} ${text || r.statusText}`);
+        })
         .then(posts => {
           setPostsReady(true);
-          if (!posts) return;
+          setPostsFetchError(null);
           const newestId = posts[posts.length - 1]?.id ?? null;
           if (newestId !== lastPostId) {
             lastPostId = newestId;
             dispatch({ type: 'SET_POSTS', posts });
           }
         })
-        .catch(() => { setPostsReady(true); });
+        .catch(err => {
+          setPostsReady(true);
+          setPostsFetchError(err.message);
+        });
 
     fetchPosts();
     const interval = setInterval(fetchPosts, 5000);
@@ -653,6 +673,7 @@ export function GameProvider({ children }) {
   const value = {
     ...state,
     postsReady,
+    postsFetchError,
     activeCharacter: state.characters[state.activeCharacterIndex],
     isManualMode: state.playMode === 'manual',
     hasPostedThisRound: (name) => state.roundPosters.includes(name),
