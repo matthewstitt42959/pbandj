@@ -71,6 +71,7 @@ model Campaign {
   isActive     Boolean               @default(false)
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
+  characters   Character[]
   joinRequests CampaignJoinRequest[]
 }
 
@@ -145,7 +146,8 @@ model Character {
   spells        Json      @default("[]")
   conditions    Json      @default("[]")
   skills        Json      @default("{}")
-  campaignId    String?             // null = unassigned
+  campaignId    String?
+  campaign      Campaign? @relation(fields: [campaignId], references: [id])
   isRetired     Boolean   @default(false)
   retiredAt     DateTime?
   createdAt     DateTime  @default(now())

@@ -9,6 +9,7 @@
     "dev:server": "node server/index.js",
     "build": "vite build",
     "start": "node server/index.js",
+    "postinstall": "prisma generate",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
