@@ -65,8 +65,8 @@ export const initialState = {
 const SANDBOX_NAME = 'The Whispering Hollow';
 
 function migrateState(saved) {
-  // Wipe persisted sandbox game — real campaigns only from here on
-  if (saved.campaign?.name === SANDBOX_NAME) {
+  // Wipe legacy local-only sandbox data — only when there is no real DB campaign id
+  if (saved.campaign?.name === SANDBOX_NAME && !saved.campaign?.id) {
     saved.campaign = null;
     saved.posts = [];
     saved.worldFacts = [];
@@ -295,35 +295,44 @@ export function GameProvider({ children }) {
       const tok = localStorage.getItem('pb-and-jay-token');
       const authHeaders = tok ? { Authorization: `Bearer ${tok}` } : {};
 
-      // If a "Play" action requested a specific campaign, load it fresh
+      // If a "Play" action requested a specific campaign, load that campaign's own state slot
       const switchId = localStorage.getItem('pb-and-jay-load-campaign');
       if (switchId) {
         localStorage.removeItem('pb-and-jay-load-campaign');
         try {
-          const cr = await fetch(`/api/campaigns/${switchId}`, { headers: authHeaders });
-          if (cr.ok) {
-            const c = await cr.json();
-            dispatch({
-              type: 'INIT',
-              payload: {
-                ...initialState,
-                campaign: { id: c.id, name: c.name, setting: c.setting, currentScene: c.openingScene },
-                initialized: true,
-              },
-            });
-            return;
+          const [gr, cr] = await Promise.all([
+            fetch(`/api/game?campaign=${encodeURIComponent(switchId)}`, { headers: authHeaders }),
+            fetch(`/api/campaigns/${switchId}`, { headers: authHeaders }),
+          ]);
+          const { state: saved } = gr.ok ? await gr.json() : { state: null };
+          const c = cr.ok ? await cr.json() : null;
+          const payload = saved ? migrateState(saved) : { ...initialState };
+          if (c) {
+            payload.campaign = {
+              id: c.id, name: c.name, setting: c.setting,
+              currentScene: c.openingScene, isAiGame: c.isAiGame ?? false,
+            };
+            if (c.isAiGame && !saved) payload.playMode = 'ai';
           }
+          payload.posts = [];
+          dispatch({ type: 'INIT', payload });
+          return;
         } catch {}
       }
 
-      // Try server first (enables cross-device sync)
+      // Try server first (enables cross-device sync).
+      // Use the per-campaign slot if we know which campaign was last active.
+      const lastCampaignId = localStorage.getItem('pb-and-jay-last-campaign');
+      const gameUrl = lastCampaignId
+        ? `/api/game?campaign=${encodeURIComponent(lastCampaignId)}`
+        : '/api/game';
       try {
-        const res = await fetch('/api/game', { headers: authHeaders });
+        const res = await fetch(gameUrl, { headers: authHeaders });
         if (res.ok) {
           const { state } = await res.json();
           if (state) {
             const migrated = migrateState(state);
-            // If saved state has no campaign (or a stale one without an id), fetch the active one
+            // If saved state has no campaign, fetch the active one
             if (!migrated.campaign?.id) {
               try {
                 const cr = await fetch('/api/campaigns/active', { headers: { ...(localStorage.getItem('pb-and-jay-token') ? { Authorization: `Bearer ${localStorage.getItem('pb-and-jay-token')}` } : {}) } });
@@ -407,7 +416,10 @@ export function GameProvider({ children }) {
 
     const timer = setTimeout(() => {
       const tok = localStorage.getItem('pb-and-jay-token');
-      fetch('/api/game', {
+      const cId = toSave.campaign?.id;
+      if (cId) localStorage.setItem('pb-and-jay-last-campaign', cId);
+      const saveUrl = cId ? `/api/game?campaign=${encodeURIComponent(cId)}` : '/api/game';
+      fetch(saveUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) },
         body: JSON.stringify({ state: toSave }),

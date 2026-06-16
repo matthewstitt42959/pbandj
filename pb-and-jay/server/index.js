@@ -221,8 +221,17 @@ app.get('/api/game', async (req, res) => {
   try {
     const userId = getRequestUserId(req);
     if (userId) {
-      const game = await prisma.userGame.findUnique({ where: { userId } });
-      return res.json({ state: game?.state ?? null });
+      const cId = req.query.campaign;
+      // Per-campaign slot when ?campaign=<id> is provided; otherwise fall back to global slot
+      const key = cId ? `${userId}:${cId}` : userId;
+      const game = await prisma.userGame.findUnique({ where: { userId: key } });
+      if (game) return res.json({ state: game.state });
+      // Per-campaign slot not found — fall back to legacy global slot if it matches this campaign
+      if (cId) {
+        const legacy = await prisma.userGame.findUnique({ where: { userId } });
+        if (legacy?.state?.campaign?.id === cId) return res.json({ state: legacy.state });
+      }
+      return res.json({ state: null });
     }
     const game = await prisma.game.findUnique({ where: { id: 'singleton' } });
     res.json({ state: game?.state ?? null });
@@ -238,10 +247,12 @@ app.post('/api/game', async (req, res) => {
   try {
     const userId = getRequestUserId(req);
     if (userId) {
+      const cId = req.query.campaign;
+      const key = cId ? `${userId}:${cId}` : userId;
       await prisma.userGame.upsert({
-        where: { userId },
+        where: { userId: key },
         update: { state },
-        create: { userId, state },
+        create: { userId: key, state },
       });
       return res.json({ ok: true });
     }
