@@ -45,7 +45,7 @@ export function mapDbCharToGame(dbChar) {
   };
 }
 
-const initialState = {
+export const initialState = {
   characters: [],
   benchedCompanions: [],
   campaign: null,
@@ -122,7 +122,7 @@ function applyRollToContent(content) {
   return `${content}\n🎲 ${result.notation}: [${result.rolls.join(', ')}]${modPart} = **${result.total}**`;
 }
 
-function gameReducer(state, action) {
+export function gameReducer(state, action) {
   switch (action.type) {
     case 'INIT': {
       // React Strict Mode double-invokes effects, producing a second INIT for the same campaign
