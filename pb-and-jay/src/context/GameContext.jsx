@@ -315,7 +315,7 @@ export function GameProvider({ children }) {
             // If saved state has no campaign (or a stale one without an id), fetch the active one
             if (!migrated.campaign?.id) {
               try {
-                const cr = await fetch('/api/campaigns/active');
+                const cr = await fetch('/api/campaigns/active', { headers: { ...(localStorage.getItem('pb-and-jay-token') ? { Authorization: `Bearer ${localStorage.getItem('pb-and-jay-token')}` } : {}) } });
                 if (cr.ok) {
                   const active = await cr.json();
                   if (active) {
@@ -324,7 +324,9 @@ export function GameProvider({ children }) {
                       name: active.name,
                       setting: active.setting,
                       currentScene: active.openingScene,
+                      isAiGame: active.isAiGame ?? false,
                     };
+                    if (active.isAiGame) migrated.playMode = 'ai';
                   }
                 }
               } catch {}
@@ -353,7 +355,7 @@ export function GameProvider({ children }) {
       // If no campaign or a stale one without an id, fetch the active campaign
       if (!local.campaign?.id) {
         try {
-          const cr = await fetch('/api/campaigns/active');
+          const cr = await fetch('/api/campaigns/active', { headers: { ...(localStorage.getItem('pb-and-jay-token') ? { Authorization: `Bearer ${localStorage.getItem('pb-and-jay-token')}` } : {}) } });
           if (cr.ok) {
             const active = await cr.json();
             if (active) {
@@ -362,7 +364,9 @@ export function GameProvider({ children }) {
                 name: active.name,
                 setting: active.setting,
                 currentScene: active.openingScene,
+                isAiGame: active.isAiGame ?? false,
               };
+              if (active.isAiGame) local.playMode = 'ai';
             }
           }
         } catch {}

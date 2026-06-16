@@ -26,11 +26,9 @@ const Navbar = () => {
             <>
               <li><NavLink to="/dashboard" onClick={close}>My Characters</NavLink></li>
               <li><NavLink to="/game" onClick={close}>Game Board</NavLink></li>
+              <li><NavLink to="/campaigns" onClick={close}>Campaigns</NavLink></li>
               {(user.role === 'DM' || user.role === 'SUPER_DM') && (
-                <>
-                  <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
-                  <li><NavLink to="/campaigns" onClick={close}>Campaigns</NavLink></li>
-                </>
+                <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
               )}
               {user.role === 'SUPER_DM' && (
                 <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>
@@ -66,11 +64,9 @@ const Navbar = () => {
             <>
               <li><NavLink to="/dashboard" onClick={close}>My Characters</NavLink></li>
               <li><NavLink to="/game" onClick={close}>Game Board</NavLink></li>
+              <li><NavLink to="/campaigns" onClick={close}>Campaigns</NavLink></li>
               {(user.role === 'DM' || user.role === 'SUPER_DM') && (
-                <>
-                  <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
-                  <li><NavLink to="/campaigns" onClick={close}>Campaigns</NavLink></li>
-                </>
+                <li><NavLink to="/dm" onClick={close}>DM Panel</NavLink></li>
               )}
               {user.role === 'SUPER_DM' && (
                 <li><NavLink to="/admin" onClick={close}>Admin</NavLink></li>

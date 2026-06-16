@@ -299,3 +299,24 @@
     width: 100%;
   }
 }
+
+.cb-field--inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cb-label--check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.cb-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #a78bfa;
+  cursor: pointer;
+}

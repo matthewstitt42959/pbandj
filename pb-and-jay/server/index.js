@@ -468,11 +468,14 @@ app.post('/api/characters/:id/unassign', requireAuth, async (req, res) => {
 const CAMPAIGN_SELECT = {
   id: true, name: true, setting: true, openingScene: true,
   hooks: true, npcs: true, dmNotes: true, status: true, isActive: true,
+  isAiGame: true,
   rejectedNote: true, approvedAt: true, createdAt: true, updatedAt: true,
   createdBy: { select: { id: true, username: true, displayName: true } },
   approvedBy: { select: { id: true, username: true, displayName: true } },
   dm:          { select: { id: true, username: true, displayName: true } },
 };
+
+const MAX_ACTIVE_CAMPAIGNS = 5;
 
 function canEditCampaign(campaign, authUser) {
   if (authUser.role === 'SUPER_DM') return true;
@@ -480,9 +483,54 @@ function canEditCampaign(campaign, authUser) {
   return false;
 }
 
-// Active campaign — public, used by GameContext on load
-app.get('/api/campaigns/active', async (_req, res) => {
+// Browse active campaigns — all authenticated users (players request to join here)
+app.get('/api/campaigns/browse', requireAuth, async (req, res) => {
   try {
+    const userId = req.authUser.id;
+    const campaigns = await prisma.campaign.findMany({
+      where: { isActive: true, status: 'APPROVED' },
+      select: {
+        id: true, name: true, setting: true, isAiGame: true, isActive: true,
+        dm: { select: { displayName: true, username: true } },
+        _count: { select: { characters: true } },
+      },
+      orderBy: { name: 'asc' },
+    });
+    const [userChars, userRequests] = await Promise.all([
+      prisma.character.findMany({ where: { userId, isRetired: false, campaignId: { not: null } }, select: { campaignId: true } }),
+      prisma.campaignJoinRequest.findMany({ where: { userId }, select: { campaignId: true, status: true } }),
+    ]);
+    const memberOf = new Set(userChars.map(c => c.campaignId));
+    const requestMap = Object.fromEntries(userRequests.map(r => [r.campaignId, r.status]));
+    res.json(campaigns.map(c => ({
+      ...c,
+      isMember: memberOf.has(c.id),
+      joinStatus: requestMap[c.id] ?? null,
+    })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Active campaign — auth-aware: returns the campaign the user's character is in, or first active
+app.get('/api/campaigns/active', async (req, res) => {
+  try {
+    const userId = getRequestUserId(req);
+    if (userId) {
+      // Player: return the active campaign their character is assigned to
+      const char = await prisma.character.findFirst({
+        where: { userId, isRetired: false, campaign: { isActive: true } },
+        include: { campaign: { select: CAMPAIGN_SELECT } },
+      });
+      if (char?.campaign) return res.json(char.campaign);
+      // DM: return the first active campaign they run
+      const dmCampaign = await prisma.campaign.findFirst({
+        where: { isActive: true, dmId: userId },
+        select: CAMPAIGN_SELECT,
+      });
+      if (dmCampaign) return res.json(dmCampaign);
+    }
+    // Fallback: first active campaign
     const campaign = await prisma.campaign.findFirst({
       where: { isActive: true },
       select: CAMPAIGN_SELECT,
@@ -493,15 +541,20 @@ app.get('/api/campaigns/active', async (_req, res) => {
   }
 });
 
-// Activate a campaign (SUPER_DM only) — deactivates any currently active one first
+// Activate a campaign (SUPER_DM only) — max MAX_ACTIVE_CAMPAIGNS can be active at once
 app.post('/api/campaigns/:id/activate', requireAuth, async (req, res) => {
   if (req.authUser.role !== 'SUPER_DM') return res.status(403).json({ error: 'Super DM access required' });
   try {
     const existing = await prisma.campaign.findUnique({ where: { id: req.params.id } });
     if (!existing) return res.status(404).json({ error: 'Campaign not found' });
     if (existing.status !== 'APPROVED') return res.status(409).json({ error: 'Only APPROVED campaigns can be activated' });
+    if (existing.isActive) return res.json(existing); // already active
 
-    await prisma.campaign.updateMany({ where: { isActive: true }, data: { isActive: false } });
+    const activeCount = await prisma.campaign.count({ where: { isActive: true } });
+    if (activeCount >= MAX_ACTIVE_CAMPAIGNS) {
+      return res.status(409).json({ error: `Maximum ${MAX_ACTIVE_CAMPAIGNS} campaigns can be active at once. Deactivate one first.` });
+    }
+
     const updated = await prisma.campaign.update({
       where: { id: req.params.id },
       data: { isActive: true },
@@ -523,6 +576,77 @@ app.post('/api/campaigns/:id/deactivate', requireAuth, async (req, res) => {
       select: CAMPAIGN_SELECT,
     });
     res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Join requests ──────────────────────────────────────────────────────────
+
+// Player requests to join a campaign
+app.post('/api/campaigns/:id/join-request', requireAuth, async (req, res) => {
+  const { message } = req.body;
+  const campaignId = req.params.id;
+  const userId = req.authUser.id;
+  try {
+    const campaign = await prisma.campaign.findUnique({ where: { id: campaignId } });
+    if (!campaign || campaign.status !== 'APPROVED') return res.status(404).json({ error: 'Campaign not found' });
+    const alreadyIn = await prisma.character.findFirst({ where: { userId, campaignId, isRetired: false } });
+    if (alreadyIn) return res.status(400).json({ error: 'You are already in this campaign' });
+    const request = await prisma.campaignJoinRequest.upsert({
+      where: { campaignId_userId: { campaignId, userId } },
+      create: { campaignId, userId, message: message?.trim() || null, status: 'PENDING' },
+      update: { status: 'PENDING', message: message?.trim() || null, requestedAt: new Date() },
+    });
+    res.status(201).json(request);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Player cancels their join request
+app.delete('/api/campaigns/:id/join-request', requireAuth, async (req, res) => {
+  await prisma.campaignJoinRequest.deleteMany({
+    where: { campaignId: req.params.id, userId: req.authUser.id },
+  });
+  res.json({ ok: true });
+});
+
+// DM views pending join requests for a campaign
+app.get('/api/campaigns/:id/join-requests', requireAuth, async (req, res) => {
+  const role = req.authUser.role;
+  if (role !== 'DM' && role !== 'SUPER_DM') return res.status(403).json({ error: 'Forbidden' });
+  try {
+    const requests = await prisma.campaignJoinRequest.findMany({
+      where: { campaignId: req.params.id, status: 'PENDING' },
+      include: {
+        user: {
+          select: {
+            id: true, username: true, displayName: true,
+            characters: { where: { isRetired: false, campaignId: null }, select: { id: true, name: true, class: true, level: true }, take: 3 },
+          },
+        },
+      },
+      orderBy: { requestedAt: 'asc' },
+    });
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DM approves or denies a join request
+app.patch('/api/campaigns/:id/join-requests/:userId', requireAuth, async (req, res) => {
+  const role = req.authUser.role;
+  if (role !== 'DM' && role !== 'SUPER_DM') return res.status(403).json({ error: 'Forbidden' });
+  const { status } = req.body;
+  if (!['APPROVED', 'DENIED'].includes(status)) return res.status(400).json({ error: 'status must be APPROVED or DENIED' });
+  try {
+    await prisma.campaignJoinRequest.updateMany({
+      where: { campaignId: req.params.id, userId: req.params.userId },
+      data: { status },
+    });
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -576,6 +700,7 @@ app.post('/api/campaigns', requireAuth, async (req, res) => {
         hooks: req.body.hooks ?? [],
         npcs: req.body.npcs ?? [],
         dmNotes: req.body.dmNotes ?? '',
+        isAiGame: req.body.isAiGame ?? false,
         createdById: req.authUser.id,
         dmId: req.authUser.id,
       },
@@ -597,10 +722,10 @@ app.patch('/api/campaigns/:id', requireAuth, async (req, res) => {
     if (!['DRAFT', 'REJECTED'].includes(existing.status) && req.authUser.role !== 'SUPER_DM') {
       return res.status(409).json({ error: 'Only SUPER_DM can edit a submitted or approved campaign' });
     }
-    const { name, setting, openingScene, hooks, npcs, dmNotes } = req.body;
+    const { name, setting, openingScene, hooks, npcs, dmNotes, isAiGame } = req.body;
     const updated = await prisma.campaign.update({
       where: { id: req.params.id },
-      data: { ...(name && { name }), setting, openingScene, hooks, npcs, dmNotes },
+      data: { ...(name && { name }), setting, openingScene, hooks, npcs, dmNotes, ...(isAiGame !== undefined && { isAiGame }) },
       select: { ...CAMPAIGN_SELECT, createdById: true },
     });
     res.json(updated);

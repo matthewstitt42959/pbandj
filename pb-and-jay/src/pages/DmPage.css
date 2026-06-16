@@ -753,3 +753,95 @@
 .dm-player-msg--ok { color: #a8e6cf; }
 .dm-player-msg--err { color: #ff8a80; }
 
+
+/* ── Join Requests ─────────────────────────────────────────────────────────── */
+.dm-join-request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.dm-join-request-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.dm-join-request-row--approved { border-color: rgba(168, 230, 207, 0.2); }
+.dm-join-request-row--denied   { border-color: rgba(255, 138, 128, 0.2); opacity: 0.6; }
+
+.dm-join-request-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.dm-join-request-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #c9c6d8;
+}
+
+.dm-join-request-username {
+  font-size: 0.75rem;
+  color: #6a7088;
+}
+
+.dm-join-request-msg {
+  font-size: 0.8rem;
+  color: #9aa0b8;
+  font-style: italic;
+  margin-top: 0.15rem;
+}
+
+.dm-join-request-chars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  grid-column: 1 / -1;
+}
+
+.dm-join-request-char {
+  font-size: 0.75rem;
+  color: #a8b4d8;
+  background: rgba(120, 130, 200, 0.08);
+  border: 1px solid rgba(120, 130, 200, 0.15);
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+}
+
+.dm-join-request-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.dm-join-status {
+  font-size: 0.75rem;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.dm-join-status--approved { color: #a8e6cf; border: 1px solid rgba(168, 230, 207, 0.3); }
+.dm-join-status--denied   { color: #ff8a80; border: 1px solid rgba(255, 138, 128, 0.3); }
+
+.dm-badge--pending {
+  background: rgba(255, 200, 87, 0.15);
+  color: #ffc857;
+  border: 1px solid rgba(255, 200, 87, 0.3);
+  border-radius: 10px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  vertical-align: middle;
+}

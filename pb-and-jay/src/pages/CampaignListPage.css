@@ -280,3 +280,120 @@
   border: 1px solid rgba(255, 138, 128, 0.3);
 }
 .btn--danger:hover:not(:disabled) { background: rgba(255, 138, 128, 0.22); }
+
+/* AI / Active badges */
+.cl-badge--ai {
+  background: rgba(162, 120, 255, 0.15);
+  color: #a278ff;
+  border-color: rgba(162, 120, 255, 0.35);
+}
+.cl-badge--active {
+  background: rgba(168, 230, 207, 0.12);
+  color: #a8e6cf;
+  border-color: rgba(168, 230, 207, 0.3);
+}
+.cl-badge--member {
+  background: rgba(120, 192, 224, 0.12);
+  color: #78c0e0;
+  border-color: rgba(120, 192, 224, 0.3);
+}
+
+/* Browse grid */
+.cl-browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.cl-browse-card {
+  background: #252535;
+  border: 1px solid rgba(120, 192, 224, 0.12);
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cl-browse-card--member {
+  border-color: rgba(168, 230, 207, 0.25);
+}
+
+.cl-browse-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cl-browse-card__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffc857;
+}
+
+.cl-browse-card__badges {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cl-browse-card__dm {
+  font-size: 0.78rem;
+  color: #9aa0b8;
+  margin: 0;
+}
+
+.cl-browse-card__setting {
+  font-size: 0.85rem;
+  color: #c0bdd0;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cl-browse-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.cl-browse-card__players {
+  font-size: 0.78rem;
+  color: #6a7088;
+}
+
+.cl-browse-card__join {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cl-join-msg {
+  background: #1a1a2e;
+  border: 1px solid #444;
+  border-radius: 5px;
+  color: #e0e0e0;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  width: 160px;
+}
+.cl-join-msg:focus { outline: none; border-color: #ffc857; }
+
+.cl-join-pending  { font-size: 0.8rem; color: #ffc857; font-style: italic; }
+.cl-join-approved { font-size: 0.8rem; color: #a8e6cf; font-style: italic; }
+.cl-join-denied   { font-size: 0.8rem; color: #ff9999; }
+
+.cl-browse-msg {
+  font-size: 0.8rem;
+  margin: 0;
+  font-weight: 500;
+}
+.cl-browse-msg--ok  { color: #a8e6cf; }
+.cl-browse-msg--err { color: #ff9999; }

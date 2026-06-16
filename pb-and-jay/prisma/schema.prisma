@@ -35,40 +35,58 @@ enum CampaignStatus {
 }
 
 model User {
-  id                String      @id @default(cuid())
-  email             String      @unique
-  username          String      @unique
+  id                String                @id @default(cuid())
+  email             String                @unique
+  username          String                @unique
   displayName       String
   password          String
-  role              UserRole    @default(PLAYER)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  role              UserRole              @default(PLAYER)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
   characters        Character[]
-  campaignsCreated  Campaign[]  @relation("CampaignCreator")
-  campaignsApproved Campaign[]  @relation("CampaignApprover")
-  campaignsDM       Campaign[]  @relation("CampaignDM")
+  campaignsCreated  Campaign[]            @relation("CampaignCreator")
+  campaignsApproved Campaign[]            @relation("CampaignApprover")
+  campaignsDM       Campaign[]            @relation("CampaignDM")
+  joinRequests      CampaignJoinRequest[]
 }
 
 model Campaign {
-  id           String         @id @default(cuid())
+  id           String                @id @default(cuid())
   name         String
-  setting      String         @default("")
-  openingScene String         @default("")
-  hooks        Json           @default("[]")
-  npcs         Json           @default("[]")
-  dmNotes      String         @default("")
-  status       CampaignStatus @default(DRAFT)
+  setting      String                @default("")
+  openingScene String                @default("")
+  hooks        Json                  @default("[]")
+  npcs         Json                  @default("[]")
+  dmNotes      String                @default("")
+  status       CampaignStatus        @default(DRAFT)
   rejectedNote String?
+  isAiGame     Boolean               @default(false)
   createdById  String
-  createdBy    User           @relation("CampaignCreator",  fields: [createdById],  references: [id])
+  createdBy    User                  @relation("CampaignCreator",  fields: [createdById],  references: [id])
   dmId         String?
-  dm           User?          @relation("CampaignDM",       fields: [dmId],         references: [id])
+  dm           User?                 @relation("CampaignDM",       fields: [dmId],         references: [id])
   approvedById String?
-  approvedBy   User?          @relation("CampaignApprover", fields: [approvedById], references: [id])
+  approvedBy   User?                 @relation("CampaignApprover", fields: [approvedById], references: [id])
   approvedAt   DateTime?
-  isActive     Boolean        @default(false)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  isActive     Boolean               @default(false)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  joinRequests CampaignJoinRequest[]
+}
+
+model CampaignJoinRequest {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      String   @default("PENDING")
+  message     String?
+  requestedAt DateTime @default(now())
+
+  @@unique([campaignId, userId])
+  @@index([campaignId])
+  @@index([userId])
 }
 
 model Setting {

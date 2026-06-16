@@ -36,6 +36,7 @@ const CampaignBuilderPage = () => {
     name: '', setting: '', openingScene: '', dmNotes: '',
     hooks: ['', '', ''],
     npcs: [{ name: '', description: '' }],
+    isAiGame: false,
   });
   const [aiPrompt, setAiPrompt] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
@@ -58,6 +59,7 @@ const CampaignBuilderPage = () => {
       dmNotes: c.dmNotes ?? '',
       hooks: hooks.length >= 3 ? hooks : [...hooks, ...Array(3 - hooks.length).fill('')],
       npcs,
+      isAiGame: c.isAiGame ?? false,
     });
   }
 
@@ -86,6 +88,7 @@ const CampaignBuilderPage = () => {
     dmNotes: form.dmNotes.trim(),
     hooks: form.hooks.map(h => h.trim()).filter(Boolean),
     npcs: form.npcs.filter(n => n.name.trim()),
+    isAiGame: form.isAiGame,
   });
 
   const handleSave = async () => {
@@ -225,6 +228,23 @@ const CampaignBuilderPage = () => {
             placeholder="The Whispering Hollow"
             disabled={!canEdit}
           />
+        </div>
+
+        {/* AI DM toggle */}
+        <div className="cb-field cb-field--inline">
+          <label className="cb-label cb-label--check">
+            <input
+              type="checkbox"
+              className="cb-checkbox"
+              checked={form.isAiGame}
+              onChange={e => set('isAiGame', e.target.checked)}
+              disabled={!canEdit}
+            />
+            AI DM Game
+          </label>
+          <p className="cb-field-hint" style={{ margin: 0 }}>
+            Mark this as an AI-run game. Players who join will see the AI DM badge. The game board auto-enables AI mode.
+          </p>
         </div>
 
         {/* Setting */}

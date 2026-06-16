@@ -210,6 +210,38 @@ const DmPage = () => {
       .finally(() => setPlayersLoading(false));
   }, []);
 
+  // Join requests
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [joinRequestsLoading, setJoinRequestsLoading] = useState(false);
+  const [joinRequestMsg, setJoinRequestMsg] = useState(null);
+
+  useEffect(() => {
+    if (!campaign?.id) return;
+    setJoinRequestsLoading(true);
+    authFetch(`/api/campaigns/${campaign.id}/join-requests`)
+      .then(data => setJoinRequests(Array.isArray(data) ? data : []))
+      .catch(() => {})
+      .finally(() => setJoinRequestsLoading(false));
+  }, [campaign?.id]);
+
+  const handleJoinRequestAction = async (userId, status) => {
+    try {
+      await authFetch(`/api/campaigns/${campaign.id}/join-requests/${userId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
+      setJoinRequests(prev => prev.map(r =>
+        r.userId === userId ? { ...r, status } : r
+      ));
+      setJoinRequestMsg({ text: `Request ${status === 'APPROVED' ? 'approved' : 'denied'}.`, ok: status === 'APPROVED' });
+    } catch (e) {
+      setJoinRequestMsg({ text: e.message, ok: false });
+    }
+    setTimeout(() => setJoinRequestMsg(null), 3000);
+  };
+
+  const pendingRequests = joinRequests.filter(r => r.status === 'PENDING');
+
   const handleAssign = async (characterId) => {
     if (!campaign?.id) return;
     try {
@@ -514,6 +546,74 @@ const DmPage = () => {
           )
         )}
       </section>
+
+      {/* Join Requests */}
+      {campaign?.id && (
+        <section className="dm-section">
+          <div className="dm-section__head">
+            <h2 className="dm-section__title" style={{ margin: 0 }}>
+              Join Requests
+              {pendingRequests.length > 0 && (
+                <span className="dm-badge dm-badge--pending" style={{ marginLeft: '0.5rem' }}>{pendingRequests.length}</span>
+              )}
+            </h2>
+            {joinRequestMsg && (
+              <span className={`dm-player-msg ${joinRequestMsg.ok ? 'dm-player-msg--ok' : 'dm-player-msg--err'}`}>
+                {joinRequestMsg.text}
+              </span>
+            )}
+          </div>
+          {joinRequestsLoading && <p className="dm-section__hint">Loading requests…</p>}
+          {!joinRequestsLoading && joinRequests.length === 0 && (
+            <p className="dm-section__hint">No join requests for this campaign.</p>
+          )}
+          {!joinRequestsLoading && joinRequests.length > 0 && (
+            <div className="dm-join-request-list">
+              {joinRequests.map(req => (
+                <div key={req.userId} className={`dm-join-request-row dm-join-request-row--${req.status.toLowerCase()}`}>
+                  <div className="dm-join-request-info">
+                    <span className="dm-join-request-name">{req.user?.displayName}</span>
+                    <span className="dm-join-request-username">@{req.user?.username}</span>
+                    {req.message && <span className="dm-join-request-msg">"{req.message}"</span>}
+                  </div>
+                  {req.user?.characters?.length > 0 && (
+                    <div className="dm-join-request-chars">
+                      <span className="dm-vital-label">Characters:</span>
+                      {req.user.characters.map(c => (
+                        <span key={c.id} className="dm-join-request-char">
+                          {c.name} (Lv {c.level} {c.class})
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="dm-join-request-actions">
+                    {req.status === 'PENDING' ? (
+                      <>
+                        <button
+                          className="btn btn--approve btn--xs"
+                          onClick={() => handleJoinRequestAction(req.userId, 'APPROVED')}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className="btn btn--danger btn--xs"
+                          onClick={() => handleJoinRequestAction(req.userId, 'DENIED')}
+                        >
+                          Deny
+                        </button>
+                      </>
+                    ) : (
+                      <span className={`dm-join-status dm-join-status--${req.status.toLowerCase()}`}>
+                        {req.status === 'APPROVED' ? 'Approved' : 'Denied'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* AI companions */}
       {aiWithIndex.length > 0 && (
