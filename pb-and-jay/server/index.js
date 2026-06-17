@@ -12,6 +12,7 @@ import prisma from './prisma.js';
 import { requireAuth } from './auth-middleware.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { sendDmPostNotification, isEmailEnabled } from './email.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, '..', 'dist');
@@ -959,6 +960,32 @@ app.post('/api/campaigns/:id/posts', requireAuth, async (req, res) => {
       aiActions: post.aiActions ?? undefined,
       timestamp: post.createdAt.getTime(),
     });
+
+    // Fire email notifications to players when the DM posts — non-blocking
+    if (type === 'dm' && isEmailEnabled()) {
+      prisma.campaign.findUnique({
+        where: { id: req.params.id },
+        select: {
+          name: true,
+          characters: {
+            where: { isRetired: false, isAiCharacter: false },
+            select: { user: { select: { email: true, id: true } } },
+          },
+        },
+      }).then(campaign => {
+        if (!campaign) return;
+        const playerEmails = campaign.characters
+          .map(c => c.user.email)
+          .filter(email => email !== req.authUser.email); // don't email the poster
+        if (playerEmails.length === 0) return;
+        sendDmPostNotification({
+          campaignName: campaign.name,
+          dmName: author.trim(),
+          postContent: content.trim(),
+          playerEmails,
+        }).catch(err => console.error('Email notification failed:', err.message));
+      }).catch(() => {});
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
