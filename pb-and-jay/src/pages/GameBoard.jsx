@@ -251,8 +251,8 @@ const GameBoard = () => {
               >
                 <div className="character-btn__top">
                   <span className="character-btn__name">{char.name}</span>
-                  <span className={`character-badge ${char.isOwn ? 'character-badge--human' : 'character-badge--other'}`}>
-                    {char.isOwn ? 'You' : char.ownerName || 'Player'}
+                  <span className={`character-badge ${char.isAI ? 'character-badge--ai' : char.isOwn ? 'character-badge--human' : 'character-badge--other'}`}>
+                    {char.isAI ? 'AI' : char.isOwn ? 'You' : char.ownerName || 'Player'}
                   </span>
                 </div>
                 <span className="character-btn__class">{char.class} {char.level}</span>
@@ -312,13 +312,19 @@ const GameBoard = () => {
             <div className="dm-response-row">
               <button
                 className="btn btn--primary"
-                onClick={runAiRound}
-                disabled={isLoadingDM || !allHumansPosted}
-                title={!allHumansPosted ? 'Post your action first' : 'Run AI companions then get DM narration'}
+                onClick={aiLocked && !aiAuthenticated ? () => setShowUnlockModal(true) : runAiRound}
+                disabled={isLoadingDM || (!allHumansPosted && aiAuthenticated)}
+                title={
+                  aiLocked && !aiAuthenticated ? 'Unlock AI DM first'
+                  : !allHumansPosted ? 'Post your action first'
+                  : 'Run AI companions then get DM narration'
+                }
               >
-                {isLoadingDM ? 'DM is responding...' : 'Get DM Response'}
+                {isLoadingDM ? 'DM is responding...'
+                  : aiLocked && !aiAuthenticated ? '🔒 Unlock AI DM'
+                  : 'Get DM Response'}
               </button>
-              {!allHumansPosted && !isLoadingDM && (
+              {!allHumansPosted && aiAuthenticated && !isLoadingDM && (
                 <span className="dm-response-hint">Post your action first</span>
               )}
               {dmError && (

@@ -357,6 +357,12 @@
   border: 1px solid rgba(120, 192, 224, 0.25);
 }
 
+.character-badge--ai {
+  background: rgba(167, 139, 250, 0.12);
+  color: #a78bfa;
+  border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
 .character-control-btn {
   font-size: 0.68rem;
   color: #6a7088;

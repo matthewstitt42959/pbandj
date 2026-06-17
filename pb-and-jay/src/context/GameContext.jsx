@@ -574,14 +574,14 @@ export function GameProvider({ children }) {
   }, []);
 
   // Load real characters from the active campaign. currentUserId identifies which char belongs to the viewer.
-  // All characters in a real campaign are human — isAI is reserved for future AI-companion feature.
+  // isAiCharacter characters are AI-controlled party members; all others are human players.
   const loadCampaignCharacters = useCallback((dbChars, currentUserId) => {
     const characters = dbChars.map(c => ({
       ...mapDbCharToGame(c),
-      isAI: false,
-      isOwn: c.userId === currentUserId,
+      isAI: !!c.isAiCharacter,
+      isOwn: !c.isAiCharacter && c.userId === currentUserId,
       ownerId: c.userId,
-      ownerName: c.user?.displayName ?? c.user?.username ?? '',
+      ownerName: c.isAiCharacter ? 'AI' : (c.user?.displayName ?? c.user?.username ?? ''),
     }));
     // Put the current user's character first if present
     const myIndex = characters.findIndex(c => c.isOwn);
