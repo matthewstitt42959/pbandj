@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../../context/GameContext';
+import { rollDice } from '../../services/dice';
 import './CharacterTabs.css';
 
 const ABILITY_SKILLS = {
@@ -44,7 +45,7 @@ function fmtMod(n) {
   return (n >= 0 ? '+' : '') + n;
 }
 
-const StatsTab = ({ character }) => {
+const StatsTab = ({ character, onRollResult }) => {
   const { activeCharacterIndex, updateCharacter } = useGame();
   const [expandedAbility, setExpandedAbility] = useState(null);
   const [showAllSkills, setShowAllSkills] = useState(false);
@@ -69,6 +70,15 @@ const StatsTab = ({ character }) => {
   const toggleAbility = (key) => {
     if (!ABILITY_SKILLS[key]?.length) return;
     setExpandedAbility(prev => (prev === key ? null : key));
+  };
+
+  const handleSkillRoll = (label, mod) => {
+    if (!onRollResult) return;
+    const notation = mod === 0 ? '1d20' : `1d20${mod >= 0 ? '+' : ''}${mod}`;
+    const result = rollDice(notation);
+    if (!result) return;
+    const modStr = mod !== 0 ? ` ${mod >= 0 ? '+' : ''}${mod}` : '';
+    onRollResult(`🎲 ${label}: [${result.rolls[0]}]${modStr} = ${result.total}`);
   };
 
   return (
@@ -122,16 +132,27 @@ const StatsTab = ({ character }) => {
                   const proficient = !!skills[sk];
                   const mod = skillMod(key, sk);
                   return (
-                    <button
+                    <div
                       key={sk}
                       className={`skill-row ${proficient ? 'skill-row--proficient' : ''}`}
-                      onClick={() => toggleSkill(sk)}
-                      title={proficient ? 'Click to remove proficiency' : 'Click to add proficiency'}
                     >
-                      <span className={`skill-dot ${proficient ? 'skill-dot--filled' : ''}`} />
+                      <button
+                        type="button"
+                        className={`skill-dot ${proficient ? 'skill-dot--filled' : ''}`}
+                        onClick={() => toggleSkill(sk)}
+                        title={proficient ? 'Remove proficiency' : 'Add proficiency'}
+                      />
                       <span className="skill-name">{label}</span>
                       <span className="skill-mod">{fmtMod(mod)}</span>
-                    </button>
+                      {onRollResult && (
+                        <button
+                          type="button"
+                          className="skill-roll-btn"
+                          onClick={() => handleSkillRoll(label, mod)}
+                          title={`Roll ${label} (1d20${mod >= 0 ? '+' : ''}${mod})`}
+                        >🎲</button>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -153,17 +174,28 @@ const StatsTab = ({ character }) => {
             const proficient = !!skills[sk];
             const mod = skillMod(ability, sk);
             return (
-              <button
+              <div
                 key={sk}
                 className={`skill-row ${proficient ? 'skill-row--proficient' : ''}`}
-                onClick={() => toggleSkill(sk)}
-                title={proficient ? 'Click to remove proficiency' : 'Click to add proficiency'}
               >
-                <span className={`skill-dot ${proficient ? 'skill-dot--filled' : ''}`} />
+                <button
+                  type="button"
+                  className={`skill-dot ${proficient ? 'skill-dot--filled' : ''}`}
+                  onClick={() => toggleSkill(sk)}
+                  title={proficient ? 'Remove proficiency' : 'Add proficiency'}
+                />
                 <span className="skill-name">{label}</span>
                 <span className="skill-ability">{ability.toUpperCase()}</span>
                 <span className="skill-mod">{fmtMod(mod)}</span>
-              </button>
+                {onRollResult && (
+                  <button
+                    type="button"
+                    className="skill-roll-btn"
+                    onClick={() => handleSkillRoll(label, mod)}
+                    title={`Roll ${label} (1d20${mod >= 0 ? '+' : ''}${mod})`}
+                  >🎲</button>
+                )}
+              </div>
             );
           })}
         </div>

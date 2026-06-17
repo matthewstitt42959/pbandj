@@ -110,14 +110,9 @@
   gap: 0.5rem;
   padding: 0.28rem 0.4rem;
   border-radius: 4px;
-  background: none;
-  border: none;
   color: #9aa0b8;
   font-size: 0.8rem;
-  font-family: inherit;
   width: 100%;
-  text-align: left;
-  cursor: pointer;
   transition: background 0.1s;
 }
 
@@ -135,11 +130,30 @@
   border-radius: 50%;
   border: 1.5px solid #6a7088;
   flex-shrink: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .skill-dot--filled {
   background: #78c0e0;
   border-color: #78c0e0;
+}
+
+.skill-roll-btn {
+  background: none;
+  border: none;
+  padding: 0 0.1rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  opacity: 0.4;
+  line-height: 1;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.skill-row:hover .skill-roll-btn {
+  opacity: 1;
 }
 
 .skill-name {

@@ -74,8 +74,21 @@ const GameBoard = () => {
   // For AI mode: only require the current viewer's character to have posted
   const allHumansPosted = !myCharacter || roundPosters.includes(myCharacter.name);
   const [activeTab, setActiveTab] = useState('stats');
-  // DMs without their own character default to DM Narration; everyone else posts as their character
-  const [postAs, setPostAs] = useState(isDm && !hasOwnCharacter ? 'dm' : 'character');
+  // Characters may not be loaded on first render, so always start as 'character' and
+  // flip to 'dm' only for DMs that truly have no character after the fetch resolves.
+  const [postAs, setPostAs] = useState('character');
+  const [postAsManual, setPostAsManual] = useState(false);
+
+  useEffect(() => {
+    if (postAsManual) return;
+    if (isDm && !myCharacter) setPostAs('dm');
+    else if (myCharacter) setPostAs('character');
+  }, [myCharacter?.id, isDm]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSetPostAs = (mode) => {
+    setPostAsManual(true);
+    setPostAs(mode);
+  };
   const [aiAvailable, setAiAvailable] = useState(false);
   const [aiLocked, setAiLocked] = useState(false);
   const [aiAuthenticated, setAiAuthenticated] = useState(false);
@@ -279,14 +292,14 @@ const GameBoard = () => {
               <button
                 type="button"
                 className={`post-as-toggle__btn ${postAs === 'character' ? 'active' : ''}`}
-                onClick={() => setPostAs('character')}
+                onClick={() => handleSetPostAs('character')}
               >
                 {myCharacter.name}
               </button>
               <button
                 type="button"
                 className={`post-as-toggle__btn ${postAs === 'dm' ? 'active' : ''}`}
-                onClick={() => setPostAs('dm')}
+                onClick={() => handleSetPostAs('dm')}
               >
                 DM Narration
               </button>
@@ -296,7 +309,11 @@ const GameBoard = () => {
           {(myCharacter || isDm) && (
             <PostComposer
               authorName={postAs === 'dm' ? 'DM' : myCharacter?.name}
-              appendText={postAs === 'character' ? diceInsert : (postAs === 'dm' ? assistInsert : null)}
+              appendText={postAs === 'character'
+                ? diceInsert
+                : postAs === 'dm'
+                  ? (!diceInsert ? assistInsert : !assistInsert ? diceInsert : diceInsert.ts > assistInsert.ts ? diceInsert : assistInsert)
+                  : null}
               onSubmit={handlePost}
               disabled={isLoadingDM}
               submitLabel={postAs === 'dm' ? 'Post DM Narration' : 'Post Action'}
@@ -436,7 +453,7 @@ const GameBoard = () => {
           </nav>
 
           <div className="tab-content">
-            {activeTab === 'stats' && <StatsTab character={activeCharacter} />}
+            {activeTab === 'stats' && <StatsTab character={activeCharacter} onRollResult={handleDiceRoll} />}
             {activeTab === 'inventory' && <InventoryTab character={activeCharacter} />}
             {activeTab === 'spells' && <SpellsTab character={activeCharacter} />}
             {activeTab === 'conditions' && <ConditionsTab character={activeCharacter} />}
