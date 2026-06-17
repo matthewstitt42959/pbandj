@@ -351,8 +351,8 @@ export function GameProvider({ children }) {
                 }
               } catch {}
             }
-            // Always use AI mode for AI campaigns
-            if (migrated.campaign?.isAiGame) migrated.playMode = 'ai';
+            // Always derive playMode from the campaign flag — never trust stale saved state
+            migrated.playMode = migrated.campaign?.isAiGame ? 'ai' : 'manual';
             // One-time migration: save any legacy blob posts to the DB
             if (migrated.campaign?.id && migrated.posts?.length > 0) {
               const tok = localStorage.getItem('pb-and-jay-token');
@@ -393,8 +393,8 @@ export function GameProvider({ children }) {
           }
         } catch {}
       }
-      // Always use AI mode for AI campaigns
-      if (local.campaign?.isAiGame) local.playMode = 'ai';
+      // Always derive playMode from the campaign flag — never trust stale saved state
+      local.playMode = local.campaign?.isAiGame ? 'ai' : 'manual';
       if (local.campaign?.id && local.posts?.length > 0) {
         const tok = localStorage.getItem('pb-and-jay-token');
         for (const p of local.posts) {
@@ -692,7 +692,7 @@ export function GameProvider({ children }) {
     try {
       const [gr, cr] = await Promise.all([
         fetch(`/api/game?campaign=${encodeURIComponent(campaignId)}`, { headers: authHeaders }),
-        fetch(`/api/campaigns/${campaignId}`, { headers: authHeaders }),
+        fetch(`/api/campaigns/${campaignId}/info`, { headers: authHeaders }),
       ]);
       const { state: saved } = gr.ok ? await gr.json() : { state: null };
       const c = cr.ok ? await cr.json() : null;
@@ -702,8 +702,9 @@ export function GameProvider({ children }) {
           id: c.id, name: c.name, setting: c.setting,
           currentScene: c.openingScene, isAiGame: c.isAiGame ?? false,
         };
-        if (c.isAiGame) payload.playMode = 'ai';
       }
+      // Always derive playMode from the campaign — never bleed across sessions
+      payload.playMode = (c?.isAiGame ?? false) ? 'ai' : 'manual';
       payload.posts = [];
       localStorage.setItem('pb-and-jay-last-campaign', campaignId);
       dispatch({ type: 'INIT', payload });

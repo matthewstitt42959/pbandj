@@ -27,7 +27,7 @@ function ActiveBadge() {
 
 // ── Player browse view ─────────────────────────────────────────────────────
 
-function BrowseCard({ campaign, onJoin, onCancel }) {
+function BrowseCard({ campaign, onJoin, onCancel, onPlay }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
   const [showMsg, setShowMsg] = useState(false);
@@ -107,7 +107,7 @@ function BrowseCard({ campaign, onJoin, onCancel }) {
           </div>
         )}
         {campaign.isMember && (
-          <Link to="/game" className="btn btn--primary btn--sm">Play</Link>
+          <button className="btn btn--primary btn--sm" onClick={() => onPlay(campaign.id)}>Play</button>
         )}
       </div>
       {showMsg && msg && (
@@ -329,6 +329,7 @@ const CampaignListPage = () => {
               campaign={c}
               onJoin={handleJoinRequest}
               onCancel={handleCancelRequest}
+              onPlay={handlePlay}
             />
           ))}
         </div>

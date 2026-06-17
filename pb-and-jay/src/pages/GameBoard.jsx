@@ -54,6 +54,7 @@ const GameBoard = () => {
 
   const { user, authFetch } = useAuth();
   const isDm = user?.role === 'DM' || user?.role === 'SUPER_DM';
+  const isAiCampaign = campaign?.isAiGame ?? false;
   const isAssigned = isDm || (
     Array.isArray(user?.characters) &&
     user.characters.some(c => !c.isRetired && c.campaignId === campaign?.id)
@@ -174,7 +175,7 @@ const GameBoard = () => {
           <p className="gameboard-header__scene">{campaign.currentScene}</p>
         </div>
         <div className="gameboard-header__controls">
-          {isDm ? (
+          {isAiCampaign && isDm && (
             <div className="mode-toggle">
               <span className="mode-toggle__label">Mode</span>
               <button
@@ -182,7 +183,7 @@ const GameBoard = () => {
                 className={`mode-toggle__btn ${playMode === 'manual' ? 'active' : ''}`}
                 onClick={() => setPlayMode('manual')}
               >
-                AI-free
+                Pause AI
               </button>
               <button
                 type="button"
@@ -201,13 +202,9 @@ const GameBoard = () => {
                   : 'AI assists with narration and companions'
                 }
               >
-                {aiLocked && !aiAuthenticated ? '🔒 AI Assist' : 'AI Assist'}
+                {aiLocked && !aiAuthenticated ? '🔒 AI Active' : 'AI Active'}
               </button>
             </div>
-          ) : (
-            <span className="mode-indicator">
-              {playMode === 'manual' ? 'AI-free session' : 'AI-assisted session'}
-            </span>
           )}
           <button className="btn btn--ghost" onClick={resetCampaign} title="Reset campaign">
             New Campaign
@@ -215,14 +212,14 @@ const GameBoard = () => {
         </div>
       </header>
 
-      {playMode === 'manual' && (
+      {isAiCampaign && playMode === 'manual' && (
         <p className="gameboard-banner gameboard-banner--manual">
-          AI-free session — the DM is narrating everything directly.
+          AI paused — DM is narrating this round directly.
         </p>
       )}
-      {playMode === 'ai' && (
+      {isAiCampaign && playMode === 'ai' && (
         <p className="gameboard-banner gameboard-banner--ai">
-          AI-assisted session — post your action, then click <strong>Get DM Response</strong> when the party is ready.
+          AI-assisted — post your action, then click <strong>Get DM Response</strong> when the party is ready.
         </p>
       )}
 
@@ -325,7 +322,7 @@ const GameBoard = () => {
             />
           )}
 
-          {playMode === 'ai' && (
+          {isAiCampaign && playMode === 'ai' && (
             <div className="dm-response-row">
               <button
                 className="btn btn--primary"
@@ -352,7 +349,7 @@ const GameBoard = () => {
 
           {isDm && postAs === 'dm' && (
             <>
-              {playMode === 'ai' && (
+              {isAiCampaign && playMode === 'ai' && (
                 <DmAssist
                   campaign={campaign}
                   posts={posts}

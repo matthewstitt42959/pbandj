@@ -679,6 +679,26 @@ app.get('/api/campaigns', requireAuth, async (req, res) => {
   }
 });
 
+// Lightweight campaign info — any authenticated user can load this to switch their session
+app.get('/api/campaigns/:id/info', requireAuth, async (req, res) => {
+  try {
+    const campaign = await prisma.campaign.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, name: true, setting: true, openingScene: true, isAiGame: true, isActive: true, status: true },
+    });
+    if (!campaign) return res.status(404).json({ error: 'Not found' });
+    if (req.authUser.role === 'PLAYER') {
+      const hasChar = await prisma.character.findFirst({
+        where: { userId: req.authUser.id, campaignId: campaign.id, isRetired: false },
+      });
+      if (!hasChar && !campaign.isActive) return res.status(403).json({ error: 'Access denied' });
+    }
+    res.json(campaign);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get single
 app.get('/api/campaigns/:id', requireAuth, async (req, res) => {
   if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
