@@ -22,6 +22,61 @@
   color: #7a7f94;
 }
 
+/* Search bar */
+.wiki-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(120, 192, 224, 0.2);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  margin-bottom: 1rem;
+  transition: border-color 0.15s;
+}
+
+.wiki-search-bar:focus-within {
+  border-color: rgba(255, 200, 87, 0.45);
+}
+
+.wiki-search-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.wiki-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #e8e6f0;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.wiki-search-input::placeholder {
+  color: #6a7088;
+}
+
+.wiki-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.wiki-search-clear {
+  background: none;
+  border: none;
+  color: #6a7088;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0 0.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.wiki-search-clear:hover { color: #e8e6f0; }
+
 .wiki-categories {
   display: flex;
   flex-wrap: wrap;
@@ -230,4 +285,76 @@
   gap: 0.6rem;
   justify-content: flex-end;
   margin-top: 0.5rem;
+}
+
+/* Spell card display */
+.spell-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.spell-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.spell-card__badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  background: rgba(255, 200, 87, 0.12);
+  border: 1px solid rgba(255, 200, 87, 0.3);
+  color: #ffc857;
+}
+
+.spell-card__badge--school {
+  background: rgba(120, 192, 224, 0.1);
+  border-color: rgba(120, 192, 224, 0.25);
+  color: #78c0e0;
+}
+
+.spell-card__classes {
+  font-size: 0.78rem;
+  color: #9aa0b8;
+  font-style: italic;
+}
+
+.spell-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: #c8c6d4;
+}
+
+.spell-card__stats strong {
+  color: #9aa0b8;
+}
+
+/* Spell class checkboxes in form */
+.spell-class-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.spell-class-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #c8c6d4;
+  cursor: pointer;
+}
+
+.spell-class-check input[type="checkbox"] {
+  accent-color: #78c0e0;
+  cursor: pointer;
 }

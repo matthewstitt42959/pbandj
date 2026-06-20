@@ -342,22 +342,48 @@ function InventoryTab({ char, onFieldChange }) {
 // ── Spells tab ────────────────────────────────────────────────────────────────
 
 function SpellsTab({ char, onFieldChange }) {
+  const { authFetch } = useAuth();
+
   const parse = (v) => {
     if (Array.isArray(v)) return v;
     if (typeof v === 'string') { try { return JSON.parse(v); } catch { return []; } }
     return [];
   };
+
   const [spells, setSpells] = useState(() => parse(char.spells));
-  const [draft, setDraft] = useState({ name: '', level: 0, notes: '' });
+  const [wikiSpells, setWikiSpells] = useState([]);
+  const [loadingWiki, setLoadingWiki] = useState(true);
+  const [selectedSpellId, setSelectedSpellId] = useState('');
+  const [draftNotes, setDraftNotes] = useState('');
+  useEffect(() => {
+    const cls = char.class;
+    const url = cls ? `/api/spells?class=${encodeURIComponent(cls)}` : '/api/spells';
+    authFetch(url)
+      .then(data => setWikiSpells(Array.isArray(data) ? data : []))
+      .catch(() => setWikiSpells([]))
+      .finally(() => setLoadingWiki(false));
+  }, [char.class]);
 
   const save = (next) => { setSpells(next); onFieldChange('spells', next); };
+
+  const knownNames = new Set(spells.map(s => s.name));
+
   const add = () => {
-    if (!draft.name.trim()) return;
-    save([...spells, { ...draft, name: draft.name.trim() }]);
-    setDraft({ name: '', level: 0, notes: '' });
+    const wiki = wikiSpells.find(s => s.id === selectedSpellId);
+    if (!wiki || knownNames.has(wiki.name)) return;
+    const entry = {
+      name: wiki.name,
+      level: wiki.level ?? 0,
+      description: wiki.description ?? '',
+      notes: draftNotes.trim(),
+    };
+    save([...spells, entry]);
+    setSelectedSpellId('');
+    setDraftNotes('');
   };
+
   const remove = (i) => save(spells.filter((_, idx) => idx !== i));
-  const update = (i, field, val) => save(spells.map((s, idx) => idx === i ? { ...s, [field]: val } : s));
+  const updateNotes = (i, val) => save(spells.map((s, idx) => idx === i ? { ...s, notes: val } : s));
 
   const byLevel = spells.reduce((acc, s, i) => {
     const lvl = s.level ?? 0;
@@ -366,36 +392,71 @@ function SpellsTab({ char, onFieldChange }) {
     return acc;
   }, {});
 
+  const availableToAdd = wikiSpells.filter(s => !knownNames.has(s.name));
+
   return (
     <div className="cs-spells">
       <div className="cs-add-row cs-add-row--multi">
-        <input className="cs-input" placeholder="Spell name" value={draft.name}
-          onChange={e => setDraft(d => ({ ...d, name: e.target.value }))}
-          onKeyDown={e => e.key === 'Enter' && add()} />
-        <select className="cs-select" value={draft.level}
-          onChange={e => setDraft(d => ({ ...d, level: Number(e.target.value) }))}>
-          <option value={0}>Cantrip</option>
-          {[1,2,3,4,5,6,7,8,9].map(l => <option key={l} value={l}>Level {l}</option>)}
+        <select
+          className="cs-select"
+          value={selectedSpellId}
+          onChange={e => setSelectedSpellId(e.target.value)}
+          disabled={loadingWiki}
+        >
+          <option value="">
+            {loadingWiki
+              ? 'Loading spells…'
+              : wikiSpells.length === 0
+                ? 'No spells in wiki yet — ask SuperDM to seed'
+                : availableToAdd.length === 0
+                  ? 'All class spells added'
+                  : '— Pick a spell —'}
+          </option>
+          {availableToAdd
+            .sort((a, b) => (a.level ?? 0) - (b.level ?? 0) || a.name.localeCompare(b.name))
+            .map(s => (
+              <option key={s.id} value={s.id}>
+                {s.level === 0 ? 'Cantrip' : `L${s.level}`} — {s.name}
+              </option>
+            ))}
         </select>
-        <button className="btn btn--primary btn--sm" onClick={add}>Add</button>
+        <input
+          className="cs-input"
+          placeholder="Notes (optional)"
+          value={draftNotes}
+          onChange={e => setDraftNotes(e.target.value)}
+        />
+        <button
+          className="btn btn--primary btn--sm"
+          onClick={add}
+          disabled={!selectedSpellId}
+        >
+          Add
+        </button>
       </div>
+
       {spells.length === 0 ? (
-        <p className="cs-empty-msg">No spells yet. Add your known spells above.</p>
+        <p className="cs-empty-msg">No spells yet. Pick from the dropdown above.</p>
       ) : (
-        Object.entries(byLevel).sort(([a],[b]) => Number(a) - Number(b)).map(([lvl, group]) => (
+        Object.entries(byLevel).sort(([a], [b]) => Number(a) - Number(b)).map(([lvl, group]) => (
           <div key={lvl} className="cs-spell-group">
             <h4 className="cs-spell-level-heading">
               {Number(lvl) === 0 ? 'Cantrips' : `Level ${lvl} Spells`}
             </h4>
             {group.map((spell) => (
-              <div key={spell._idx} className="cs-spell-row">
-                <span className="cs-spell-name">
-                  <EditField label="Spell name" value={spell.name} onChange={v => update(spell._idx, 'name', v)} />
-                </span>
-                <span className="cs-spell-notes">
-                  <EditField label="Notes" value={spell.notes ?? ''} onChange={v => update(spell._idx, 'notes', v)} />
-                </span>
-                <button className="cs-remove-btn" onClick={() => remove(spell._idx)} title="Remove">×</button>
+              <div key={spell._idx} className="cs-spell-row cs-spell-row--detailed">
+                <div className="cs-spell-row__main">
+                  <span className="cs-spell-name">{spell.name}</span>
+                  <button className="cs-remove-btn" onClick={() => remove(spell._idx)} title="Remove">×</button>
+                </div>
+                {spell.description && (
+                  <p className="cs-spell-description">
+                    {spell.description.length > 120 ? spell.description.slice(0, 117) + '…' : spell.description}
+                  </p>
+                )}
+                <div className="cs-spell-notes-row">
+                  <EditField label="Notes" value={spell.notes ?? ''} onChange={v => updateNotes(spell._idx, v)} />
+                </div>
               </div>
             ))}
           </div>

@@ -1473,6 +1473,57 @@ app.delete('/api/wiki/:id', requireAuth, requireDM, async (req, res) => {
   res.json({ ok: true });
 });
 
+// --- Spells (stored as WikiEntry with category "Spells") ---
+app.get('/api/spells', requireAuth, async (req, res) => {
+  const entries = await prisma.wikiEntry.findMany({
+    where: { category: 'Spells' },
+    orderBy: [{ title: 'asc' }],
+  });
+  const spells = entries.map(e => {
+    try { return { id: e.id, ...JSON.parse(e.content) }; }
+    catch { return { id: e.id, name: e.title }; }
+  });
+  const cls = req.query.class;
+  const clsLower = cls?.toLowerCase();
+  const filtered = clsLower
+    ? spells.filter(s => s.classes?.some(c => c.toLowerCase() === clsLower))
+    : spells;
+  res.json(filtered);
+});
+
+app.post('/api/admin/seed-spells', requireAuth, async (req, res) => {
+  if (!['DM', 'SUPER_DM'].includes(req.authUser?.role)) {
+    return res.status(403).json({ error: 'DM access required' });
+  }
+  const { SPELLS } = await import('./spellData.js');
+  let created = 0;
+  let skipped = 0;
+  for (const spell of SPELLS) {
+    const existing = await prisma.wikiEntry.findFirst({
+      where: { category: 'Spells', title: spell.name },
+    });
+    if (existing) { skipped++; continue; }
+    await prisma.wikiEntry.create({
+      data: {
+        title: spell.name,
+        category: 'Spells',
+        content: JSON.stringify({
+          name: spell.name,
+          level: spell.level,
+          school: spell.school,
+          castingTime: spell.castingTime,
+          range: spell.range,
+          duration: spell.duration,
+          classes: spell.classes,
+          description: spell.description,
+        }),
+      },
+    });
+    created++;
+  }
+  res.json({ ok: true, created, skipped });
+});
+
 app.get('/api/health', async (req, res) => {
   let provider;
   try {

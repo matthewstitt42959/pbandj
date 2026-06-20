@@ -1,49 +1,69 @@
 import React, { useState } from 'react';
-import { useGame } from '../../context/GameContext';
 import './CharacterTabs.css';
 
 const SpellsTab = ({ character }) => {
-  const { activeCharacterIndex, updateCharacter } = useGame();
-  const [newSpell, setNewSpell] = useState('');
+  const [expandedDesc, setExpandedDesc] = useState(new Set());
 
   if (!character) return null;
 
-  const handleRemove = (i) => {
-    updateCharacter(activeCharacterIndex, { spells: character.spells.filter((_, idx) => idx !== i) });
+  const spells = Array.isArray(character.spells) ? character.spells : [];
+
+  const toggleDesc = (i) => {
+    setExpandedDesc(prev => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
   };
 
-  const handleAdd = (e) => {
-    e.preventDefault();
-    const trimmed = newSpell.trim();
-    if (!trimmed) return;
-    updateCharacter(activeCharacterIndex, { spells: [...character.spells, trimmed] });
-    setNewSpell('');
-  };
+  const byLevel = spells.reduce((acc, s, i) => {
+    const entry = typeof s === 'string' ? { name: s, level: 0, _idx: i } : { ...s, _idx: i };
+    const lvl = entry.level ?? 0;
+    if (!acc[lvl]) acc[lvl] = [];
+    acc[lvl].push(entry);
+    return acc;
+  }, {});
 
   return (
     <div className="tab-panel">
-      <h4>Spells & Abilities</h4>
-      {character.spells.length === 0 ? (
-        <p className="empty-state">No spells — this class relies on martial prowess.</p>
+      <h4>Spells &amp; Abilities</h4>
+      <p className="spells-tab-hint">Manage your spell list on your Character Sheet.</p>
+      {spells.length === 0 ? (
+        <p className="empty-state">No spells added yet — visit your Character Sheet to pick spells.</p>
       ) : (
-        <ul className="item-list">
-          {character.spells.map((spell, i) => (
-            <li key={i} className="item-list__row">
-              <span>{spell}</span>
-              <button className="item-remove-btn" onClick={() => handleRemove(i)} title="Remove spell">&times;</button>
-            </li>
-          ))}
-        </ul>
+        Object.entries(byLevel)
+          .sort(([a], [b]) => Number(a) - Number(b))
+          .map(([lvl, group]) => (
+            <div key={lvl} className="spells-level-group">
+              <h5 className="spells-level-heading">
+                {Number(lvl) === 0 ? 'Cantrips' : `Level ${lvl}`}
+              </h5>
+              <ul className="item-list">
+                {group.map((spell) => (
+                  <li key={spell._idx} className="item-list__row item-list__row--spell">
+                    <div className="spell-row-main">
+                      <span className="spell-row-name">{spell.name}</span>
+                      {spell.description && (
+                        <button
+                          className="spell-desc-btn"
+                          onClick={() => toggleDesc(spell._idx)}
+                        >
+                          {expandedDesc.has(spell._idx) ? 'hide' : 'details'}
+                        </button>
+                      )}
+                    </div>
+                    {spell.notes && (
+                      <p className="spell-row-notes">{spell.notes}</p>
+                    )}
+                    {expandedDesc.has(spell._idx) && spell.description && (
+                      <p className="spell-row-desc">{spell.description}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
       )}
-      <form className="item-add" onSubmit={handleAdd}>
-        <input
-          className="item-add__input"
-          value={newSpell}
-          onChange={(e) => setNewSpell(e.target.value)}
-          placeholder="Add spell or ability..."
-        />
-        <button type="submit" className="item-add__btn" disabled={!newSpell.trim()}>Add</button>
-      </form>
     </div>
   );
 };

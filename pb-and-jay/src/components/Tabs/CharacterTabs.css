@@ -277,6 +277,79 @@
   cursor: not-allowed;
 }
 
+/* ── Spells tab (read-only, GameBoard) ── */
+.spells-tab-hint {
+  font-size: 0.78rem;
+  color: #6a7088;
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+.spells-level-group {
+  margin-bottom: 1rem;
+}
+
+.spells-level-heading {
+  font-size: 0.7rem;
+  color: #6a7088;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.4rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.item-list__row--spell {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.2rem;
+  padding: 0.4rem 0;
+}
+
+.spell-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spell-row-name {
+  flex: 1;
+  font-size: 0.88rem;
+  color: #e8e6f0;
+}
+
+.spell-desc-btn {
+  background: none;
+  border: none;
+  color: #78c0e0;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.spell-desc-btn:hover { text-decoration: underline; }
+
+.spell-row-notes {
+  font-size: 0.78rem;
+  color: #6a7088;
+  margin: 0;
+  padding-left: 0.25rem;
+}
+
+.spell-row-desc {
+  font-size: 0.78rem;
+  color: #9aa0b8;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0.3rem 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border-left: 2px solid rgba(120, 192, 224, 0.3);
+  white-space: pre-wrap;
+}
+
 .condition-list {
   margin-bottom: 0.25rem;
 }
