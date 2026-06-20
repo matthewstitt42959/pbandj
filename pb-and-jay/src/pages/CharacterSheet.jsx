@@ -345,9 +345,10 @@ function SpellsTab({ char, onFieldChange }) {
   const { authFetch } = useAuth();
 
   const parse = (v) => {
-    if (Array.isArray(v)) return v;
-    if (typeof v === 'string') { try { return JSON.parse(v); } catch { return []; } }
-    return [];
+    const raw = Array.isArray(v) ? v
+      : typeof v === 'string' ? (() => { try { return JSON.parse(v); } catch { return []; } })()
+      : [];
+    return raw.map(s => typeof s === 'string' ? { name: s, level: 0, description: '', notes: '' } : s);
   };
 
   const [spells, setSpells] = useState(() => parse(char.spells));
