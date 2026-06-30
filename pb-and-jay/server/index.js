@@ -1434,6 +1434,54 @@ app.delete('/api/admin/settings/ai-password', requireAuth, requireSuperDM, async
   res.json({ ok: true });
 });
 
+// ── AI subscribers (record-keeping only — access stays gated by the shared password) ──
+
+app.get('/api/admin/subscribers', requireAuth, requireSuperDM, async (_req, res) => {
+  const subscribers = await prisma.subscriber.findMany({
+    include: { user: { select: { id: true, username: true, displayName: true, email: true } } },
+    orderBy: { expiresAt: 'asc' },
+  });
+  res.json(subscribers);
+});
+
+app.post('/api/admin/subscribers', requireAuth, requireSuperDM, async (req, res) => {
+  const { userId, amount, paidAt, expiresAt, notes } = req.body;
+  if (!userId || !paidAt || !expiresAt) {
+    return res.status(400).json({ error: 'userId, paidAt, and expiresAt are required' });
+  }
+  const subscriber = await prisma.subscriber.create({
+    data: {
+      userId,
+      amount: amount != null ? Number(amount) : 5,
+      paidAt: new Date(paidAt),
+      expiresAt: new Date(expiresAt),
+      notes: notes?.trim() || null,
+    },
+    include: { user: { select: { id: true, username: true, displayName: true, email: true } } },
+  });
+  res.status(201).json(subscriber);
+});
+
+app.patch('/api/admin/subscribers/:id', requireAuth, requireSuperDM, async (req, res) => {
+  const { amount, paidAt, expiresAt, notes } = req.body;
+  const data = {};
+  if (amount != null) data.amount = Number(amount);
+  if (paidAt) data.paidAt = new Date(paidAt);
+  if (expiresAt) data.expiresAt = new Date(expiresAt);
+  if (notes !== undefined) data.notes = notes?.trim() || null;
+  const subscriber = await prisma.subscriber.update({
+    where: { id: req.params.id },
+    data,
+    include: { user: { select: { id: true, username: true, displayName: true, email: true } } },
+  });
+  res.json(subscriber);
+});
+
+app.delete('/api/admin/subscribers/:id', requireAuth, requireSuperDM, async (req, res) => {
+  await prisma.subscriber.delete({ where: { id: req.params.id } });
+  res.json({ ok: true });
+});
+
 // ── Wiki ──────────────────────────────────────────────────────────────────────
 
 function requireDM(req, res, next) {

@@ -244,6 +244,7 @@ const CampaignBuilderPage = () => {
           </label>
           <p className="cb-field-hint" style={{ margin: 0 }}>
             Mark this as an AI-run game. Players who join will see the AI DM badge. The game board auto-enables AI mode.
+            {' '}AI access costs $5/month to cover API usage — ask the site owner for the unlock code.
           </p>
         </div>
 

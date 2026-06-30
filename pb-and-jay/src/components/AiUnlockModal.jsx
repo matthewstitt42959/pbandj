@@ -27,10 +27,10 @@ const AiUnlockModal = ({ onUnlocked, onClose }) => {
         <h2 className="modal-card__title">Unlock AI DM</h2>
         <p className="modal-card__desc">
           AI-powered storytelling requires a subscription.<br />
-          <strong>$5 one-time access fee.</strong>
+          <strong>$5/month for access.</strong>
         </p>
         <p className="modal-card__subdesc">
-          Contact the site owner to purchase access and receive your code.
+          Contact the site owner to subscribe and receive your access code.
         </p>
         <form onSubmit={handleSubmit}>
           <input

@@ -48,6 +48,21 @@ model User {
   campaignsApproved Campaign[]            @relation("CampaignApprover")
   campaignsDM       Campaign[]            @relation("CampaignDM")
   joinRequests      CampaignJoinRequest[]
+  subscriptions     Subscriber[]
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Float    @default(5)
+  paidAt    DateTime
+  expiresAt DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Campaign {

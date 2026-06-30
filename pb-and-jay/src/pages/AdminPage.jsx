@@ -83,6 +83,161 @@ function CampaignRow({ campaign, dmUsers, authFetch, onUpdated }) {
 
 const ROLES = ['PLAYER', 'DM', 'SUPER_DM'];
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const toInputDate = (d) => new Date(d).toISOString().slice(0, 10);
+const addDays = (date, days) => new Date(date.getTime() + days * DAY_MS);
+
+function subscriberStatus(expiresAt) {
+  const days = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / DAY_MS);
+  if (days < 0) return { label: 'Expired', cls: 'sub-badge--expired' };
+  if (days <= 7) return { label: `${days}d left`, cls: 'sub-badge--soon' };
+  return { label: 'Active', cls: 'sub-badge--active' };
+}
+
+function SubscriberRow({ sub, authFetch, onUpdated, onDeleted }) {
+  const [editing, setEditing] = useState(false);
+  const [expiresAt, setExpiresAt] = useState(toInputDate(sub.expiresAt));
+  const [notes, setNotes] = useState(sub.notes ?? '');
+  const [busy, setBusy] = useState(false);
+
+  const status = subscriberStatus(sub.expiresAt);
+
+  const handleSave = async () => {
+    setBusy(true);
+    try {
+      const updated = await authFetch(`/api/admin/subscribers/${sub.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ expiresAt, notes }),
+      });
+      onUpdated(updated);
+      setEditing(false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRenew = async () => {
+    setBusy(true);
+    try {
+      const base = new Date(sub.expiresAt) > new Date() ? new Date(sub.expiresAt) : new Date();
+      const newExpiry = addDays(base, 30);
+      const updated = await authFetch(`/api/admin/subscribers/${sub.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ paidAt: new Date().toISOString(), expiresAt: newExpiry.toISOString() }),
+      });
+      onUpdated(updated);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Remove subscriber record for @${sub.user.username}?`)) return;
+    setBusy(true);
+    try {
+      await authFetch(`/api/admin/subscribers/${sub.id}`, { method: 'DELETE' });
+      onDeleted(sub.id);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <tr className="admin-row">
+      <td>
+        <span className="admin-display-name">{sub.user.displayName}</span>
+        <span className="admin-username">@{sub.user.username}</span>
+      </td>
+      <td className="admin-date">${sub.amount.toFixed(2)}</td>
+      <td className="admin-date">{new Date(sub.paidAt).toLocaleDateString()}</td>
+      <td>
+        {editing ? (
+          <input
+            type="date"
+            className="sub-date-input"
+            value={expiresAt}
+            onChange={e => setExpiresAt(e.target.value)}
+          />
+        ) : (
+          new Date(sub.expiresAt).toLocaleDateString()
+        )}
+      </td>
+      <td><span className={`sub-badge ${status.cls}`}>{status.label}</span></td>
+      <td>
+        {editing ? (
+          <input
+            type="text"
+            className="sub-notes-input"
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Notes"
+          />
+        ) : (
+          <span className="admin-username">{sub.notes || '—'}</span>
+        )}
+      </td>
+      <td className="sub-actions">
+        {editing ? (
+          <>
+            <button className="btn btn--primary btn--xs" onClick={handleSave} disabled={busy}>Save</button>
+            <button className="btn btn--ghost btn--xs" onClick={() => setEditing(false)} disabled={busy}>Cancel</button>
+          </>
+        ) : (
+          <>
+            <button className="btn btn--ghost btn--xs" onClick={handleRenew} disabled={busy}>+30d</button>
+            <button className="btn btn--ghost btn--xs" onClick={() => setEditing(true)} disabled={busy}>Edit</button>
+            <button className="btn btn--danger btn--xs" onClick={handleDelete} disabled={busy}>Remove</button>
+          </>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+function AddSubscriberForm({ users, authFetch, onAdded }) {
+  const [userId, setUserId] = useState('');
+  const [amount, setAmount] = useState('5');
+  const [paidAt, setPaidAt] = useState(toInputDate(new Date()));
+  const [expiresAt, setExpiresAt] = useState(toInputDate(addDays(new Date(), 30)));
+  const [notes, setNotes] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleAdd = async () => {
+    if (!userId) { setError('Pick a user'); return; }
+    setBusy(true);
+    setError('');
+    try {
+      const created = await authFetch('/api/admin/subscribers', {
+        method: 'POST',
+        body: JSON.stringify({ userId, amount, paidAt, expiresAt, notes }),
+      });
+      onAdded(created);
+      setUserId('');
+      setNotes('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="sub-add-form">
+      <select className="admin-role-select" value={userId} onChange={e => setUserId(e.target.value)}>
+        <option value="">— Pick user —</option>
+        {users.map(u => <option key={u.id} value={u.id}>{u.displayName} (@{u.username})</option>)}
+      </select>
+      <input type="number" step="0.01" className="sub-amount-input" value={amount} onChange={e => setAmount(e.target.value)} placeholder="5.00" />
+      <label className="sub-date-label">Paid<input type="date" className="sub-date-input" value={paidAt} onChange={e => setPaidAt(e.target.value)} /></label>
+      <label className="sub-date-label">Expires<input type="date" className="sub-date-input" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} /></label>
+      <input type="text" className="sub-notes-input" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)" />
+      <button className="btn btn--primary btn--sm" onClick={handleAdd} disabled={busy}>{busy ? '...' : '+ Add Payment'}</button>
+      {error && <span className="admin-error">{error}</span>}
+    </div>
+  );
+}
+
 function TempPasswordModal({ username, password, onClose }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
@@ -194,6 +349,17 @@ const AdminPage = () => {
   const [aiPasswordInput, setAiPasswordInput] = useState('');
   const [aiPasswordMsg, setAiPasswordMsg] = useState(null);
   const [aiPasswordBusy, setAiPasswordBusy] = useState(false);
+
+  // AI subscribers
+  const [subscribers, setSubscribers] = useState([]);
+  const [subscribersLoading, setSubscribersLoading] = useState(true);
+
+  useEffect(() => {
+    authFetch('/api/admin/subscribers')
+      .then(setSubscribers)
+      .catch(() => {})
+      .finally(() => setSubscribersLoading(false));
+  }, []);
 
   useEffect(() => {
     authFetch('/api/admin/users')
@@ -380,6 +546,50 @@ const AdminPage = () => {
           <p className={`ai-pw-msg ${aiPasswordMsg.ok ? 'ai-pw-msg--ok' : 'ai-pw-msg--err'}`}>
             {aiPasswordMsg.text}
           </p>
+        )}
+      </section>
+
+      <section className="admin-section">
+        <h2 className="admin-section__title">AI Subscribers</h2>
+        <p className="admin-section__desc">
+          Track who's paid for AI DM access and when they're due to renew. This is record-keeping only — it doesn't change the shared access code above.
+        </p>
+        <AddSubscriberForm
+          users={users}
+          authFetch={authFetch}
+          onAdded={created => setSubscribers(prev => [...prev, created].sort((a, b) => new Date(a.expiresAt) - new Date(b.expiresAt)))}
+        />
+        {subscribersLoading ? (
+          <p className="admin-loading">Loading subscribers...</p>
+        ) : subscribers.length === 0 ? (
+          <p className="admin-loading">No subscribers tracked yet.</p>
+        ) : (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Amount</th>
+                  <th>Paid</th>
+                  <th>Expires</th>
+                  <th>Status</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subscribers.map(sub => (
+                  <SubscriberRow
+                    key={sub.id}
+                    sub={sub}
+                    authFetch={authFetch}
+                    onUpdated={updated => setSubscribers(prev => prev.map(s => s.id === updated.id ? updated : s))}
+                    onDeleted={id => setSubscribers(prev => prev.filter(s => s.id !== id))}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </div>
