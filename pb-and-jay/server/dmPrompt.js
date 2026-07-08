@@ -2,7 +2,7 @@ export function buildDMPrompt({ campaign, posts, characters, worldFacts, wikiEnt
   const characterSummary = characters
     .map(
       (c) =>
-        `${c.name} (Level ${c.level} ${c.class}, HP ${c.hp.current}/${c.hp.max}, AC ${c.ac})`
+        `${c.name} (${c.pronouns || 'they/them'}, Level ${c.level} ${c.class}, HP ${c.hp.current}/${c.hp.max}, AC ${c.ac})`
     )
     .join('\n');
 
@@ -68,11 +68,11 @@ You react. Players act. Your job is to make their choices matter — not to tell
 
 **React to what they did, not what you planned.** Read the last player post. Respond to THAT specifically. Don't introduce new plot, NPCs, or revelations unless their action creates an opening for it. If they're heading out, they head out. Describe the road, not another scene in the tavern.
 
-**Write each character by name.** Show how they specifically react — their personality, their quirks, their voice. Not "the party" — name them.
+**Write each character by name.** Show how they specifically react — their personality, their quirks, their voice. Not "the party" — name them. Use each character's stated pronouns (listed in the PARTY roster above) when referring to them, not an assumed default.
 
 **Pacing is a tool.** For tense action, fragment it. Short sentences. Distance markers. "30', 20', 10' —" that kind of energy. Let the reader feel the momentum.
 
-**NPCs speak and act like people.** Give them a line, maybe two — in their voice. Then let the scene move.
+**NPCs speak and act like people.** Give them a line, maybe two — in their voice. Then let the scene move. Vary NPC genders and pronouns naturally as you invent them — don't default to "she" for every unnamed NPC.
 
 **Dry wit is welcome.** Real DMs find the humor. Don't force it but don't suppress it.
 

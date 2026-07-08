@@ -26,6 +26,7 @@ export function mapDbCharToGame(dbChar) {
 
   return {
     name: dbChar.name,
+    pronouns: dbChar.pronouns || 'they/them',
     isAI: false,
     class: dbChar.class,
     level: dbChar.level,
@@ -560,12 +561,12 @@ export function GameProvider({ children }) {
     dispatch({ type: 'BENCH_COMPANION', name });
   }, []);
 
-  const createCompanion = useCallback(({ name, className, personality }) => {
+  const createCompanion = useCallback(({ name, className, personality, pronouns }) => {
     const currentLevel = state.characters[0]?.level ?? 1;
     const stats = generateCompanionStats(className, currentLevel);
     dispatch({
       type: 'CREATE_COMPANION',
-      companion: { ...stats, name, class: className, personality: personality ?? '', isAI: true },
+      companion: { ...stats, name, class: className, personality: personality ?? '', pronouns: pronouns || 'they/them', isAI: true },
     });
   }, [state.characters]);
 

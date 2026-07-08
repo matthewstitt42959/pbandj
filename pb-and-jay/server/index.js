@@ -332,7 +332,7 @@ app.get('/api/characters/:id', requireAuth, async (req, res) => {
 });
 
 app.post('/api/characters', requireAuth, async (req, res) => {
-  const { name, species, class: charClass, background, backstory,
+  const { name, pronouns, species, class: charClass, background, backstory,
     level, abilityScores, hp, maxHp, ac, skills } = req.body;
 
   if (!name || !species || !charClass || !background || !abilityScores || hp == null || maxHp == null) {
@@ -351,7 +351,7 @@ app.post('/api/characters', requireAuth, async (req, res) => {
     const character = await prisma.character.create({
       data: {
         userId: req.authUser.id,
-        name, species,
+        name, pronouns: pronouns || 'they/them', species,
         class: charClass,
         background, backstory,
         level: level ?? 1,
@@ -1140,6 +1140,7 @@ ${prompt ? `Additional guidance: ${prompt}` : ''}
 Return a JSON array of exactly ${clampedCount} objects. Each object must have ALL of these fields:
 {
   "name": "Character name",
+  "pronouns": "Pronouns (e.g. she/her, he/him, they/them)",
   "species": "Species (e.g. Human, Elf, Dwarf, Halfling, Gnome, Orc, Kindled, Ashborn, Ridgeborn, or Warped)",
   "class": "Class (fighter, wizard, cleric, rogue, ranger, paladin, bard, druid, monk, barbarian, warlock, sorcerer, summoner, or tinker)",
   "background": "Background (e.g. Acolyte, Criminal, Guide, Sage, Soldier, etc.)",
@@ -1149,7 +1150,7 @@ Return a JSON array of exactly ${clampedCount} objects. Each object must have AL
   "inventory": ["item1", "item2"],
   "spells": []
 }
-Make each character distinct and interesting. Vary the classes. Return ONLY the JSON array, no markdown.`;
+Make each character distinct and interesting. Vary the classes, and vary genders/pronouns naturally rather than defaulting to one. Return ONLY the JSON array, no markdown.`;
 
     const { raw } = await provider.generateDMResponse({ systemPrompt, userPrompt: 'Generate the party.' });
 
@@ -1174,6 +1175,7 @@ Make each character distinct and interesting. Vary the classes. Return ONLY the 
           campaignId: req.params.id,
           isAiCharacter: true,
           name: c.name ?? 'Unknown',
+          pronouns: c.pronouns || 'they/them',
           species: c.species ?? 'Human',
           class: c.class ?? 'fighter',
           background: c.background ?? 'Folk Hero',

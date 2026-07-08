@@ -147,6 +147,7 @@ model Character {
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name          String
+  pronouns      String    @default("they/them")
   species       String
   class         String
   subclass      String?

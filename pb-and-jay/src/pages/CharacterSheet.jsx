@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getCasterInfo, fullProgressionRows, formatSlots } from '../data/casterProgression';
+import { PRONOUN_OPTIONS } from '../data/dnd2024';
 import './CharacterSheet.css';
 
 const TABS = ['Overview', 'Skills', 'Inventory', 'Spells', 'Story'];
@@ -159,6 +160,18 @@ function OverviewTab({ char, onFieldChange }) {
             </span>
           </div>
         ))}
+        <div className="cs-field">
+          <span className="cs-field__label">Pronouns</span>
+          <span className="cs-field__val">
+            <select
+              className="cs-select"
+              value={char.pronouns ?? 'they/them'}
+              onChange={e => onFieldChange('pronouns', e.target.value)}
+            >
+              {PRONOUN_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </span>
+        </div>
         <div className="cs-field">
           <span className="cs-field__label">Level</span>
           <span className="cs-field__val">

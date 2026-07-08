@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { rollDice } from '../services/dice';
+import { PRONOUN_OPTIONS } from '../data/dnd2024';
 import './DmPage.css';
 
 const ENCOUNTER_KEY = 'pb-and-jay-encounter';
@@ -277,6 +278,7 @@ const DmPage = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newClass, setNewClass] = useState('Fighter');
+  const [newPronouns, setNewPronouns] = useState('they/them');
   const [newPersonality, setNewPersonality] = useState('');
 
   // --- Encounter enemies ---
@@ -355,9 +357,10 @@ const DmPage = () => {
 
   const handleCreate = () => {
     if (!newName.trim()) return;
-    createCompanion({ name: newName.trim(), className: newClass, personality: newPersonality.trim() });
+    createCompanion({ name: newName.trim(), className: newClass, pronouns: newPronouns, personality: newPersonality.trim() });
     setNewName('');
     setNewClass('Fighter');
+    setNewPronouns('they/them');
     setNewPersonality('');
     setShowCreateForm(false);
   };
@@ -659,6 +662,13 @@ const DmPage = () => {
               onChange={e => setNewClass(e.target.value)}
             >
               {DND_CLASSES.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <select
+              className="dm-create-select"
+              value={newPronouns}
+              onChange={e => setNewPronouns(e.target.value)}
+            >
+              {PRONOUN_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
             <input
               className="dm-create-input"

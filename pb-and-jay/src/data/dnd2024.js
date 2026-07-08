@@ -524,6 +524,10 @@ export const BACKGROUNDS = [
 // Standard array values for ability score assignment (2024 PHB)
 export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
 
+// Pronoun options for character sheets — surfaced to the AI so it refers to
+// each character correctly instead of defaulting to one pronoun for everyone.
+export const PRONOUN_OPTIONS = ['she/her', 'he/him', 'they/them', 'she/they', 'he/they', 'other'];
+
 export const ABILITIES = [
   { key: 'str', label: 'Strength', abbr: 'STR', description: 'Physical power, melee attacks, carrying capacity' },
   { key: 'dex', label: 'Dexterity', abbr: 'DEX', description: 'Speed, ranged attacks, stealth, AC without armor' },

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  SPECIES, CLASSES, BACKGROUNDS, STANDARD_ARRAY, ABILITIES, CLASS_PRIMARY_ABILITIES,
+  SPECIES, CLASSES, BACKGROUNDS, STANDARD_ARRAY, ABILITIES, CLASS_PRIMARY_ABILITIES, PRONOUN_OPTIONS,
 } from '../data/dnd2024';
 import {
   getModifier, calculateMaxHP, calculateUnarmoredAC,
@@ -31,6 +31,18 @@ function StepNameSpecies({ form, setForm }) {
         maxLength={40}
         autoFocus
       />
+
+      <label className="wiz-label" style={{ marginTop: '1.5rem' }}>Pronouns</label>
+      <p className="wiz-sublabel">
+        Lets the AI refer to your character correctly instead of guessing.
+      </p>
+      <select
+        className="wiz-input"
+        value={form.pronouns}
+        onChange={e => setForm(f => ({ ...f, pronouns: e.target.value }))}
+      >
+        {PRONOUN_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+      </select>
 
       <label className="wiz-label" style={{ marginTop: '1.5rem' }}>Species</label>
       <p className="wiz-sublabel">
@@ -379,6 +391,7 @@ const CharacterCreate = () => {
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     name: '',
+    pronouns: 'they/them',
     species: '',
     class: '',
     background: '',
@@ -416,6 +429,7 @@ const CharacterCreate = () => {
         method: 'POST',
         body: JSON.stringify({
           name: form.name.trim(),
+          pronouns: form.pronouns,
           species: form.species,
           class: form.class,
           background: form.background,
