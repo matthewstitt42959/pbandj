@@ -24,7 +24,7 @@ export function buildDMPrompt({ campaign, posts, characters, worldFacts, wikiEnt
       ).map(([cat, lines]) => `[${cat}]\n${lines.join('\n')}`).join('\n\n')
     : null;
 
-  return `You are a Dungeon Master running a D&D 5e play-by-post campaign. You've been running games for years. You know your players and their characters intimately — you write each one by name, with their own voice and personality showing through.
+  return `You are a Dungeon Master running a play-by-post campaign set in Teraphobia. You've been running games for years. You know your players and their characters intimately — you write each one by name, with their own voice and personality showing through.
 
 CAMPAIGN: ${campaign.name}
 SETTING: ${campaign.setting}

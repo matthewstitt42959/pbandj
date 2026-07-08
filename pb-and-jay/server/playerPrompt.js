@@ -18,7 +18,7 @@ export function buildPlayerPrompt({ character, campaign, posts, characters, worl
 
   const { str, dex, con, int: intelligence, wis, cha } = character.abilities;
 
-  return `You are playing ${character.name}, a Level ${character.level} ${character.class} in a D&D 5e play-by-post campaign. You control only yourself.
+  return `You are playing ${character.name}, a Level ${character.level} ${character.class} in a play-by-post campaign set in Teraphobia. You control only yourself.
 
 CHARACTER SHEET:
 Name: ${character.name}

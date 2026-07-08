@@ -1,4 +1,4 @@
-// Pure utility functions for D&D 5e / 2024 character math
+// Pure utility functions for character math (ability modifiers, proficiency bonus, etc.)
 
 /** @param {number} score - ability score (3–20+) */
 export function getModifier(score) {

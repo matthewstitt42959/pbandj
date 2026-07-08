@@ -873,7 +873,7 @@ app.post('/api/campaigns/:id/generate', requireAuth, async (req, res) => {
     if (!canEditCampaign(existing, req.authUser)) return res.status(403).json({ error: 'Access denied' });
 
     const { raw } = await provider.generateDMResponse({
-      systemPrompt: `You are a creative D&D 2024 campaign designer. Given a prompt, generate a rich campaign outline in JSON format with exactly these fields:
+      systemPrompt: `You are a creative campaign designer for Teraphobia — a post-apocalyptic setting where rips have torn open between this world and Kimeria, and Kimerian creatures cross through them. Given a prompt, generate a rich campaign outline in JSON format with exactly these fields:
 {
   "name": "Campaign title",
   "setting": "World/location description (2-3 paragraphs)",
@@ -1132,7 +1132,7 @@ app.post('/api/campaigns/:id/generate-characters', requireAuth, async (req, res)
     if (slotsLeft === 0) return res.status(400).json({ error: `Party is full (${MAX_PARTY}/${MAX_PARTY})` });
     const clampedCount = Math.min(Math.max(Number(count) || 3, 1), slotsLeft);
 
-    const systemPrompt = `You are a D&D 2024 character creator. Generate a party of ${clampedCount} characters suitable for this campaign.
+    const systemPrompt = `You are a character creator for Teraphobia, a post-apocalyptic setting where rips have torn open between this world and Kimeria. Generate a party of ${clampedCount} characters suitable for this campaign.
 Campaign: "${campaign.name}"
 Setting: "${campaign.setting}"
 ${prompt ? `Additional guidance: ${prompt}` : ''}
@@ -1140,9 +1140,9 @@ ${prompt ? `Additional guidance: ${prompt}` : ''}
 Return a JSON array of exactly ${clampedCount} objects. Each object must have ALL of these fields:
 {
   "name": "Character name",
-  "species": "Species (e.g. Human, Elf, Dwarf, Halfling, etc.)",
-  "class": "Class (fighter, wizard, cleric, rogue, ranger, paladin, bard, druid, monk, barbarian, warlock, or sorcerer)",
-  "background": "Background (e.g. Acolyte, Criminal, Folk Hero, etc.)",
+  "species": "Species (e.g. Human, Elf, Dwarf, Halfling, Gnome, Orc, Kindled, Ashborn, Ridgeborn, or Warped)",
+  "class": "Class (fighter, wizard, cleric, rogue, ranger, paladin, bard, druid, monk, barbarian, warlock, sorcerer, summoner, or tinker)",
+  "background": "Background (e.g. Acolyte, Criminal, Guide, Sage, Soldier, etc.)",
   "backstory": "One sentence backstory",
   "level": 1,
   "abilityScores": { "str": 14, "dex": 12, "con": 13, "int": 10, "wis": 11, "cha": 9 },
@@ -1162,7 +1162,7 @@ Make each character distinct and interesting. Vary the classes. Return ONLY the 
       return res.status(502).json({ error: 'AI returned invalid JSON — try again' });
     }
 
-    const HIT_DICE_GEN = { barbarian: 12, fighter: 10, paladin: 10, ranger: 10, monk: 8, cleric: 8, druid: 8, rogue: 8, warlock: 8, bard: 8, sorcerer: 6, wizard: 6 };
+    const HIT_DICE_GEN = { barbarian: 12, fighter: 10, paladin: 10, ranger: 10, monk: 8, cleric: 8, druid: 8, rogue: 8, warlock: 8, bard: 8, summoner: 8, tinker: 8, sorcerer: 6, wizard: 6 };
     const created = await Promise.all(chars.slice(0, clampedCount).map(c => {
       const scores = c.abilityScores ?? {};
       const conMod = Math.floor(((scores.con ?? 10) - 10) / 2);
