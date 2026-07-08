@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getCasterInfo, fullProgressionRows, formatSlots } from '../data/casterProgression';
 import './CharacterSheet.css';
 
 const TABS = ['Overview', 'Skills', 'Inventory', 'Spells', 'Story'];
@@ -395,8 +396,53 @@ function SpellsTab({ char, onFieldChange }) {
 
   const availableToAdd = wikiSpells.filter(s => !knownNames.has(s.name));
 
+  const casterInfo = getCasterInfo(char.class, char.level);
+  const cantripCount = spells.filter(s => (s.level ?? 0) === 0).length;
+  const leveledCount = spells.length - cantripCount;
+  const overBudget = casterInfo && !casterInfo.noCastingYet
+    && (cantripCount > casterInfo.cantrips || leveledCount > casterInfo.known);
+
   return (
     <div className="cs-spells">
+      {casterInfo && (
+        <div className="cs-caster-summary">
+          {casterInfo.noCastingYet ? (
+            <p className="cs-caster-summary__line">{char.class} doesn't gain spellcasting until level 2.</p>
+          ) : (
+            <>
+              <p className="cs-caster-summary__line">
+                {casterInfo.track} caster, level {char.level}: <strong>{casterInfo.cantrips}</strong> cantrip{casterInfo.cantrips === 1 ? '' : 's'} known,{' '}
+                <strong>{casterInfo.known}</strong> spell{casterInfo.known === 1 ? '' : 's'} known, {formatSlots(casterInfo)}.
+              </p>
+              <p className={`cs-caster-summary__count${overBudget ? ' cs-caster-summary__count--over' : ''}`}>
+                You have {cantripCount} cantrip{cantripCount === 1 ? '' : 's'} and {leveledCount} leveled spell{leveledCount === 1 ? '' : 's'} added
+                {overBudget ? ' — over your level\'s budget' : ''}.
+              </p>
+            </>
+          )}
+          <details className="cs-caster-details">
+            <summary>Full progression, levels 1–20</summary>
+            <div className="cs-caster-table-wrap">
+              <table className="cs-caster-table">
+                <thead>
+                  <tr><th>Lvl</th><th>Cantrips</th><th>Known</th><th>Slots</th></tr>
+                </thead>
+                <tbody>
+                  {fullProgressionRows(char.class).map(row => (
+                    <tr key={row.level} className={row.level === char.level ? 'cs-caster-table__row--current' : ''}>
+                      <td>{row.level}</td>
+                      <td>{row.noCastingYet ? '—' : row.cantrips}</td>
+                      <td>{row.noCastingYet ? '—' : row.known}</td>
+                      <td>{row.noCastingYet ? '—' : formatSlots(row)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+      )}
+
       <div className="cs-add-row cs-add-row--multi">
         <select
           className="cs-select"

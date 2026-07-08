@@ -23,7 +23,7 @@ describe('SPECIES', () => {
 });
 
 describe('CLASSES', () => {
-  it('has exactly 12 classes (2024 PHB)', () => expect(CLASSES.length).toBe(12));
+  it('has exactly 14 classes (12 core + Summoner + Tinker)', () => expect(CLASSES.length).toBe(14));
   it('every class has required fields', () => {
     CLASSES.forEach(c => {
       expect(c.id, `${c.name} missing id`).toBeTruthy();

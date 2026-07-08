@@ -546,6 +546,71 @@
   padding: 1rem 0;
 }
 
+.cs-caster-summary {
+  background: rgba(120, 192, 224, 0.06);
+  border: 1px solid rgba(120, 192, 224, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.cs-caster-summary__line {
+  color: #e8e6f0;
+  font-size: 0.88rem;
+  margin: 0 0 0.35rem;
+}
+
+.cs-caster-summary__count {
+  color: #6a7088;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.cs-caster-summary__count--over {
+  color: #ff8a80;
+  font-weight: 600;
+}
+
+.cs-caster-details {
+  margin-top: 0.6rem;
+}
+
+.cs-caster-details summary {
+  color: #78c0e0;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.cs-caster-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.cs-caster-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.cs-caster-table th,
+.cs-caster-table td {
+  padding: 0.3rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(120, 192, 224, 0.12);
+  color: #c8c6d8;
+}
+
+.cs-caster-table th {
+  color: #78c0e0;
+  font-weight: 600;
+}
+
+.cs-caster-table__row--current td {
+  color: #ffc857;
+  font-weight: 600;
+}
+
 .cs-remove-btn {
   background: none;
   border: none;
