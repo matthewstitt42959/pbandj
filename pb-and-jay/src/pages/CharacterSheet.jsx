@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getCasterInfo, fullProgressionRows, formatSlots } from '../data/casterProgression';
 import './CharacterSheet.css';
@@ -546,6 +546,9 @@ function StoryTab({ char, onFieldChange }) {
 
 const CharacterSheet = () => {
   const { id } = useParams();
+  const location = useLocation();
+  const backTo = location.state?.from ?? '/dashboard';
+  const backLabel = location.state?.fromLabel ?? 'Dashboard';
   const { authFetch } = useAuth();
   const [char, setChar] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -591,7 +594,7 @@ const CharacterSheet = () => {
   if (error) return (
     <div className="cs-error">
       <p>{error}</p>
-      <Link to="/dashboard" className="btn btn--ghost">Back to dashboard</Link>
+      <Link to={backTo} className="btn btn--ghost">Back to {backLabel}</Link>
     </div>
   );
   if (!char) return null;
@@ -601,7 +604,7 @@ const CharacterSheet = () => {
   return (
     <div className="cs-page">
       <div className="cs-top-bar">
-        <Link to="/dashboard" className="cs-back-link">← Dashboard</Link>
+        <Link to={backTo} className="cs-back-link">← {backLabel}</Link>
         <div className="cs-top-bar__right">
           {saveMsg && (
             <span className={`cs-save-msg ${saveMsg.startsWith('Save') ? 'cs-save-msg--err' : ''}`}>

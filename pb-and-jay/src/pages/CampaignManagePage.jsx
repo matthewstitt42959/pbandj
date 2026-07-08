@@ -55,11 +55,16 @@ function Badge({ label, color }) {
 }
 
 function CharacterChip({ char, onRemove }) {
+  const { id: campaignId } = useParams();
   return (
     <div className="cm-char-chip">
       <div className="cm-char-chip__info">
         <span className="cm-char-chip__name">
-          <Link to={`/character/${char.id}`} className="cm-char-chip__link">{char.name}</Link>
+          <Link
+            to={`/character/${char.id}`}
+            state={{ from: `/campaigns/${campaignId}/manage`, fromLabel: 'Campaign' }}
+            className="cm-char-chip__link"
+          >{char.name}</Link>
         </span>
         <span className="cm-char-chip__meta">
           {char.class} · Lv {char.level}

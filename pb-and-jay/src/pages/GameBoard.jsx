@@ -270,6 +270,7 @@ const GameBoard = () => {
               {char.dbId && (
                 <Link
                   to={`/character/${char.dbId}`}
+                  state={{ from: '/game', fromLabel: 'Game Board' }}
                   className="character-edit-link"
                   title={`Edit ${char.name}`}
                 >✎</Link>
