@@ -22,7 +22,7 @@ const mockCharacters = [
       deception: false, intimidation: false, performance: false, persuasion: false,
     },
     inventory: ['Spellbook', 'Wand', 'Potion of Healing'],
-    spells: ['Magic Missile', 'Shield', 'Detect Magic'],
+    spells: ['Force Darts', 'Snapward', 'Bleed Sense'],
     conditions: []
   },
   {
@@ -73,7 +73,7 @@ const mockCharacters = [
       animalHandling: false, insight: false, medicine: false, perception: false, survival: false,
       deception: true, intimidation: false, performance: false, persuasion: false,
     },
-    inventory: ['Dagger (x2)', 'Thieves\' Tools', 'Cloak of Elvenkind'],
+    inventory: ['Dagger (x2)', 'Thieves\' Tools', 'Static-Woven Cloak'],
     spells: [],
     conditions: []
   },
@@ -100,7 +100,7 @@ const mockCharacters = [
       deception: false, intimidation: false, performance: false, persuasion: false,
     },
     inventory: ['Longbow', 'Shortsword', 'Animal Feed'],
-    spells: ['Hunter\'s Mark', 'Cure Wounds'],
+    spells: ['Beast Tongue', 'Mend Flesh'],
     conditions: []
   },
   {
@@ -126,8 +126,8 @@ const mockCharacters = [
       deception: false, intimidation: false, performance: false, persuasion: false,
     },
     inventory: ['Mace', 'Shield', 'Holy Symbol'],
-    spells: ['Guiding Bolt', 'Healing Word', 'Bless'],
-    conditions: ['Concentration (Bless)']
+    spells: ['Beacon Shot', 'Quick Mend', 'Rally'],
+    conditions: ['Concentration (Rally)']
   }
 ];
 

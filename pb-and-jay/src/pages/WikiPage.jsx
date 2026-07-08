@@ -4,11 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import './WikiPage.css';
 
 const CATEGORIES = ['All', 'Spells', 'Creatures', 'Factions', 'Locations', 'History', 'Events', 'Technology', 'General'];
-const SPELL_CLASSES = ['Bard', 'Cleric', 'Druid', 'Paladin', 'Ranger', 'Sorcerer', 'Warlock', 'Wizard', 'Artificer'];
-const SCHOOLS = ['Abjuration', 'Conjuration', 'Divination', 'Enchantment', 'Evocation', 'Illusion', 'Necromancy', 'Transmutation'];
+const SPELL_CLASSES = ['Bard', 'Cleric', 'Druid', 'Paladin', 'Ranger', 'Sorcerer', 'Summoner', 'Tinker', 'Warlock', 'Wizard'];
+const SCHOOLS = ['Combust', 'Rift', 'Rot', 'Sight', 'Static', 'Shift', 'Sway', 'Ward'];
 
 const EMPTY_FORM = { title: '', category: 'General', content: '' };
-const EMPTY_SPELL = { level: 0, school: 'Evocation', castingTime: '1 action', range: '60 feet', duration: 'Instantaneous', classes: [], description: '' };
+const EMPTY_SPELL = { level: 0, school: 'Combust', castingTime: '1 action', range: '60 feet', duration: 'Instantaneous', classes: [], description: '' };
 
 function parseSpell(content) {
   try { return { ...EMPTY_SPELL, ...JSON.parse(content) }; }
@@ -134,7 +134,7 @@ export default function WikiPage() {
   };
 
   const handleSeedSpells = async () => {
-    if (!window.confirm('Seed the wiki with the built-in D&D 5e spell list? Existing spells will be skipped.')) return;
+    if (!window.confirm('Sync the wiki spell list with the built-in spellbook? This adds new spells, updates changed ones, and removes any that no longer exist.')) return;
     setSeeding(true);
     setError('');
     try {
@@ -142,7 +142,7 @@ export default function WikiPage() {
       // Reload wiki entries after seeding
       const data = await fetch('/api/wiki').then(r => r.json());
       setEntries(data);
-      alert(`Done! Created ${result.created} spells, skipped ${result.skipped} already existing.`);
+      alert(`Done! Created ${result.created}, updated ${result.updated}, removed ${result.removed} stale entries.`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -226,7 +226,7 @@ export default function WikiPage() {
               onClick={handleSeedSpells}
               disabled={seeding}
             >
-              {seeding ? 'Seeding…' : 'Seed Spells'}
+              {seeding ? 'Syncing…' : 'Sync Spells'}
             </button>
           )}
           {isDm && (

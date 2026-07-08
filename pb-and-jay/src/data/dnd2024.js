@@ -1,24 +1,25 @@
-// D&D 2024 Player's Handbook — core species, classes, and backgrounds
+// Teraphobia species, classes, and backgrounds — original content.
+// See docs/SPELLBOOK_RULES.md for the magic-system rules these tie into.
 
 export const SPECIES = [
   {
-    id: 'aasimar',
-    name: 'Aasimar',
-    tagline: 'Touched by celestial light',
+    id: 'kindled',
+    name: 'Kindled',
+    tagline: 'Touched by the bleed-light',
     description:
-      'Aasimar carry a spark of divine power — descendants of mortals who were blessed by angels or other celestial beings. They radiate a gentle warmth and often feel called to protect the innocent.',
-    traits: ['Darkvision 60 ft', 'Healing Hands', 'Celestial Revelation (Radiant Soul, Radiant Consumption, or Necrotic Shroud)'],
+      'The Kindled carry something that caught when a rift tore near them — a light under the skin that never quite goes out. Some were born to parents already marked; others were changed by a single close call. Either way, people notice, and not always kindly.',
+    traits: ['Darkvision 60 ft', 'Steady Hands (healing touch)', 'Bleed Surge (Radiant, Ash, or Hollow manifestation)'],
     size: 'Medium',
     speed: 30,
     icon: '✨',
   },
   {
-    id: 'dragonborn',
-    name: 'Dragonborn',
-    tagline: 'Born of draconic might',
+    id: 'ashborn',
+    name: 'Ashborn',
+    tagline: 'Marked by the rip',
     description:
-      'Dragonborn are proud warriors with draconic ancestry flowing through their veins. They choose a dragon lineage that shapes their breath weapon and damage resistances.',
-    traits: ['Draconic Ancestry (choose a dragon type)', 'Breath Weapon', 'Damage Resistance', 'Draconic Flight at level 5'],
+      'Ashborn carry scale and claw where skin used to be — a Kimerian bloodline crossed generations back, or a rift-burn that never fully healed. They choose a lineage that colors their breath weapon and their resistances.',
+    traits: ['Lineage (choose an elemental strain)', 'Breath Weapon', 'Damage Resistance', 'Rift-Wings at level 5'],
     size: 'Medium',
     speed: 30,
     icon: '🐉',
@@ -57,12 +58,12 @@ export const SPECIES = [
     icon: '🔮',
   },
   {
-    id: 'goliath',
-    name: 'Goliath',
-    tagline: 'Giant blood, mountain spirit',
+    id: 'ridgeborn',
+    name: 'Ridgeborn',
+    tagline: 'Built for the hard country',
     description:
-      'Goliaths are towering humanoids with giant heritage. They thrive in harsh mountain environments and carry a fierce competitive spirit. Their giant lineage grants extraordinary abilities.',
-    traits: ['Large build (counts as Large for carrying capacity)', 'Giant Ancestry (choose: Cloud, Fire, Frost, Hill, Stone, or Storm)', 'Stone\'s Endurance (reduce damage once per short rest)'],
+      'Ridgeborn are massive, mountain-bred survivors — some say descended from something that came through a rift in the old Rockies and never left. They thrive where the ground is hard and the weather doesn\'t forgive mistakes.',
+    traits: ['Large build (counts as Large for carrying capacity)', 'Old Blood (choose a heritage: Cloud, Ash, Frost, Stone, or Storm)', 'Set Your Feet (reduce damage once per short rest)'],
     size: 'Medium',
     speed: 35,
     icon: '🗻',
@@ -101,12 +102,12 @@ export const SPECIES = [
     icon: '💪',
   },
   {
-    id: 'tiefling',
-    name: 'Tiefling',
-    tagline: 'Marked by infernal heritage',
+    id: 'warped',
+    name: 'Warped',
+    tagline: 'Carrying the rift\'s mark',
     description:
-      'Tieflings carry the mark of a fiendish pact made by an ancestor. Often mistrusted, they compensate with sharp wits and fierce determination. Their infernal heritage grants potent magical abilities.',
-    traits: ['Darkvision 60 ft', 'Fiendish Legacy (choose: Abyssal, Chthonic, or Infernal lineage)', 'Otherworldly Presence (Know Thaumaturgy cantrip)', 'Fire Resistance'],
+      'The Warped were touched too long, too close, or too young — exposure to a rift that should have killed them instead changed them for good. Most people flinch first and ask questions later; the Warped have learned to expect it.',
+    traits: ['Darkvision 60 ft', 'Warp Lineage (choose: Ash, Hollow, or Static strain)', 'Static Hum (know the Small Wonder cantrip)', 'Heat-Touched (fire resistance)'],
     size: 'Medium',
     speed: 30,
     icon: '🔥',
@@ -305,6 +306,38 @@ export const CLASSES = [
     subclassName: 'Arcane Tradition',
     icon: '📚',
     complexity: 'Advanced',
+  },
+  {
+    id: 'summoner',
+    name: 'Summoner',
+    tagline: 'Holds the seam open, pulls something through',
+    description:
+      'Summoners don\'t fling their own power around — they specialize in tearing a small, controlled seam toward the other side and binding whatever comes through to their will. It\'s dangerous, unpredictable work, and the best Summoners are the ones who\'ve learned exactly how far a seam can be pushed before it pushes back.',
+    hitDie: 8,
+    primaryAbility: ['cha'],
+    saves: ['con', 'cha'],
+    armorProficiency: 'Light armor',
+    skillChoices: { count: 2, from: ['Arcana', 'Insight', 'Intimidation', 'Investigation', 'Nature', 'Religion'] },
+    subclassLevel: 1,
+    subclassName: 'Binding',
+    icon: '🕳️',
+    complexity: 'Advanced',
+  },
+  {
+    id: 'tinker',
+    name: 'Tinker',
+    tagline: 'Scavenger-engineer who bends magic through scrap',
+    description:
+      'Tinkers channel their magic through what they build — rigged wiring, salvaged parts, gear jury-rigged into something that shouldn\'t work but does. Half mechanic, half caster, they turn Teraphobia\'s ruins into a toolbox.',
+    hitDie: 8,
+    primaryAbility: ['int'],
+    saves: ['con', 'int'],
+    armorProficiency: 'Light and Medium armor, Shields',
+    skillChoices: { count: 2, from: ['Arcana', 'Investigation', 'Medicine', 'Nature', 'Perception', 'Sleight of Hand'] },
+    subclassLevel: 3,
+    subclassName: 'Specialization',
+    icon: '🔧',
+    complexity: 'Intermediate',
   },
 ];
 
@@ -512,6 +545,8 @@ export const CLASS_PRIMARY_ABILITIES = {
   ranger: ['dex', 'wis'],
   rogue: ['dex', 'int'],
   sorcerer: ['cha', 'con'],
+  summoner: ['cha', 'con'],
+  tinker: ['int', 'con'],
   warlock: ['cha', 'con'],
   wizard: ['int', 'con'],
 };

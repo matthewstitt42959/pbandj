@@ -1544,32 +1544,39 @@ app.post('/api/admin/seed-spells', requireAuth, async (req, res) => {
     return res.status(403).json({ error: 'DM access required' });
   }
   const { SPELLS } = await import('./spellData.js');
+  const currentNames = SPELLS.map(s => s.name);
+
+  // Drop any wiki spell whose title no longer matches the current spell list
+  // (e.g. stale entries left over from a previous, differently-named spell set).
+  const removedResult = await prisma.wikiEntry.deleteMany({
+    where: { category: 'Spells', title: { notIn: currentNames } },
+  });
+
   let created = 0;
-  let skipped = 0;
+  let updated = 0;
   for (const spell of SPELLS) {
+    const content = JSON.stringify({
+      name: spell.name,
+      level: spell.level,
+      school: spell.school,
+      castingTime: spell.castingTime,
+      range: spell.range,
+      duration: spell.duration,
+      classes: spell.classes,
+      description: spell.description,
+    });
     const existing = await prisma.wikiEntry.findFirst({
       where: { category: 'Spells', title: spell.name },
     });
-    if (existing) { skipped++; continue; }
-    await prisma.wikiEntry.create({
-      data: {
-        title: spell.name,
-        category: 'Spells',
-        content: JSON.stringify({
-          name: spell.name,
-          level: spell.level,
-          school: spell.school,
-          castingTime: spell.castingTime,
-          range: spell.range,
-          duration: spell.duration,
-          classes: spell.classes,
-          description: spell.description,
-        }),
-      },
-    });
-    created++;
+    if (existing) {
+      await prisma.wikiEntry.update({ where: { id: existing.id }, data: { content } });
+      updated++;
+    } else {
+      await prisma.wikiEntry.create({ data: { title: spell.name, category: 'Spells', content } });
+      created++;
+    }
   }
-  res.json({ ok: true, created, skipped });
+  res.json({ ok: true, created, updated, removed: removedResult.count });
 });
 
 app.get('/api/health', async (req, res) => {
