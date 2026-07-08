@@ -546,6 +546,28 @@
   padding: 1rem 0;
 }
 
+.cs-spell-preview {
+  background: rgba(255, 200, 87, 0.06);
+  border: 1px solid rgba(255, 200, 87, 0.25);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.cs-spell-preview__meta {
+  color: #ffc857;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+}
+
+.cs-spell-preview__desc {
+  color: #c8c6d8;
+  font-size: 0.85rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
 .cs-caster-summary {
   background: rgba(120, 192, 224, 0.06);
   border: 1px solid rgba(120, 192, 224, 0.2);

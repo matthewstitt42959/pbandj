@@ -395,6 +395,7 @@ function SpellsTab({ char, onFieldChange }) {
   }, {});
 
   const availableToAdd = wikiSpells.filter(s => !knownNames.has(s.name));
+  const selectedSpell = wikiSpells.find(s => s.id === selectedSpellId);
 
   const casterInfo = getCasterInfo(char.class, char.level);
   const cantripCount = spells.filter(s => (s.level ?? 0) === 0).length;
@@ -481,6 +482,20 @@ function SpellsTab({ char, onFieldChange }) {
           Add
         </button>
       </div>
+
+      {selectedSpell && (
+        <div className="cs-spell-preview">
+          <p className="cs-spell-preview__meta">
+            {selectedSpell.school && <span>{selectedSpell.school}</span>}
+            {selectedSpell.castingTime && <span> • {selectedSpell.castingTime}</span>}
+            {selectedSpell.range && <span> • {selectedSpell.range}</span>}
+            {selectedSpell.duration && <span> • {selectedSpell.duration}</span>}
+          </p>
+          {selectedSpell.description && (
+            <p className="cs-spell-preview__desc">{selectedSpell.description}</p>
+          )}
+        </div>
+      )}
 
       {spells.length === 0 ? (
         <p className="cs-empty-msg">No spells yet. Pick from the dropdown above.</p>
