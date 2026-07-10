@@ -126,7 +126,7 @@ const GameBoard = () => {
           <p>Select a campaign to start playing, or return home.</p>
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link to="/campaigns" className="btn btn--primary">Browse Campaigns</Link>
-            <Link to="/" className="btn btn--ghost">Go Home</Link>
+            <Link to="/pbj" className="btn btn--ghost">Go Home</Link>
           </div>
         </div>
       </div>

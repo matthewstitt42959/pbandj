@@ -1,0 +1,17 @@
+/* Colors carried over from the original broken-archive port so Aerial War
+   looks the same as it did there, scoped locally so they don't leak into
+   the rest of the site's theme. */
+.aerial-war-page {
+  --color-br-alt: #111009;
+  --color-surface2: #1a1712;
+  --color-accent: #c8a96e;
+  --color-border: #3d3730;
+}
+
+.aerial-war-back-link {
+  text-decoration: none;
+}
+
+.aerial-war-back-link:hover {
+  text-decoration: underline;
+}

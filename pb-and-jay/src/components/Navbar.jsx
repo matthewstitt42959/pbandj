@@ -13,13 +13,13 @@ const Navbar = () => {
   return (
     <nav className="nav-bar">
       <div className="nav-inner">
-        <NavLink to="/" className="nav-title" onClick={close}>
+        <NavLink to="/pbj" className="nav-title" onClick={close}>
           <img src="/bluejay-logo.svg" alt="" className="nav-logo" aria-hidden="true" />
           PB & Jay
         </NavLink>
 
         <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
-          <li><NavLink to="/" end onClick={close}>Home</NavLink></li>
+          <li><NavLink to="/pbj" end onClick={close}>Home</NavLink></li>
           <li><NavLink to="/rules" onClick={close}>Rules</NavLink></li>
           <li><NavLink to="/wiki" onClick={close}>World Wiki</NavLink></li>
           {user && (
@@ -57,7 +57,7 @@ const Navbar = () => {
       {/* Mobile menu */}
       {menuOpen && (
         <ul className="nav-links nav-links--mobile">
-          <li><NavLink to="/" end onClick={close}>Home</NavLink></li>
+          <li><NavLink to="/pbj" end onClick={close}>Home</NavLink></li>
           <li><NavLink to="/rules" onClick={close}>Rules</NavLink></li>
           <li><NavLink to="/wiki" onClick={close}>World Wiki</NavLink></li>
           {user ? (

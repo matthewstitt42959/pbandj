@@ -1,10 +1,16 @@
 /* Global reset & theme */
-*,
-*::before,
-*::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* Layered (not just left unlayered) so it doesn't automatically beat Tailwind's
+   utility classes — unlayered CSS always wins over layered CSS regardless of
+   specificity, which was silently zeroing out margin/padding utilities like
+   ml-2 on the Aerial War page. See src/styles/tailwind.css for layer order. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 }
 
 html,

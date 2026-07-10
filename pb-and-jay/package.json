@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
+    "@tailwindcss/vite": "^4.3.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.1.2",
@@ -49,6 +50,7 @@
     "globals": "^16.0.0",
     "jsdom": "^29.1.1",
     "prisma": "^5.22.0",
+    "tailwindcss": "^4.3.2",
     "vite": "^6.3.5",
     "vitest": "^4.1.8"
   }

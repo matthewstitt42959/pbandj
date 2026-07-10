@@ -1,0 +1,8 @@
+/* Tailwind utilities only — no preflight/base layer, so it doesn't reset the
+   rest of the app (which is styled with plain CSS, not Tailwind). Added for
+   the ported Aerial War page; safe to use Tailwind classes on future pages
+   too without touching this file. */
+@layer theme, base, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
