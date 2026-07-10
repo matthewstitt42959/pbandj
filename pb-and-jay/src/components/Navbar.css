@@ -18,6 +18,21 @@
   gap: 1.5rem;
 }
 
+/* ── Back to hub ── */
+
+.nav-hub-link {
+  font-size: 0.78rem;
+  color: #6a7088;
+  text-decoration: none;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.nav-hub-link:hover {
+  color: #9aa0b8;
+  text-decoration: none;
+}
+
 /* ── Logo ── */
 
 .nav-title {
