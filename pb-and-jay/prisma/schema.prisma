@@ -41,6 +41,7 @@ model User {
   displayName       String
   password          String
   role              UserRole              @default(PLAYER)
+  emailUpdates      Boolean               @default(true)
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
   characters        Character[]
@@ -52,15 +53,16 @@ model User {
 }
 
 model Subscriber {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount    Float    @default(5)
-  paidAt    DateTime
-  expiresAt DateTime
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount         Float     @default(5)
+  paidAt         DateTime
+  expiresAt      DateTime
+  notes          String?
+  reminderSentAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([userId])
 }

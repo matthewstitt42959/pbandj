@@ -73,8 +73,14 @@ export function AuthProvider({ children }) {
   // For components that need to make authenticated API calls directly
   const authFetch = (path, options = {}) => apiFetch(path, options);
 
+  const updateProfile = async (changes) => {
+    const updated = await apiFetch('/api/users/me', { method: 'PATCH', body: JSON.stringify(changes) });
+    setUser(prev => ({ ...prev, ...updated }));
+    return updated;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, register, signOut, authFetch }}>
+    <AuthContext.Provider value={{ user, loading, signIn, register, signOut, authFetch, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -87,7 +87,7 @@ function CharacterCard({ character, onRetire, onAssign, onUnassign, retiring, as
 }
 
 const DashboardPage = () => {
-  const { user, authFetch, signOut } = useAuth();
+  const { user, authFetch, signOut, updateProfile } = useAuth();
   const { setPlayerCharacter } = useGame();
   const navigate = useNavigate();
   const [characters, setCharacters] = useState([]);
@@ -95,6 +95,17 @@ const DashboardPage = () => {
   const [retiring, setRetiring] = useState(null);
   const [assigning, setAssigning] = useState(null);
   const [showRetired, setShowRetired] = useState(false);
+  const [savingEmailPref, setSavingEmailPref] = useState(false);
+
+  const handleToggleEmailUpdates = async (e) => {
+    const emailUpdates = e.target.checked;
+    setSavingEmailPref(true);
+    try {
+      await updateProfile({ emailUpdates });
+    } finally {
+      setSavingEmailPref(false);
+    }
+  };
 
   useEffect(() => {
     authFetch('/api/characters')
@@ -146,6 +157,15 @@ const DashboardPage = () => {
         <div>
           <h1 className="dash-header__title">Welcome back, {user?.displayName ?? 'Adventurer'}</h1>
           <p className="dash-header__sub">@{user?.username} · {user?.role?.toLowerCase() ?? 'player'}</p>
+          <label className="dash-email-pref">
+            <input
+              type="checkbox"
+              checked={user?.emailUpdates ?? true}
+              disabled={savingEmailPref}
+              onChange={handleToggleEmailUpdates}
+            />
+            Email me about membership and game updates
+          </label>
         </div>
         <button className="btn btn--ghost" onClick={signOut}>Sign out</button>
       </header>

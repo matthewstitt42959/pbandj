@@ -12,7 +12,7 @@ import prisma from './prisma.js';
 import { requireAuth } from './auth-middleware.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { sendDmPostNotification, isEmailEnabled } from './email.js';
+import { sendDmPostNotification, sendMembershipConfirmation, sendMembershipExpiringReminder, isEmailEnabled } from './email.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, '..', 'dist');
@@ -300,6 +300,23 @@ app.post('/api/users/me', requireAuth, async (req, res) => {
       return res.status(409).json({ error: 'Username already taken — please choose another' });
     }
     console.error('POST /api/users/me error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/users/me', requireAuth, async (req, res) => {
+  const { emailUpdates } = req.body;
+  if (typeof emailUpdates !== 'boolean') {
+    return res.status(400).json({ error: 'emailUpdates must be a boolean' });
+  }
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.authUser.id },
+      data: { emailUpdates },
+    });
+    res.json(safeUser(user));
+  } catch (err) {
+    console.error('PATCH /api/users/me error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -1438,9 +1455,11 @@ app.delete('/api/admin/settings/ai-password', requireAuth, requireSuperDM, async
 
 // ── AI subscribers (record-keeping only — access stays gated by the shared password) ──
 
+const SUBSCRIBER_USER_SELECT = { id: true, username: true, displayName: true, email: true, emailUpdates: true };
+
 app.get('/api/admin/subscribers', requireAuth, requireSuperDM, async (_req, res) => {
   const subscribers = await prisma.subscriber.findMany({
-    include: { user: { select: { id: true, username: true, displayName: true, email: true } } },
+    include: { user: { select: SUBSCRIBER_USER_SELECT } },
     orderBy: { expiresAt: 'asc' },
   });
   res.json(subscribers);
@@ -1459,9 +1478,19 @@ app.post('/api/admin/subscribers', requireAuth, requireSuperDM, async (req, res)
       expiresAt: new Date(expiresAt),
       notes: notes?.trim() || null,
     },
-    include: { user: { select: { id: true, username: true, displayName: true, email: true } } },
+    include: { user: { select: SUBSCRIBER_USER_SELECT } },
   });
   res.status(201).json(subscriber);
+
+  // Fire the confirmation email — non-blocking, opt-out respected
+  if (isEmailEnabled() && subscriber.user.emailUpdates) {
+    sendMembershipConfirmation({
+      email: subscriber.user.email,
+      displayName: subscriber.user.displayName,
+      amount: subscriber.amount,
+      expiresAt: subscriber.expiresAt,
+    }).catch(err => console.error('Membership confirmation email error:', err.message));
+  }
 });
 
 app.patch('/api/admin/subscribers/:id', requireAuth, requireSuperDM, async (req, res) => {
@@ -1469,20 +1498,58 @@ app.patch('/api/admin/subscribers/:id', requireAuth, requireSuperDM, async (req,
   const data = {};
   if (amount != null) data.amount = Number(amount);
   if (paidAt) data.paidAt = new Date(paidAt);
-  if (expiresAt) data.expiresAt = new Date(expiresAt);
+  if (expiresAt) {
+    data.expiresAt = new Date(expiresAt);
+    data.reminderSentAt = null; // renewed with a new expiration — allow a fresh reminder later
+  }
   if (notes !== undefined) data.notes = notes?.trim() || null;
   const subscriber = await prisma.subscriber.update({
     where: { id: req.params.id },
     data,
-    include: { user: { select: { id: true, username: true, displayName: true, email: true } } },
+    include: { user: { select: SUBSCRIBER_USER_SELECT } },
   });
   res.json(subscriber);
+
+  // Renewing (i.e. pushing the expiration out) gets the same confirmation email as a new signup
+  if (expiresAt && isEmailEnabled() && subscriber.user.emailUpdates) {
+    sendMembershipConfirmation({
+      email: subscriber.user.email,
+      displayName: subscriber.user.displayName,
+      amount: subscriber.amount,
+      expiresAt: subscriber.expiresAt,
+    }).catch(err => console.error('Membership confirmation email error:', err.message));
+  }
 });
 
 app.delete('/api/admin/subscribers/:id', requireAuth, requireSuperDM, async (req, res) => {
   await prisma.subscriber.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
 });
+
+const MEMBERSHIP_REMINDER_WINDOW_DAYS = 3;
+
+async function checkExpiringMemberships() {
+  if (!isEmailEnabled()) return;
+  try {
+    const now = new Date();
+    const windowEnd = new Date(now.getTime() + MEMBERSHIP_REMINDER_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+    const expiring = await prisma.subscriber.findMany({
+      where: { reminderSentAt: null, expiresAt: { gte: now, lte: windowEnd } },
+      include: { user: { select: SUBSCRIBER_USER_SELECT } },
+    });
+    for (const sub of expiring) {
+      if (!sub.user.emailUpdates) continue;
+      await sendMembershipExpiringReminder({
+        email: sub.user.email,
+        displayName: sub.user.displayName,
+        expiresAt: sub.expiresAt,
+      });
+      await prisma.subscriber.update({ where: { id: sub.id }, data: { reminderSentAt: now } });
+    }
+  } catch (err) {
+    console.error('Membership reminder check error:', err.message);
+  }
+}
 
 // ── Wiki ──────────────────────────────────────────────────────────────────────
 
@@ -1613,8 +1680,12 @@ if (isProduction) {
   });
 }
 
+const MEMBERSHIP_REMINDER_INTERVAL_MS = 12 * 60 * 60 * 1000;
+
 const server = app.listen(PORT, () => {
   seedRules();
+  checkExpiringMemberships();
+  setInterval(checkExpiringMemberships, MEMBERSHIP_REMINDER_INTERVAL_MS);
   try {
     const provider = getProvider();
     console.log(`PB & Jay running on port ${PORT}`);
