@@ -6,13 +6,13 @@ import { fileURLToPath } from 'url';
 import { buildDMPrompt } from './dmPrompt.js';
 import { buildPlayerPrompt } from './playerPrompt.js';
 import { parseWorldFacts } from './parseWorldFacts.js';
-import { createHmac } from 'crypto';
+import { createHmac, randomBytes } from 'crypto';
 import { getProvider, listProviders } from './providers/index.js';
 import prisma from './prisma.js';
 import { requireAuth } from './auth-middleware.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { sendDmPostNotification, sendMembershipConfirmation, sendMembershipExpiringReminder, isEmailEnabled } from './email.js';
+import { sendDmPostNotification, sendMembershipConfirmation, sendMembershipExpiringReminder, sendPasswordResetEmail, isEmailEnabled } from './email.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, '..', 'dist');
@@ -134,6 +134,63 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(500).json({ error: 'Login failed — please try again' });
+  }
+});
+
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const email = (req.body.email ?? '').trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Always respond the same way whether or not the email exists, so this
+    // endpoint can't be used to check which emails have accounts.
+    if (user && isEmailEnabled()) {
+      const resetToken = randomBytes(32).toString('hex');
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { resetToken, resetTokenExpiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS) },
+      });
+
+      const appUrl = process.env.APP_URL || 'http://localhost:5173';
+      sendPasswordResetEmail({
+        email: user.email,
+        displayName: user.displayName,
+        resetUrl: `${appUrl}/auth/reset?token=${resetToken}`,
+      }).catch(err => console.error('Password reset email error:', err.message));
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Forgot-password error:', err.message);
+    res.status(500).json({ error: 'Something went wrong — please try again' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Token and password are required' });
+  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+  try {
+    const user = await prisma.user.findUnique({ where: { resetToken: token } });
+    if (!user || !user.resetTokenExpiresAt || user.resetTokenExpiresAt < new Date()) {
+      return res.status(400).json({ error: 'This reset link is invalid or has expired — request a new one' });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hash, resetToken: null, resetTokenExpiresAt: null },
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Reset-password error:', err.message);
+    res.status(500).json({ error: 'Something went wrong — please try again' });
   }
 });
 
@@ -317,6 +374,28 @@ app.patch('/api/users/me', requireAuth, async (req, res) => {
     res.json(safeUser(user));
   } catch (err) {
     console.error('PATCH /api/users/me error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/users/me/password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current and new password are required' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  }
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.authUser.id } });
+    if (!user || !(await bcrypt.compare(currentPassword, user.password))) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+    const hash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: user.id }, data: { password: hash } });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('POST /api/users/me/password error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

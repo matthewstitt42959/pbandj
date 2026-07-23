@@ -46,6 +46,18 @@
   margin-bottom: 2.5rem;
 }
 
+.dash-password-form {
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-password-success {
+  color: #6fcf97;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
 .dash-section__head {
   display: flex;
   align-items: center;

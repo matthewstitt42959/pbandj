@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import './DashboardPage.css';
+import './LoginPage.css';
 
 const MAX_ACTIVE = 2;
 
@@ -83,6 +84,88 @@ function CharacterCard({ character, onRetire, onAssign, onUnassign, retiring, as
         </div>
       )}
     </div>
+  );
+}
+
+function ChangePasswordForm({ authFetch }) {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess(false);
+
+    if (newPassword.length < 6) { setError('New password must be at least 6 characters.'); return; }
+    if (newPassword !== confirmPassword) { setError('New passwords do not match.'); return; }
+
+    setSaving(true);
+    try {
+      await authFetch('/api/users/me/password', {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setSuccess(true);
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="dash-password-form">
+      <label className="auth-label" htmlFor="currentPassword">Current password</label>
+      <input
+        id="currentPassword"
+        type="password"
+        className="auth-input"
+        autoComplete="current-password"
+        value={currentPassword}
+        onChange={(e) => setCurrentPassword(e.target.value)}
+      />
+
+      <label className="auth-label" htmlFor="newPassword" style={{ marginTop: '0.75rem' }}>New password</label>
+      <input
+        id="newPassword"
+        type="password"
+        className="auth-input"
+        autoComplete="new-password"
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+      />
+
+      <label className="auth-label" htmlFor="confirmNewPassword" style={{ marginTop: '0.75rem' }}>
+        Confirm new password
+      </label>
+      <input
+        id="confirmNewPassword"
+        type="password"
+        className="auth-input"
+        autoComplete="new-password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+      />
+
+      {error && (
+        <div className="auth-error-box" role="alert">
+          <span className="auth-error-icon">!</span>
+          <span>{error}</span>
+        </div>
+      )}
+      {success && <p className="dash-password-success">Password updated.</p>}
+
+      <button type="submit" className="btn btn--primary" disabled={saving} style={{ marginTop: '1rem' }}>
+        {saving ? 'Saving…' : 'Update password'}
+      </button>
+    </form>
   );
 }
 
@@ -226,6 +309,11 @@ const DashboardPage = () => {
             )}
           </div>
         )}
+      </section>
+
+      <section className="dash-section">
+        <h2 className="dash-section__title">Account</h2>
+        <ChangePasswordForm authFetch={authFetch} />
       </section>
     </div>
   );

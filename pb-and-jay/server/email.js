@@ -79,6 +79,37 @@ export async function sendMembershipExpiringReminder({ email, displayName, expir
   });
 }
 
+export async function sendPasswordResetEmail({ email, displayName, resetUrl }) {
+  if (!transporter) return;
+
+  await transporter.sendMail({
+    from: `"PB & Jay" <${GMAIL_USER}>`,
+    to: email,
+    subject: 'Reset your PB & Jay password',
+    text: [
+      `Hi ${displayName},`,
+      '',
+      'Someone (hopefully you) requested a password reset for your PB & Jay account.',
+      '',
+      `Reset your password: ${resetUrl}`,
+      '',
+      'This link expires in 1 hour. If you didn’t request this, you can ignore this email.',
+    ].join('\n'),
+    html: `
+      <p style="font-family:sans-serif;color:#333">Hi ${displayName},</p>
+      <p style="font-family:sans-serif;color:#333">
+        Someone (hopefully you) requested a password reset for your PB & Jay account.
+      </p>
+      <p style="margin-top:1.5rem">
+        <a href="${resetUrl}" style="background:#78c0e0;color:#1a1d2e;padding:0.5rem 1.2rem;border-radius:6px;text-decoration:none;font-family:sans-serif;font-weight:600">Reset password →</a>
+      </p>
+      <p style="font-family:sans-serif;color:#888;font-size:0.85rem;margin-top:1.5rem">
+        This link expires in 1 hour. If you didn't request this, you can ignore this email.
+      </p>
+    `,
+  });
+}
+
 export async function sendDmPostNotification({ campaignName, dmName, postContent, playerEmails }) {
   if (!transporter || playerEmails.length === 0) return;
 
