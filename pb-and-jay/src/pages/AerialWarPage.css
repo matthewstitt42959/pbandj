@@ -15,3 +15,24 @@
 .aerial-war-back-link:hover {
   text-decoration: underline;
 }
+
+.aerial-war-clash {
+  animation: aerial-war-clash-in 0.28s ease-out;
+}
+
+@keyframes aerial-war-clash-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aerial-war-clash {
+    animation: none;
+  }
+}

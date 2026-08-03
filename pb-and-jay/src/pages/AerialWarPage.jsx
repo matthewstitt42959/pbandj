@@ -99,14 +99,39 @@ function initGame() {
   };
 }
 
+// Opponent's hand is now visible to the player, so a purely random response
+// felt dumb by comparison. This picks the cheapest card that still wins,
+// forces a war rather than conceding if nothing beats it outright, and only
+// sacrifices its weakest card as a last resort — conserving strong cards for
+// later rounds instead of burning them on a fight it was already winning.
+function chooseP2Response(hand, p1Card, handSize) {
+  let weakestIdx = 0;
+  let cheapestWinIdx = -1;
+  let cheapestWinValue = Infinity;
+  let tieIdx = -1;
+
+  for (let i = 0; i < handSize; i++) {
+    if (hand[i].value < hand[weakestIdx].value) weakestIdx = i;
+    if (hand[i].value > p1Card.value && hand[i].value < cheapestWinValue) {
+      cheapestWinValue = hand[i].value;
+      cheapestWinIdx = i;
+    }
+    if (hand[i].value === p1Card.value) tieIdx = i;
+  }
+
+  if (cheapestWinIdx !== -1) return cheapestWinIdx;
+  if (tieIdx !== -1) return tieIdx;
+  return weakestIdx;
+}
+
 function applyRound(state, p1Idx) {
   const p1 = [...state.p1];
   const p2 = [...state.p2];
 
-  // P1 plays chosen hand card; P2 plays a random card from their hand
+  // P1 plays chosen hand card; P2 responds tactically from their (visible) hand
   const p1Card = p1.splice(p1Idx, 1)[0];
   const p2HandSize = Math.min(3, p2.length);
-  const p2Card = p2.splice(Math.floor(Math.random() * p2HandSize), 1)[0];
+  const p2Card = p2.splice(chooseP2Response(p2, p1Card, p2HandSize), 1)[0];
 
   const pot = [p1Card, p2Card];
   let winner;
@@ -201,7 +226,7 @@ export default function AerialWarPage() {
   const total = p1.length + p2.length;
   const p1Pct = total > 0 ? (p1.length / total) * 100 : 50;
   const p1Hand = p1.slice(0, Math.min(3, p1.length));
-  const p2HandSize = Math.min(3, p2.length);
+  const p2Hand = p2.slice(0, Math.min(3, p2.length));
   const lastEntry = log[log.length - 1];
 
   const speedLabel = speed <= 350 ? 'Fast' : speed <= 900 ? 'Normal' : 'Slow';
@@ -256,6 +281,14 @@ export default function AerialWarPage() {
           <PlaneIcon color="#e5e5e5" facing="left" />
         </div>
 
+        {/* Early-game tip — the opponent plays tactically, not randomly, and
+            that's easy to miss if you're just dumping your best card each round. */}
+        {phase === 'choose' && round < 3 && (
+          <p className="text-xs text-white/50 italic text-center">
+            Tip: the opponent guards its strongest planes — sometimes a weaker play forces them to spend big.
+          </p>
+        )}
+
         {/* Hands */}
         {phase === 'choose' && (
           <div className="space-y-4">
@@ -285,15 +318,15 @@ export default function AerialWarPage() {
               </div>
             </div>
 
-            {/* P2 hand — face down */}
+            {/* P2 hand — visible, so you can actually weigh the matchup */}
             <div>
               <div className="text-[10px] uppercase tracking-widest text-white mb-2">Opponent's Hand</div>
               <div className="grid grid-cols-3 gap-2">
-                {Array.from({ length: p2HandSize }).map((_, i) => (
+                {p2Hand.map((card, i) => (
                   <div key={i} className="p-3 border border-[var(--color-border)] bg-[var(--color-surface2)]/50 rounded-lg">
-                    <div className="text-[9px] uppercase tracking-widest text-white mb-1">???</div>
-                    <div className="text-xs font-semibold text-white leading-tight mb-2">Unknown</div>
-                    <div className="text-xl font-bold text-white">?</div>
+                    <div className="text-[9px] uppercase tracking-widest text-white mb-1">{card.era}</div>
+                    <div className="text-xs font-semibold text-white leading-tight mb-2">{card.name}</div>
+                    <div className="text-xl font-bold text-white/70">{card.value}</div>
                   </div>
                 ))}
               </div>
@@ -303,7 +336,10 @@ export default function AerialWarPage() {
 
         {/* Last round result */}
         {lastEntry && (
-          <div className={`border rounded-lg p-4 ${lastEntry.isWar ? 'border-red-800 bg-red-950/20' : 'border-[var(--color-border)] bg-[var(--color-surface2)]'}`}>
+          <div
+            key={lastEntry.id}
+            className={`aerial-war-clash border rounded-lg p-4 ${lastEntry.isWar ? 'border-red-800 bg-red-950/20' : 'border-[var(--color-border)] bg-[var(--color-surface2)]'}`}
+          >
             {lastEntry.isWar && (
               <div className="text-[10px] uppercase tracking-widest text-red-400 font-bold mb-2">War</div>
             )}
