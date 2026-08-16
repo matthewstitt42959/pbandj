@@ -266,6 +266,42 @@
 
 /* ── Ability score step ── */
 
+.wiz-method-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.wiz-method-btn {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(120, 192, 224, 0.2);
+  border-radius: 8px;
+  color: #9aa0b8;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.55rem 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.wiz-method-btn:hover { color: #e8e6f0; }
+
+.wiz-method-btn--active {
+  background: rgba(120, 192, 224, 0.15);
+  border-color: rgba(120, 192, 224, 0.5);
+  color: #78c0e0;
+}
+
+.wiz-ability-cost {
+  font-size: 0.72rem;
+  color: #9aa0b8;
+  background: rgba(120, 192, 224, 0.1);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+}
+
 .wiz-auto-hint {
   background: rgba(255, 200, 87, 0.06);
   border: 1px solid rgba(255, 200, 87, 0.2);

@@ -3,12 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   SPECIES, CLASSES, BACKGROUNDS, STANDARD_ARRAY, ABILITIES, CLASS_PRIMARY_ABILITIES, PRONOUN_OPTIONS,
+  POINT_BUY_MIN, POINT_BUY_MAX, POINT_BUY_BUDGET, pointBuyCost, pointBuySpent,
 } from '../data/dnd2024';
 import {
   getModifier, calculateMaxHP, calculateUnarmoredAC,
   applyBackgroundBonuses, buildSkillsFromProficiencies, suggestAbilityAssignment,
 } from '../utils/characterUtils';
+import PointBuyTracker from '../components/PointBuyTracker';
 import './CharacterCreate.css';
+
+const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+const ABILITY_METHODS = [
+  { id: 'standard', label: 'Standard Array' },
+  { id: 'pointbuy', label: 'Point Buy' },
+];
+const POINT_BUY_RANGE = Array.from(
+  { length: POINT_BUY_MAX - POINT_BUY_MIN + 1 },
+  (_, i) => POINT_BUY_MIN + i,
+);
 
 const STEPS = ['Name & Species', 'Class', 'Background', 'Ability Scores', 'Review'];
 const TOTAL = STEPS.length;
@@ -192,6 +204,7 @@ function StepAbilityScores({ form, setForm }) {
   const bg = BACKGROUNDS.find(b => b.id === form.background);
   const cls = CLASSES.find(c => c.id === form.class);
   const primaryAbilities = cls ? CLASS_PRIMARY_ABILITIES[cls.id] ?? [] : [];
+  const method = form.abilityMethod ?? 'standard';
 
   const assigned = form.abilityAssignment ?? {};
   const usedValues = Object.values(assigned);
@@ -206,6 +219,11 @@ function StepAbilityScores({ form, setForm }) {
     return applyBackgroundBonuses(assigned, bg.abilityBonus);
   }, [assigned, bg]);
 
+  const setMethod = (nextMethod) => {
+    if (nextMethod === method) return;
+    setForm(f => ({ ...f, abilityMethod: nextMethod, abilityAssignment: null }));
+  };
+
   const handleAssign = (abilityKey, value) => {
     setForm(f => ({
       ...f,
@@ -218,22 +236,46 @@ function StepAbilityScores({ form, setForm }) {
     setForm(f => ({ ...f, abilityAssignment: suggestion }));
   };
 
+  const handleFillStandardArray = () => {
+    const next = {};
+    ABILITY_KEYS.forEach((k, i) => { next[k] = STANDARD_ARRAY[i]; });
+    setForm(f => ({ ...f, abilityAssignment: next }));
+  };
+
   return (
     <div className="wiz-step">
       <h2 className="wiz-step__title">Ability scores</h2>
       <p className="wiz-step__hint">
-        Assign the standard array (15, 14, 13, 12, 10, 8) to your six abilities.
-        Your background will add bonuses on top.
+        Choose how to set your six ability scores. Your background will add bonuses on top.
       </p>
+
+      <div className="wiz-method-toggle">
+        {ABILITY_METHODS.map(m => (
+          <button
+            key={m.id}
+            type="button"
+            className={`wiz-method-btn ${method === m.id ? 'wiz-method-btn--active' : ''}`}
+            onClick={() => setMethod(m.id)}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
 
       {primaryAbilities.length > 0 && (
         <div className="wiz-auto-hint">
           <strong>{cls?.name}</strong> benefits most from{' '}
           <strong>{primaryAbilities.map(a => a.toUpperCase()).join(' and ')}</strong>.{' '}
-          <button type="button" className="wiz-auto-btn" onClick={handleAutoAssign}>
-            Auto-assign for me
-          </button>
+          {method === 'standard' && (
+            <button type="button" className="wiz-auto-btn" onClick={handleAutoAssign}>
+              Auto-assign for me
+            </button>
+          )}
         </div>
+      )}
+
+      {method === 'pointbuy' && (
+        <PointBuyTracker scores={assigned} onFillStandardArray={handleFillStandardArray} />
       )}
 
       <div className="wiz-ability-grid">
@@ -242,6 +284,7 @@ function StepAbilityScores({ form, setForm }) {
           const final = finalScores[ab.key];
           const bgBonus = bg?.abilityBonus[ab.key] ?? 0;
           const isPrimary = primaryAbilities.includes(ab.key);
+          const cost = method === 'pointbuy' ? pointBuyCost(base) : null;
 
           return (
             <div key={ab.key} className={`wiz-ability-row ${isPrimary ? 'wiz-ability-row--primary' : ''}`}>
@@ -249,23 +292,36 @@ function StepAbilityScores({ form, setForm }) {
                 <span className="wiz-ability-name">{ab.abbr}</span>
                 <span className="wiz-ability-desc">{ab.label}</span>
               </div>
-              <select
-                className="wiz-ability-select"
-                value={base ?? ''}
-                onChange={e => handleAssign(ab.key, e.target.value)}
-              >
-                <option value="">—</option>
-                {STANDARD_ARRAY.map(v => {
-                  const alreadyUsed = usedValues.filter(u => u === v).length;
-                  const totalInArray = STANDARD_ARRAY.filter(a => a === v).length;
-                  const isTakenElsewhere = alreadyUsed >= totalInArray && base !== v;
-                  return (
-                    <option key={v} value={v} disabled={isTakenElsewhere}>
-                      {v}
-                    </option>
-                  );
-                })}
-              </select>
+              {method === 'standard' ? (
+                <select
+                  className="wiz-ability-select"
+                  value={base ?? ''}
+                  onChange={e => handleAssign(ab.key, e.target.value)}
+                >
+                  <option value="">—</option>
+                  {STANDARD_ARRAY.map(v => {
+                    const alreadyUsed = usedValues.filter(u => u === v).length;
+                    const totalInArray = STANDARD_ARRAY.filter(a => a === v).length;
+                    const isTakenElsewhere = alreadyUsed >= totalInArray && base !== v;
+                    return (
+                      <option key={v} value={v} disabled={isTakenElsewhere}>
+                        {v}
+                      </option>
+                    );
+                  })}
+                </select>
+              ) : (
+                <select
+                  className="wiz-ability-select"
+                  value={base ?? ''}
+                  onChange={e => handleAssign(ab.key, e.target.value)}
+                >
+                  <option value="">—</option>
+                  {POINT_BUY_RANGE.map(v => (
+                    <option key={v} value={v}>{v} ({pointBuyCost(v)}pt)</option>
+                  ))}
+                </select>
+              )}
               <div className="wiz-ability-final">
                 {base != null ? (
                   <>
@@ -275,6 +331,9 @@ function StepAbilityScores({ form, setForm }) {
                     </span>
                     {bgBonus > 0 && (
                       <span className="wiz-ability-bgbonus">+{bgBonus} {bg?.name}</span>
+                    )}
+                    {cost !== null && (
+                      <span className="wiz-ability-cost">{cost}pt</span>
                     )}
                   </>
                 ) : (
@@ -286,12 +345,18 @@ function StepAbilityScores({ form, setForm }) {
         })}
       </div>
 
-      <p className="wiz-array-remaining">
-        Remaining values:{' '}
-        {remaining.length === 0
-          ? <strong style={{ color: '#4caf81' }}>All assigned ✓</strong>
-          : remaining.join(', ')}
-      </p>
+      {method === 'standard' ? (
+        <p className="wiz-array-remaining">
+          Remaining values:{' '}
+          {remaining.length === 0
+            ? <strong style={{ color: '#4caf81' }}>All assigned ✓</strong>
+            : remaining.join(', ')}
+        </p>
+      ) : (
+        <p className="wiz-array-remaining">
+          Pick a value from {POINT_BUY_MIN} to {POINT_BUY_MAX} for each ability — higher scores cost more points.
+        </p>
+      )}
     </div>
   );
 }
@@ -395,6 +460,7 @@ const CharacterCreate = () => {
     species: '',
     class: '',
     background: '',
+    abilityMethod: 'standard',
     abilityAssignment: null,
     backstory: '',
   });
@@ -411,8 +477,12 @@ const CharacterCreate = () => {
     if (step === 1) return !!form.class;
     if (step === 2) return !!form.background;
     if (step === 3) {
-      const keys = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-      return keys.every(k => form.abilityAssignment?.[k] != null);
+      const allAssigned = ABILITY_KEYS.every(k => form.abilityAssignment?.[k] != null);
+      if (!allAssigned) return false;
+      if ((form.abilityMethod ?? 'standard') === 'pointbuy') {
+        return pointBuySpent(form.abilityAssignment) <= POINT_BUY_BUDGET;
+      }
+      return true;
     }
     return true;
   };

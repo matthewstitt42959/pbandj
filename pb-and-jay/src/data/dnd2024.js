@@ -524,6 +524,21 @@ export const BACKGROUNDS = [
 // Standard array values for ability score assignment (2024 PHB)
 export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
 
+// Point buy (2024 PHB): 27-point budget, scores range 8-15
+export const POINT_BUY_BUDGET = 27;
+export const POINT_BUY_MIN = 8;
+export const POINT_BUY_MAX = 15;
+export const POINT_BUY_COST = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 };
+const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+
+export function pointBuyCost(score) {
+  return POINT_BUY_COST[score] ?? null; // null = outside point-buy range
+}
+
+export function pointBuySpent(scores) {
+  return ABILITY_KEYS.reduce((sum, k) => sum + (POINT_BUY_COST[scores[k]] ?? 0), 0);
+}
+
 // Pronoun options for character sheets — surfaced to the AI so it refers to
 // each character correctly instead of defaulting to one pronoun for everyone.
 export const PRONOUN_OPTIONS = ['she/her', 'he/him', 'they/them', 'she/they', 'he/they', 'other'];
