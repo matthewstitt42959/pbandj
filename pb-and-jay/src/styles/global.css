@@ -296,15 +296,39 @@ code {
   gap: 0.15rem;
 }
 
+.homepage__char-chip--retired {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 .homepage__char-name {
   font-weight: 700;
   color: #ffc857;
   font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.homepage__char-badge {
+  font-size: 0.6rem;
+  color: #6a7088;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
 }
 
 .homepage__char-class {
   font-size: 0.8rem;
   color: #9aa0b8;
+}
+
+.homepage__char-unretire {
+  align-self: flex-start;
+  margin-top: 0.35rem;
 }
 
 /* Settings */

@@ -1022,6 +1022,8 @@
     display: flex;
     flex-direction: column;
     height: calc(100dvh - 52px - 56px - 110px); /* navbar + tab bar + gameboard header/banner */
+    overflow-y: auto; /* lets the composer (and DM tools below it) scroll into view instead of being clipped past this fixed height */
+    overscroll-behavior-y: contain;
     border-radius: 0;
     border-left: none;
     border-right: none;
@@ -1029,11 +1031,11 @@
 
   .log-window {
     flex: 1;
-    overflow-y: auto; /* sole scroll owner — .encounter-log no longer scrolls itself, avoids nested-scroll rubber-banding */
-    overscroll-behavior-y: contain;
+    overflow-y: auto;
+    overscroll-behavior-y: contain; /* keeps momentum scroll inside the post list from chaining into .encounter-log's own scroll */
     max-height: none;
-    /* guarantee posts are always readable even when DM tools are expanded */
-    min-height: clamp(200px, 45dvh, 480px);
+    /* enough room to read a few posts without the floor swallowing the composer/Post Action button below it */
+    min-height: clamp(120px, 30dvh, 320px);
   }
 
   /* Character panel full width on mobile */
