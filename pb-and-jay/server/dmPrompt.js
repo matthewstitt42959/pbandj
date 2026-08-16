@@ -1,9 +1,26 @@
+function describeCharacter(c) {
+  const lineage = c.species ? `${c.species}${c.speciesTrait ? ` (${c.speciesTrait})` : ''}` : null;
+  const role = c.subclass || c.fightingStyle
+    ? `${c.class} — ${c.subclass || c.fightingStyle}`
+    : c.class;
+  const bits = [
+    `${lineage ? `${lineage} ` : ''}Level ${c.level} ${role}`,
+    c.background ? `${c.background} background` : null,
+    `HP ${c.hp.current}/${c.hp.max}`,
+    `AC ${c.ac}`,
+  ].filter(Boolean).join(', ');
+
+  const extras = [
+    c.feats?.length ? `Feats: ${c.feats.join(', ')}` : null,
+    c.backstory ? `Backstory: ${c.backstory}` : null,
+  ].filter(Boolean).join(' | ');
+
+  return `${c.name} (${c.pronouns || 'they/them'}, ${bits})${extras ? `\n  ${extras}` : ''}`;
+}
+
 export function buildDMPrompt({ campaign, posts, characters, worldFacts, wikiEntries }) {
   const characterSummary = characters
-    .map(
-      (c) =>
-        `${c.name} (${c.pronouns || 'they/them'}, Level ${c.level} ${c.class}, HP ${c.hp.current}/${c.hp.max}, AC ${c.ac})`
-    )
+    .map(describeCharacter)
     .join('\n');
 
   const recentPosts = posts

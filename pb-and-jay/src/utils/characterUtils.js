@@ -58,7 +58,7 @@ export function buildSkillsFromProficiencies(skills) {
     skills.map(s => s.replace(/\s+(\w)/g, (_, c) => c.toUpperCase())
       .replace(/^(\w)/, c => c.toLowerCase()))
   );
-  return Object.fromEntries(ALL_SKILLS.map(s => [s, profSet.has(s)]));
+  return Object.fromEntries(ALL_SKILLS.map(s => [s, profSet.has(s) ? 1 : 0]));
 }
 
 /**

@@ -79,19 +79,19 @@ describe('applyBackgroundBonuses', () => {
 });
 
 describe('buildSkillsFromProficiencies', () => {
-  it('marks provided skills as true', () => {
+  it('marks provided skills as proficient (1)', () => {
     const skills = buildSkillsFromProficiencies(['Arcana', 'History']);
-    expect(skills.arcana).toBe(true);
-    expect(skills.history).toBe(true);
+    expect(skills.arcana).toBe(1);
+    expect(skills.history).toBe(1);
   });
-  it('marks unprovided skills as false', () => {
+  it('marks unprovided skills as not proficient (0)', () => {
     const skills = buildSkillsFromProficiencies(['Arcana']);
-    expect(skills.athletics).toBe(false);
+    expect(skills.athletics).toBe(0);
   });
   it('handles multi-word skill names', () => {
     const skills = buildSkillsFromProficiencies(['Animal Handling', 'Sleight of Hand']);
-    expect(skills.animalHandling).toBe(true);
-    expect(skills.sleightOfHand).toBe(true);
+    expect(skills.animalHandling).toBe(1);
+    expect(skills.sleightOfHand).toBe(1);
   });
 });
 

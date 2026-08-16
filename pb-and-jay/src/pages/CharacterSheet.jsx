@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getCasterInfo, fullProgressionRows, formatSlots } from '../data/casterProgression';
-import { PRONOUN_OPTIONS, STANDARD_ARRAY, pointBuyCost } from '../data/dnd2024';
+import { PRONOUN_OPTIONS, STANDARD_ARRAY, pointBuyCost, getLineageOptions, hasFightingStyle } from '../data/dnd2024';
 import PointBuyTracker from '../components/PointBuyTracker';
 import './CharacterSheet.css';
 
@@ -90,24 +90,28 @@ function OverviewTab({ char, onFieldChange }) {
   const scores = char.abilityScores ?? {};
   const pb = profBonus(char.level);
   const conditions = Array.isArray(char.conditions) ? char.conditions : [];
+  const hasLineage = !!getLineageOptions(char.species?.toLowerCase());
+  const hasStyle = hasFightingStyle(char.class?.toLowerCase());
 
   const toggleCondition = (c) => {
     if (conditions.includes(c)) onFieldChange('conditions', conditions.filter(x => x !== c));
     else onFieldChange('conditions', [...conditions, c]);
   };
 
+  const identityFields = [
+    ['Name', 'name'],
+    ['Species', 'species'],
+    ...(hasLineage ? [['Lineage', 'speciesTrait']] : []),
+    ['Class', 'class'],
+    ['Subclass', 'subclass'],
+    ...(hasStyle ? [['Fighting Style', 'fightingStyle']] : []),
+    ['Background', 'background'],
+  ];
+
   return (
     <div className="cs-overview">
       <div className="cs-identity-grid">
-        {[
-          ['Name', 'name'],
-          ['Species', 'species'],
-          ['Lineage', 'speciesTrait'],
-          ['Class', 'class'],
-          ['Subclass', 'subclass'],
-          ['Fighting Style', 'fightingStyle'],
-          ['Background', 'background'],
-        ].map(([lbl, field]) => (
+        {identityFields.map(([lbl, field]) => (
           <div key={field} className="cs-field">
             <span className="cs-field__label">{lbl}</span>
             <span className="cs-field__val">

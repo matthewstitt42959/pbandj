@@ -30,18 +30,29 @@ export function buildPlayerPrompt({ character, campaign, posts, characters, worl
 
   const { str, dex, con, int: intelligence, wis, cha } = character.abilities;
   const pronouns = character.pronouns || 'they/them';
+  const proficientSkills = Object.entries(character.skills ?? {})
+    .filter(([, has]) => has)
+    .map(([skill]) => skill.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()));
+  const role = character.subclass || character.fightingStyle
+    ? `${character.class} (${character.subclass || character.fightingStyle})`
+    : character.class;
 
-  return `You are playing ${character.name}, a Level ${character.level} ${character.class} in a play-by-post campaign set in Teraphobia. You control only yourself.
+  return `You are playing ${character.name}, a Level ${character.level} ${role} in a play-by-post campaign set in Teraphobia. You control only yourself.
 
 CHARACTER SHEET:
 Name: ${character.name}
 Pronouns: ${pronouns}
-Class: ${character.class} (Level ${character.level})
+Species: ${character.species || 'unknown'}${character.speciesTrait ? ` (${character.speciesTrait})` : ''}
+Class: ${role} (Level ${character.level})
+Background: ${character.background || 'unknown'}
 HP: ${character.hp.current}/${character.hp.max}  AC: ${character.ac}  Speed: ${character.speed}ft
 STR ${fmt(str.score, str.modifier)} | DEX ${fmt(dex.score, dex.modifier)} | CON ${fmt(con.score, con.modifier)} | INT ${fmt(intelligence.score, intelligence.modifier)} | WIS ${fmt(wis.score, wis.modifier)} | CHA ${fmt(cha.score, cha.modifier)}
+Skilled at: ${proficientSkills.join(', ') || 'nothing specific'}
+Feats: ${character.feats?.join(', ') || 'none'}
 Inventory: ${character.inventory.join(', ') || 'nothing notable'}
 Spells: ${character.spells.join(', ') || 'none'}
 Conditions: ${character.conditions.join(', ') || 'none'}
+${character.backstory ? `Backstory: ${character.backstory}` : ''}
 
 PARTY: ${partyList}
 
