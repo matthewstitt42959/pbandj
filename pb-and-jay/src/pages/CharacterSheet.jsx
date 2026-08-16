@@ -102,8 +102,10 @@ function OverviewTab({ char, onFieldChange }) {
         {[
           ['Name', 'name'],
           ['Species', 'species'],
+          ['Lineage', 'speciesTrait'],
           ['Class', 'class'],
           ['Subclass', 'subclass'],
+          ['Fighting Style', 'fightingStyle'],
           ['Background', 'background'],
         ].map(([lbl, field]) => (
           <div key={field} className="cs-field">
@@ -113,6 +115,16 @@ function OverviewTab({ char, onFieldChange }) {
             </span>
           </div>
         ))}
+        <div className="cs-field">
+          <span className="cs-field__label">Feats</span>
+          <span className="cs-field__val">
+            <EditField
+              label="Feats"
+              value={(Array.isArray(char.feats) ? char.feats : []).join(', ')}
+              onChange={v => onFieldChange('feats', v.split(',').map(s => s.trim()).filter(Boolean))}
+            />
+          </span>
+        </div>
         <div className="cs-field">
           <span className="cs-field__label">Pronouns</span>
           <span className="cs-field__val">

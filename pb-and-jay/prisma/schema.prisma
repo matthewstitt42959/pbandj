@@ -155,6 +155,9 @@ model Character {
   species       String
   class         String
   subclass      String?
+  speciesTrait  String?
+  fightingStyle String?
+  feats         Json      @default("[]")
   background    String
   backstory     String?
   level         Int       @default(1)

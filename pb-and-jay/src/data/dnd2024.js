@@ -9,6 +9,11 @@ export const SPECIES = [
     description:
       'The Kindled carry something that caught when a rift tore near them — a light under the skin that never quite goes out. Some were born to parents already marked; others were changed by a single close call. Either way, people notice, and not always kindly.',
     traits: ['Darkvision 60 ft', 'Steady Hands (healing touch)', 'Bleed Surge (Radiant, Ash, or Hollow manifestation)'],
+    lineageOptions: [
+      { id: 'radiant', name: 'Radiant', description: 'Your Bleed Surge manifests as searing light.', damageType: 'radiant', resistance: 'radiant' },
+      { id: 'ash', name: 'Ash', description: 'Your Bleed Surge manifests as smoldering embers.', damageType: 'fire', resistance: 'fire' },
+      { id: 'hollow', name: 'Hollow', description: 'Your Bleed Surge manifests as draining emptiness.', damageType: 'necrotic', resistance: 'necrotic' },
+    ],
     size: 'Medium',
     speed: 30,
     icon: '✨',
@@ -20,6 +25,13 @@ export const SPECIES = [
     description:
       'Ashborn carry scale and claw where skin used to be — a Kimerian bloodline crossed generations back, or a rift-burn that never fully healed. They choose a lineage that colors their breath weapon and their resistances.',
     traits: ['Elemental Lineage (a strain your DM helps you pick — colors your breath weapon and resistances)', 'Breath Weapon', 'Damage Resistance', 'Rift-Wings at level 5'],
+    lineageOptions: [
+      { id: 'ash', name: 'Ash Strain', description: 'Your breath weapon deals fire damage; you resist fire.', damageType: 'fire', resistance: 'fire' },
+      { id: 'frost', name: 'Frost Strain', description: 'Your breath weapon deals cold damage; you resist cold.', damageType: 'cold', resistance: 'cold' },
+      { id: 'storm', name: 'Storm Strain', description: 'Your breath weapon deals lightning damage; you resist lightning.', damageType: 'lightning', resistance: 'lightning' },
+      { id: 'radiant', name: 'Radiant Strain', description: 'Your breath weapon deals radiant damage; you resist radiant.', damageType: 'radiant', resistance: 'radiant' },
+      { id: 'hollow', name: 'Hollow Strain', description: 'Your breath weapon deals necrotic damage; you resist necrotic.', damageType: 'necrotic', resistance: 'necrotic' },
+    ],
     size: 'Medium',
     speed: 30,
     icon: '🐉',
@@ -42,6 +54,11 @@ export const SPECIES = [
     description:
       'Elves live for centuries and accumulate wisdom and skill over lifetimes. Their keen senses and innate magic make them natural adventurers. Their lineage — High Elf, Wood Elf, or Drow — is worked out with your DM as part of their story.',
     traits: ['Darkvision 60 ft', 'Fey Ancestry (immune to magical sleep)', 'Keen Senses', 'Trance (only needs 4 hours rest)', 'Elven Lineage (a subtype special ability your DM helps you settle on)'],
+    lineageOptions: [
+      { id: 'high', name: 'High Elf', description: 'Sharpened by old magic — you have a knack for arcane tricks and a keen memory.' },
+      { id: 'wood', name: 'Wood Elf', description: 'Raised in the wild places — you move quicker and vanish into the trees.' },
+      { id: 'drow', name: 'Drow', description: 'Born under stone — your eyes pierce total darkness and shadow clings to you.' },
+    ],
     size: 'Medium',
     speed: 30,
     icon: '🌿',
@@ -53,6 +70,10 @@ export const SPECIES = [
     description:
       'Gnomes are small in body but enormous in personality. Their boundless curiosity drives them to explore every mystery the world has to offer, and their natural cleverness helps them survive it.',
     traits: ['Small size', 'Darkvision 60 ft', 'Gnomish Cunning (Adv. on INT/WIS/CHA saves vs magic)', 'Gnomish Lineage (Forest or Rock subtype, settled with your DM)'],
+    lineageOptions: [
+      { id: 'forest', name: 'Forest Gnome', description: 'Small illusions and a way with woodland creatures come naturally to you.' },
+      { id: 'rock', name: 'Rock Gnome', description: 'A knack for tinkering — you can rig small clockwork contraptions.' },
+    ],
     size: 'Small',
     speed: 30,
     icon: '🔮',
@@ -64,6 +85,13 @@ export const SPECIES = [
     description:
       'Ridgeborn are massive, mountain-bred survivors — some say descended from something that came through a rift in the old Rockies and never left. They thrive where the ground is hard and the weather doesn\'t forgive mistakes.',
     traits: ['Large build (counts as Large for carrying capacity)', 'Old Blood (a heritage — Cloud, Ash, Frost, Stone, or Storm — worked out with your DM)', 'Set Your Feet (reduce damage once per short rest)'],
+    lineageOptions: [
+      { id: 'cloud', name: 'Cloud', description: 'Old Blood runs thin and high — you shrug off falls and heights unnerve you less.' },
+      { id: 'ash', name: 'Ash', description: 'Old Blood carries embers — you resist fire.', damageType: 'fire', resistance: 'fire' },
+      { id: 'frost', name: 'Frost', description: 'Old Blood runs cold — you resist cold.', damageType: 'cold', resistance: 'cold' },
+      { id: 'stone', name: 'Stone', description: 'Old Blood runs heavy — your skin is tougher than it looks.' },
+      { id: 'storm', name: 'Storm', description: 'Old Blood crackles — you resist lightning.', damageType: 'lightning', resistance: 'lightning' },
+    ],
     size: 'Medium',
     speed: 35,
     icon: '🗻',
@@ -108,6 +136,11 @@ export const SPECIES = [
     description:
       'The Warped were touched too long, too close, or too young — exposure to a rift that should have killed them instead changed them for good. Most people flinch first and ask questions later; the Warped have learned to expect it.',
     traits: ['Darkvision 60 ft', 'Warp Lineage (an Ash, Hollow, or Static strain, settled with your DM)', 'Static Hum (know the Small Wonder cantrip)', 'Heat-Touched (fire resistance)'],
+    lineageOptions: [
+      { id: 'ash', name: 'Ash', description: 'Your rift-mark runs hot — you resist fire.', damageType: 'fire', resistance: 'fire' },
+      { id: 'hollow', name: 'Hollow', description: 'Your rift-mark drains — you resist necrotic.', damageType: 'necrotic', resistance: 'necrotic' },
+      { id: 'static', name: 'Static', description: 'Your rift-mark crackles — you resist lightning.', damageType: 'lightning', resistance: 'lightning' },
+    ],
     size: 'Medium',
     speed: 30,
     icon: '🔥',
@@ -341,6 +374,47 @@ export const CLASSES = [
   },
 ];
 
+// Fighting Style — the only class with a level-1 style choice; others pick a subclass
+// (see SUBCLASSES) or nothing yet, matching each class's own subclassLevel.
+export const FIGHTING_STYLES = [
+  { id: 'archery', name: 'Archery', description: '+2 bonus to attack rolls made with ranged weapons.' },
+  { id: 'defense', name: 'Defense', description: '+1 bonus to AC while wearing armor.' },
+  { id: 'dueling', name: 'Dueling', description: '+2 bonus to damage when wielding a single one-handed weapon with no other weapon.' },
+  { id: 'great-weapon-fighting', name: 'Great Weapon Fighting', description: 'Reroll 1s and 2s on damage dice when using a two-handed weapon.' },
+  { id: 'protection', name: 'Protection', description: 'Use your reaction to impose disadvantage on an attack against a nearby ally.' },
+  { id: 'two-weapon-fighting', name: 'Two-Weapon Fighting', description: 'Add your ability modifier to the damage of your off-hand attack.' },
+];
+
+// Subclass options for the four classes whose subclassLevel is 1 (chosen at creation).
+// Every other class keeps subclass unset at creation — it isn't chosen until a later
+// level, same as the real rules — and remains editable later from the character sheet.
+export const SUBCLASSES = {
+  cleric: [
+    { id: 'ember', name: 'Domain of the Ember', description: 'Your faith burns hot — you channel fire and ash alongside your healing.' },
+    { id: 'mercy', name: 'Domain of Mercy', description: 'Your faith is a steady hand — your healing and protection magic run deep.' },
+    { id: 'rift', name: 'Domain of the Rift', description: 'Your faith looks straight at the tear in the world and does not flinch.' },
+    { id: 'order', name: 'Domain of Order', description: 'Your faith is a held line — you ward and guard those who stand with you.' },
+  ],
+  sorcerer: [
+    { id: 'riftborn', name: 'Riftborn', description: 'Your power sparked the moment a rift tore near you, and never fully settled.' },
+    { id: 'bleedline', name: 'Bleedline', description: 'Magic seeps into you from a Kindled ancestor\'s bloodline, subtle and constant.' },
+    { id: 'static-blood', name: 'Static Blood', description: 'Your power crackles like a live wire — quick, unstable, hard to predict.' },
+    { id: 'old-blood', name: 'Old Blood', description: 'Your power is inherited from something ancient that predates the rifts.' },
+  ],
+  warlock: [
+    { id: 'the-hollow', name: 'The Hollow', description: 'Your patron is a hunger from beyond a collapsed rift — it wants, and you provide.' },
+    { id: 'the-static', name: 'The Static', description: 'Your patron is an entity woven from raw rift-storm, restless and loud.' },
+    { id: 'the-undertow', name: 'The Undertow', description: 'Your patron lives in the space between tears, and speaks to you from the gaps.' },
+    { id: 'ember-court', name: 'The Ember Court', description: 'Your patron rules a fire-and-ash aristocracy on the other side of a rift.' },
+  ],
+  summoner: [
+    { id: 'binding-ash', name: 'Binding of Ash', description: 'What you pulled through burns — your bound thing runs hot and aggressive.' },
+    { id: 'binding-hollow', name: 'Binding of Hollow', description: 'What you pulled through is emptiness given shape — quiet, patient, draining.' },
+    { id: 'binding-static', name: 'Binding of Static', description: 'What you pulled through crackles with rift-storm — fast, erratic, shocking.' },
+    { id: 'binding-stone', name: 'Binding of Stone', description: 'What you pulled through is heavy and slow to anger — a wall that fights back.' },
+  ],
+};
+
 // 2024 PHB backgrounds — each provides fixed ASIs, two skill proficiencies, and an Origin Feat
 export const BACKGROUNDS = [
   {
@@ -521,6 +595,22 @@ export const BACKGROUNDS = [
   },
 ];
 
+// Origin Feats — covers every feat name referenced by BACKGROUNDS above (granted
+// automatically, fixed by background) and doubles as the pool Humans pick from for
+// their "Versatile" trait (gain one Origin Feat of your choice).
+export const FEATS = [
+  { id: 'magic-initiate-cleric', name: 'Magic Initiate (Cleric)', description: 'Learn two cantrips and one 1st-level spell from the Cleric list; cast the leveled spell once per long rest without a slot.' },
+  { id: 'magic-initiate-druid', name: 'Magic Initiate (Druid)', description: 'Learn two cantrips and one 1st-level spell from the Druid list; cast the leveled spell once per long rest without a slot.' },
+  { id: 'magic-initiate-wizard', name: 'Magic Initiate (Wizard)', description: 'Learn two cantrips and one 1st-level spell from the Wizard list; cast the leveled spell once per long rest without a slot.' },
+  { id: 'crafter', name: 'Crafter', description: 'You work faster and cheaper at the crafting table, and gain proficiency with three artisan\'s tools.' },
+  { id: 'skilled', name: 'Skilled', description: 'Gain proficiency in three skills or tools of your choice.' },
+  { id: 'alert', name: 'Alert', description: 'You can\'t be caught flat-footed — you act first when it matters, and see through most disguises at a glance.' },
+  { id: 'tough', name: 'Tough', description: 'Your hit point maximum increases by 2 per character level.' },
+  { id: 'lucky', name: 'Lucky', description: 'Once per long rest, turn a failed roll into a second chance.' },
+  { id: 'tavern-brawler', name: 'Tavern Brawler', description: 'You hit harder unarmed and can grapple as part of an attack.' },
+  { id: 'savage-attacker', name: 'Savage Attacker', description: 'Once per turn, reroll your weapon damage and take the better result.' },
+];
+
 // Standard array values for ability score assignment (2024 PHB)
 export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
 
@@ -580,4 +670,20 @@ export function getClassById(id) {
 
 export function getBackgroundById(id) {
   return BACKGROUNDS.find(b => b.id === id) ?? null;
+}
+
+export function getLineageOptions(speciesId) {
+  return getSpeciesById(speciesId)?.lineageOptions ?? null;
+}
+
+export function hasFightingStyle(classId) {
+  return classId === 'fighter';
+}
+
+export function getSubclassOptions(classId) {
+  return SUBCLASSES[classId] ?? null;
+}
+
+export function getFeatByName(name) {
+  return FEATS.find(f => f.name === name) ?? null;
 }

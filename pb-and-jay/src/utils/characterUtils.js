@@ -61,6 +61,19 @@ export function buildSkillsFromProficiencies(skills) {
   return Object.fromEntries(ALL_SKILLS.map(s => [s, profSet.has(s)]));
 }
 
+/**
+ * Generate skill proficiencies from background's fixed skills plus player-picked
+ * class skills and an optional bonus pick (Human's "Skillful" trait).
+ * @param {string[]} backgroundSkills
+ * @param {string[]} chosenClassSkills
+ * @param {string|null} extraSkill
+ */
+export function buildSkillsFromChoices(backgroundSkills, chosenClassSkills, extraSkill) {
+  const all = [...(backgroundSkills ?? []), ...(chosenClassSkills ?? [])];
+  if (extraSkill) all.push(extraSkill);
+  return buildSkillsFromProficiencies(all);
+}
+
 const HIT_DICE = {
   barbarian: 12,
   fighter: 10, paladin: 10, ranger: 10,

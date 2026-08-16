@@ -428,8 +428,8 @@ app.get('/api/characters/:id', requireAuth, async (req, res) => {
 });
 
 app.post('/api/characters', requireAuth, async (req, res) => {
-  const { name, pronouns, species, class: charClass, background, backstory,
-    level, abilityScores, hp, maxHp, ac, skills } = req.body;
+  const { name, pronouns, species, class: charClass, subclass, background, backstory,
+    level, abilityScores, hp, maxHp, ac, skills, spells, speciesTrait, fightingStyle, feats } = req.body;
 
   if (!name || !species || !charClass || !background || !abilityScores || hp == null || maxHp == null) {
     return res.status(400).json({ error: 'Missing required character fields' });
@@ -452,6 +452,7 @@ app.post('/api/characters', requireAuth, async (req, res) => {
         userId: req.authUser.id,
         name, pronouns: pronouns || 'they/them', species,
         class: charClass,
+        subclass: subclass || null,
         background, backstory,
         level: level ?? 1,
         abilityScores,
@@ -459,8 +460,11 @@ app.post('/api/characters', requireAuth, async (req, res) => {
         ac: ac ?? 10,
         skills: skills ?? {},
         inventory: [],
-        spells: [],
+        spells: spells ?? [],
         conditions: [],
+        speciesTrait: speciesTrait || null,
+        fightingStyle: fightingStyle || null,
+        feats: feats ?? [],
       },
     });
     res.status(201).json(character);
