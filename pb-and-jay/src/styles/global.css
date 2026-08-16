@@ -24,6 +24,7 @@ body {
   background: linear-gradient(160deg, #1a1a2e 0%, #1e1e2f 40%, #252540 100%);
   color: #e8e6f0;
   line-height: 1.6;
+  overscroll-behavior-y: contain;
 }
 
 #root {

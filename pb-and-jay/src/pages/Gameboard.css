@@ -410,6 +410,7 @@
 .log-window {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
   padding: 0.5rem;
   margin-bottom: 1rem;
   min-height: 300px;
@@ -709,6 +710,7 @@
 .tab-content {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
 }
 
 /* Dice Roller */
@@ -1020,7 +1022,6 @@
     display: flex;
     flex-direction: column;
     height: calc(100dvh - 52px - 56px - 110px); /* navbar + tab bar + gameboard header/banner */
-    overflow-y: auto; /* scroll section to reach composer when DM tools push it down */
     border-radius: 0;
     border-left: none;
     border-right: none;
@@ -1028,7 +1029,8 @@
 
   .log-window {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto; /* sole scroll owner — .encounter-log no longer scrolls itself, avoids nested-scroll rubber-banding */
+    overscroll-behavior-y: contain;
     max-height: none;
     /* guarantee posts are always readable even when DM tools are expanded */
     min-height: clamp(200px, 45dvh, 480px);
