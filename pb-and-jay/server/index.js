@@ -435,9 +435,12 @@ app.post('/api/characters', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Missing required character fields' });
   }
 
-  // Enforce 2-character limit
+  // Enforce 2-character limit — scoped to the player's own personal characters,
+  // matching GET /api/characters. AI companions generated for a DM's campaign
+  // (isAiCharacter: true) share the DM's userId but aren't visible or retireable
+  // from the dashboard, so they must not count against this cap.
   const activeCount = await prisma.character.count({
-    where: { userId: req.authUser.id, isRetired: false },
+    where: { userId: req.authUser.id, isRetired: false, isAiCharacter: false },
   });
   if (activeCount >= 2) {
     return res.status(409).json({ error: 'You can have at most 2 active characters. Retire one first.' });
