@@ -19,7 +19,7 @@ export const SPECIES = [
     tagline: 'Marked by the rip',
     description:
       'Ashborn carry scale and claw where skin used to be — a Kimerian bloodline crossed generations back, or a rift-burn that never fully healed. They choose a lineage that colors their breath weapon and their resistances.',
-    traits: ['Lineage (choose an elemental strain)', 'Breath Weapon', 'Damage Resistance', 'Rift-Wings at level 5'],
+    traits: ['Elemental Lineage (a strain your DM helps you pick — colors your breath weapon and resistances)', 'Breath Weapon', 'Damage Resistance', 'Rift-Wings at level 5'],
     size: 'Medium',
     speed: 30,
     icon: '🐉',
@@ -40,8 +40,8 @@ export const SPECIES = [
     name: 'Elf',
     tagline: 'Ancient and graceful',
     description:
-      'Elves live for centuries and accumulate wisdom and skill over lifetimes. Their keen senses and innate magic make them natural adventurers. Choose a lineage: High Elf, Wood Elf, or Drow.',
-    traits: ['Darkvision 60 ft', 'Fey Ancestry (immune to magical sleep)', 'Keen Senses', 'Trance (only needs 4 hours rest)', 'Elven Lineage (subtype special ability)'],
+      'Elves live for centuries and accumulate wisdom and skill over lifetimes. Their keen senses and innate magic make them natural adventurers. Their lineage — High Elf, Wood Elf, or Drow — is worked out with your DM as part of their story.',
+    traits: ['Darkvision 60 ft', 'Fey Ancestry (immune to magical sleep)', 'Keen Senses', 'Trance (only needs 4 hours rest)', 'Elven Lineage (a subtype special ability your DM helps you settle on)'],
     size: 'Medium',
     speed: 30,
     icon: '🌿',
@@ -52,7 +52,7 @@ export const SPECIES = [
     tagline: 'Curious and quick-witted',
     description:
       'Gnomes are small in body but enormous in personality. Their boundless curiosity drives them to explore every mystery the world has to offer, and their natural cleverness helps them survive it.',
-    traits: ['Small size', 'Darkvision 60 ft', 'Gnomish Cunning (Adv. on INT/WIS/CHA saves vs magic)', 'Gnomish Lineage (Forest or Rock subtype)'],
+    traits: ['Small size', 'Darkvision 60 ft', 'Gnomish Cunning (Adv. on INT/WIS/CHA saves vs magic)', 'Gnomish Lineage (Forest or Rock subtype, settled with your DM)'],
     size: 'Small',
     speed: 30,
     icon: '🔮',
@@ -63,7 +63,7 @@ export const SPECIES = [
     tagline: 'Built for the hard country',
     description:
       'Ridgeborn are massive, mountain-bred survivors — some say descended from something that came through a rift in the old Rockies and never left. They thrive where the ground is hard and the weather doesn\'t forgive mistakes.',
-    traits: ['Large build (counts as Large for carrying capacity)', 'Old Blood (choose a heritage: Cloud, Ash, Frost, Stone, or Storm)', 'Set Your Feet (reduce damage once per short rest)'],
+    traits: ['Large build (counts as Large for carrying capacity)', 'Old Blood (a heritage — Cloud, Ash, Frost, Stone, or Storm — worked out with your DM)', 'Set Your Feet (reduce damage once per short rest)'],
     size: 'Medium',
     speed: 35,
     icon: '🗻',
@@ -107,7 +107,7 @@ export const SPECIES = [
     tagline: 'Carrying the rift\'s mark',
     description:
       'The Warped were touched too long, too close, or too young — exposure to a rift that should have killed them instead changed them for good. Most people flinch first and ask questions later; the Warped have learned to expect it.',
-    traits: ['Darkvision 60 ft', 'Warp Lineage (choose: Ash, Hollow, or Static strain)', 'Static Hum (know the Small Wonder cantrip)', 'Heat-Touched (fire resistance)'],
+    traits: ['Darkvision 60 ft', 'Warp Lineage (an Ash, Hollow, or Static strain, settled with your DM)', 'Static Hum (know the Small Wonder cantrip)', 'Heat-Touched (fire resistance)'],
     size: 'Medium',
     speed: 30,
     icon: '🔥',
