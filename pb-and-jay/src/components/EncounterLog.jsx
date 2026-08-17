@@ -113,7 +113,11 @@ const EncounterLog = ({ posts, isLoading, postsReady, postsFetchError, scrollKey
   const handleScroll = () => {
     const el = logRef.current;
     if (!el) return;
-    userScrolledUp.current = el.scrollHeight - el.scrollTop - el.clientHeight > 80;
+    // A small nudge to reread a line or two shouldn't count as "still at the bottom" — an AI
+    // round can add several posts in quick succession (party actions, then DM narration), each
+    // re-triggering the scrollToBottom effect below. An 80px allowance let those re-triggers
+    // yank the view back down out from under a manual scroll that hadn't gone far enough yet.
+    userScrolledUp.current = el.scrollHeight - el.scrollTop - el.clientHeight > 24;
   };
 
   const scrollToBottom = (smooth = true) => {
