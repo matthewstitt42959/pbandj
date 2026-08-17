@@ -89,6 +89,7 @@
   display: flex;
   gap: 0.35rem;
   margin-bottom: 0.75rem;
+  flex-shrink: 0;
 }
 
 /* ── Scene starters ── */
@@ -195,6 +196,7 @@
   flex-direction: column;
   gap: 0.4rem;
   margin-top: 0.75rem;
+  flex-shrink: 0;
 }
 
 .dm-response-hint {
@@ -1022,7 +1024,7 @@
     display: flex;
     flex-direction: column;
     height: calc(100dvh - 52px - 56px - 110px); /* navbar + tab bar + gameboard header/banner */
-    overflow-y: auto; /* lets the composer (and DM tools below it) scroll into view instead of being clipped past this fixed height */
+    overflow-y: auto; /* backstop for extreme cases; not the primary fix — see .log-window's min-height below */
     overscroll-behavior-y: contain;
     border-radius: 0;
     border-left: none;
@@ -1031,11 +1033,16 @@
 
   .log-window {
     flex: 1;
+    /* Touches over the post list scroll *it*, and overscroll-behavior:contain (needed to
+       stop bounce-chaining into .encounter-log) blocks that gesture from ever reaching the
+       outer scroll once the list hits its own bounds. Since the list covers almost the full
+       screen, that made the composer/Get DM Response button effectively unreachable by touch.
+       min-height: 0 lets this flex item shrink to make room for the composer/response row
+       below it instead of forcing them out of the fixed-height container in the first place. */
+    min-height: 0;
     overflow-y: auto;
-    overscroll-behavior-y: contain; /* keeps momentum scroll inside the post list from chaining into .encounter-log's own scroll */
+    overscroll-behavior-y: contain;
     max-height: none;
-    /* enough room to read a few posts without the floor swallowing the composer/Post Action button below it */
-    min-height: clamp(120px, 30dvh, 320px);
   }
 
   /* Character panel full width on mobile */
