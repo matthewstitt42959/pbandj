@@ -138,7 +138,6 @@ const GameBoard = () => {
   const [aiAuthenticated, setAiAuthenticated] = useState(false);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [mobileTab, setMobileTab] = useState('log');
-  const [logScrollKey, setLogScrollKey] = useState(0);
   const [diceInsert, setDiceInsert] = useState(null);
   const [assistInsert, setAssistInsert] = useState(null);
   const [dmDiceResult, setDmDiceResult] = useState(null);
@@ -146,9 +145,14 @@ const GameBoard = () => {
   const [dmDiceMod, setDmDiceMod] = useState(0);
   const [showDmDice, setShowDmDice] = useState(false);
 
+  // Switching to the Log tab used to force-scroll straight to the newest post every time,
+  // wiping out any manual scroll-up — annoying on its own, and actively broken now that
+  // rolling dice means a trip to the Party tab and back. The log never actually unmounts
+  // between tabs (mobile-hidden is CSS-only), so its scroll position is already preserved
+  // naturally, and new posts arriving still auto-scroll (respecting a manual scroll-up)
+  // via EncounterLog's own effect — no extra reset needed here.
   const handleMobileTab = (tab) => {
     setMobileTab(tab);
-    if (tab === 'log') setLogScrollKey((k) => k + 1);
   };
 
   const refreshAiStatus = () => {
@@ -190,7 +194,7 @@ const GameBoard = () => {
           <span>You're watching this campaign. Contact the DM to be assigned a character and join.</span>
         </div>
         <div className="spectator-log-wrap">
-          <EncounterLog posts={posts} isLoading={false} scrollKey={0} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
+          <EncounterLog posts={posts} isLoading={false} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
         </div>
       </div>
     );
@@ -331,7 +335,7 @@ const GameBoard = () => {
 
         <section className={`encounter-log${mobileTab !== 'log' ? ' mobile-hidden' : ''}`}>
           <h3>Encounter Log</h3>
-          <EncounterLog posts={posts} isLoading={isLoadingDM} postsReady={postsReady} postsFetchError={postsFetchError} scrollKey={logScrollKey} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
+          <EncounterLog posts={posts} isLoading={isLoadingDM} postsReady={postsReady} postsFetchError={postsFetchError} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
 
           {isDm && myCharacter && (
             <div className="post-as-toggle">
