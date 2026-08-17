@@ -304,50 +304,8 @@ const GameBoard = () => {
             </div>
           )}
 
-          {(myCharacter || isDm) && (
-            <PostComposer
-              authorName={postAs === 'dm' ? 'DM' : myCharacter?.name}
-              appendText={postAs === 'character'
-                ? diceInsert
-                : postAs === 'dm'
-                  ? (!diceInsert ? assistInsert : !assistInsert ? diceInsert : diceInsert.ts > assistInsert.ts ? diceInsert : assistInsert)
-                  : null}
-              onSubmit={handlePost}
-              disabled={isLoadingDM}
-              submitLabel={postAs === 'dm' ? 'Post DM Narration' : 'Post Action'}
-              placeholder={
-                postAs === 'dm'
-                  ? 'Write what happens next — scene description, NPC dialogue, consequences...'
-                  : 'Describe your action... (tip: type /roll 1d20+3 for dice rolls)'
-              }
-            />
-          )}
-
-          {isAiCampaign && playMode === 'ai' && (
-            <div className="dm-response-row">
-              <button
-                className="btn btn--primary"
-                onClick={aiLocked && !aiAuthenticated ? () => setShowUnlockModal(true) : runAiRound}
-                disabled={isLoadingDM || (!allHumansPosted && aiAuthenticated)}
-                title={
-                  aiLocked && !aiAuthenticated ? 'Unlock AI DM first'
-                  : !allHumansPosted ? 'Post your action first'
-                  : 'Run AI companions then get DM narration'
-                }
-              >
-                {isLoadingDM ? 'DM is responding...'
-                  : aiLocked && !aiAuthenticated ? '🔒 Unlock AI DM'
-                  : 'Get DM Response'}
-              </button>
-              {!allHumansPosted && aiAuthenticated && !isLoadingDM && (
-                <span className="dm-response-hint">Post your action first</span>
-              )}
-              {dmError && (
-                <p className="dm-response-error">{dmError}</p>
-              )}
-            </div>
-          )}
-
+          {/* DM tools render above the composer dock (not after it) so they scroll normally
+              in the page flow instead of being covered by the sticky composer on mobile. */}
           {isDm && postAs === 'dm' && (
             <>
               {isAiCampaign && playMode === 'ai' && (
@@ -435,6 +393,55 @@ const GameBoard = () => {
               </div>
             </>
           )}
+
+          {/* Composer + Get DM Response are docked together so, on mobile, they can stick to
+              the bottom of the viewport (see .composer-dock) instead of relying on the post
+              list scrolling out of the way to reveal them. */}
+          <div className="composer-dock">
+            {(myCharacter || isDm) && (
+              <PostComposer
+                authorName={postAs === 'dm' ? 'DM' : myCharacter?.name}
+                appendText={postAs === 'character'
+                  ? diceInsert
+                  : postAs === 'dm'
+                    ? (!diceInsert ? assistInsert : !assistInsert ? diceInsert : diceInsert.ts > assistInsert.ts ? diceInsert : assistInsert)
+                    : null}
+                onSubmit={handlePost}
+                disabled={isLoadingDM}
+                submitLabel={postAs === 'dm' ? 'Post DM Narration' : 'Post Action'}
+                placeholder={
+                  postAs === 'dm'
+                    ? 'Write what happens next — scene description, NPC dialogue, consequences...'
+                    : 'Describe your action... (tip: type /roll 1d20+3 for dice rolls)'
+                }
+              />
+            )}
+
+            {isAiCampaign && playMode === 'ai' && (
+              <div className="dm-response-row">
+                <button
+                  className="btn btn--primary"
+                  onClick={aiLocked && !aiAuthenticated ? () => setShowUnlockModal(true) : runAiRound}
+                  disabled={isLoadingDM || (!allHumansPosted && aiAuthenticated)}
+                  title={
+                    aiLocked && !aiAuthenticated ? 'Unlock AI DM first'
+                    : !allHumansPosted ? 'Post your action first'
+                    : 'Run AI companions then get DM narration'
+                  }
+                >
+                  {isLoadingDM ? 'DM is responding...'
+                    : aiLocked && !aiAuthenticated ? '🔒 Unlock AI DM'
+                    : 'Get DM Response'}
+                </button>
+                {!allHumansPosted && aiAuthenticated && !isLoadingDM && (
+                  <span className="dm-response-hint">Post your action first</span>
+                )}
+                {dmError && (
+                  <p className="dm-response-error">{dmError}</p>
+                )}
+              </div>
+            )}
+          </div>
         </section>
 
         <aside className={`action-panel${mobileTab !== 'stats' ? ' mobile-hidden' : ''}`}>

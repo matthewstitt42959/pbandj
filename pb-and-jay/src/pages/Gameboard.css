@@ -633,6 +633,12 @@
   50% { opacity: 1; }
 }
 
+/* Composer dock — wraps the composer + Get DM Response row so they can be
+   pinned together as a unit on mobile (see the @media block below). */
+.composer-dock {
+  flex-shrink: 0;
+}
+
 /* Post Composer */
 .post-composer {
   flex-shrink: 0;
@@ -1019,30 +1025,39 @@
     min-height: 0;
   }
 
-  /* Encounter log fills remaining height on mobile */
+  /* Encounter log scrolls with the page on mobile (like the Stats tab's .action-panel
+     below) instead of being clipped to a fixed height. A fixed-height + internal-scroll
+     box here kept fighting itself: shrinking the post list to reach the composer, or
+     letting it grow and losing the composer off the bottom with no way to reach it —
+     overscroll-behavior:contain on the post list (needed to stop bounce-chaining) blocks
+     a touch gesture from ever handing off to a parent scroll once the list hits its own
+     bounds, and the list covers nearly the whole screen. See .composer-dock below for how
+     the composer/Get DM Response row stay reachable regardless. */
   .encounter-log {
     display: flex;
     flex-direction: column;
-    height: calc(100dvh - 52px - 56px - 110px); /* navbar + tab bar + gameboard header/banner */
-    overflow-y: auto; /* backstop for extreme cases; not the primary fix — see .log-window's min-height below */
-    overscroll-behavior-y: contain;
     border-radius: 0;
     border-left: none;
     border-right: none;
   }
 
   .log-window {
-    flex: 1;
-    /* Touches over the post list scroll *it*, and overscroll-behavior:contain (needed to
-       stop bounce-chaining into .encounter-log) blocks that gesture from ever reaching the
-       outer scroll once the list hits its own bounds. Since the list covers almost the full
-       screen, that made the composer/Get DM Response button effectively unreachable by touch.
-       min-height: 0 lets this flex item shrink to make room for the composer/response row
-       below it instead of forcing them out of the fixed-height container in the first place. */
-    min-height: 0;
+    flex: none;
     overflow-y: auto;
     overscroll-behavior-y: contain;
-    max-height: none;
+    max-height: 55vh;
+    min-height: 240px;
+  }
+
+  /* Pinned to the bottom of the viewport (just above the fixed mobile tab bar) so the
+     composer and Get DM Response button are always visible without needing to scroll
+     to them at all. */
+  .composer-dock {
+    position: sticky;
+    bottom: 56px;
+    background: #252535;
+    padding-bottom: 0.5rem;
+    z-index: 5;
   }
 
   /* Character panel full width on mobile */
