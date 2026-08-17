@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getCasterInfo, fullProgressionRows, formatSlots } from '../data/casterProgression';
-import { PRONOUN_OPTIONS, STANDARD_ARRAY, pointBuyCost, getLineageOptions, hasFightingStyle } from '../data/dnd2024';
+import { PRONOUN_OPTIONS, STANDARD_ARRAY, pointBuyCost, getLineageOptions, hasFightingStyle, CLASS_PRIMARY_ABILITIES } from '../data/dnd2024';
 import PointBuyTracker from '../components/PointBuyTracker';
 import './CharacterSheet.css';
 
@@ -27,8 +27,10 @@ const CONDITION_LIST = [
   'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious',
 ];
 
-const mod = (s) => { const m = Math.floor((s - 10) / 2); return (m >= 0 ? '+' : '') + m; };
+const rawMod = (s) => Math.floor((s - 10) / 2);
+const mod = (s) => { const m = rawMod(s); return (m >= 0 ? '+' : '') + m; };
 const profBonus = (level) => Math.ceil(level / 4) + 1;
+const spellcastingAbility = (charClass) => CLASS_PRIMARY_ABILITIES[charClass?.toLowerCase()]?.[0] ?? null;
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
@@ -173,6 +175,10 @@ function OverviewTab({ char, onFieldChange }) {
         <div className="cs-stat-box">
           <span className="cs-stat-box__val">+{pb}</span>
           <span className="cs-stat-box__label">Prof Bonus</span>
+        </div>
+        <div className="cs-stat-box">
+          <span className="cs-stat-box__val">{scores.dex != null ? mod(scores.dex) : '—'}</span>
+          <span className="cs-stat-box__label">Initiative</span>
         </div>
       </div>
 
@@ -392,10 +398,33 @@ function SpellsTab({ char, onFieldChange }) {
   const overBudget = casterInfo && !casterInfo.noCastingYet
     && (cantripCount > casterInfo.cantrips || leveledCount > casterInfo.known);
 
+  const pb = profBonus(char.level);
+  const scores = char.abilityScores ?? {};
+  const castAbility = spellcastingAbility(char.class);
+  const castScore = castAbility ? scores[castAbility] : null;
+  const spellAttackBonus = castScore != null ? pb + rawMod(castScore) : null;
+  const spellSaveDC = castScore != null ? 8 + pb + rawMod(castScore) : null;
+
   return (
     <div className="cs-spells">
       {casterInfo && (
         <div className="cs-caster-summary">
+          {casterInfo && !casterInfo.noCastingYet && spellAttackBonus != null && (
+            <div className="cs-caster-stats">
+              <div className="cs-stat-box">
+                <span className="cs-stat-box__val">{spellAttackBonus >= 0 ? '+' : ''}{spellAttackBonus}</span>
+                <span className="cs-stat-box__label">Spell Attack</span>
+              </div>
+              <div className="cs-stat-box">
+                <span className="cs-stat-box__val">{spellSaveDC}</span>
+                <span className="cs-stat-box__label">Spell Save DC</span>
+              </div>
+              <div className="cs-stat-box">
+                <span className="cs-stat-box__val">{ABILITY_LABELS[castAbility]}</span>
+                <span className="cs-stat-box__label">Casting Ability</span>
+              </div>
+            </div>
+          )}
           {casterInfo.noCastingYet ? (
             <p className="cs-caster-summary__line">{char.class} doesn't gain spellcasting until level 2.</p>
           ) : (
