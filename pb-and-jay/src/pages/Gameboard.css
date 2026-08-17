@@ -313,6 +313,36 @@
   text-decoration: none;
 }
 
+.character-hp {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.2rem 0.75rem 0.4rem;
+  font-size: 0.72rem;
+  color: #9aa0b8;
+}
+
+.character-hp__val {
+  font-weight: 600;
+}
+
+.character-hp__adjust {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.character-hp__input {
+  width: 52px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(120, 192, 224, 0.2);
+  border-radius: 4px;
+  color: #e8e6f0;
+  padding: 0.15rem 0.3rem;
+  font-size: 0.72rem;
+}
+
 .character-btn__top {
   display: flex;
   justify-content: space-between;

@@ -23,6 +23,48 @@ const TABS = [
   { id: 'world', label: 'World' },
 ];
 
+// DM combat tracking: HP is visible to everyone, but only a DM can push a change —
+// players still edit their own HP from their Character Sheet as before.
+function PartyMemberHp({ char, isDm, onApplyDelta }) {
+  const [delta, setDelta] = useState('');
+  const [applying, setApplying] = useState(false);
+  const hp = char.hp ?? { current: 0, max: 0 };
+
+  const apply = async () => {
+    const n = parseInt(delta, 10);
+    if (!n) { setDelta(''); return; }
+    setApplying(true);
+    try {
+      await onApplyDelta(char.dbId, hp.current + n);
+      setDelta('');
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  return (
+    <div className="character-hp">
+      <span className="character-hp__val">{hp.current}/{hp.max} HP</span>
+      {isDm && char.dbId && (
+        <span className="character-hp__adjust">
+          <input
+            type="number"
+            className="character-hp__input"
+            placeholder="±HP"
+            value={delta}
+            onChange={e => setDelta(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && apply()}
+            disabled={applying}
+          />
+          <button type="button" className="btn btn--ghost btn--xs" onClick={apply} disabled={applying || !delta}>
+            {applying ? '…' : 'Apply'}
+          </button>
+        </span>
+      )}
+    </div>
+  );
+}
+
 const GameBoard = () => {
   const navigate = useNavigate();
   const {
@@ -50,6 +92,7 @@ const GameBoard = () => {
     loadCampaignCharacters,
     editPost,
     deletePost,
+    updateCharacterStatus,
   } = useGame();
 
   const { user, authFetch } = useAuth();
@@ -275,6 +318,11 @@ const GameBoard = () => {
                   title={`Edit ${char.name}`}
                 >✎</Link>
               )}
+              <PartyMemberHp
+                char={char}
+                isDm={isDm}
+                onApplyDelta={(dbId, newHp) => updateCharacterStatus(dbId, { hp: newHp })}
+              />
             </div>
           ))}
         </aside>

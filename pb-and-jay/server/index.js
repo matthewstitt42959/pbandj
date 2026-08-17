@@ -1253,6 +1253,29 @@ app.post('/api/dm/characters/:id/unassign', requireAuth, async (req, res) => {
   }
 });
 
+// DM updates HP/conditions on any character — combat tracking, since players can
+// only edit their own sheet (PATCH /api/characters/:id below is owner-scoped).
+app.patch('/api/dm/characters/:id/status', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  const { hp, conditions } = req.body;
+  try {
+    const character = await prisma.character.findUnique({ where: { id: req.params.id } });
+    if (!character) return res.status(404).json({ error: 'Character not found' });
+    const data = {};
+    if (hp != null) data.hp = Math.max(0, Math.min(character.maxHp, hp));
+    if (conditions != null) data.conditions = conditions;
+    const updated = await prisma.character.update({
+      where: { id: req.params.id },
+      data,
+      select: { id: true, name: true, hp: true, maxHp: true, conditions: true },
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error('PATCH /api/dm/characters/:id/status error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // AI generates a party of characters and assigns them to a campaign
 app.post('/api/campaigns/:id/generate-characters', requireAuth, async (req, res) => {
   if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
