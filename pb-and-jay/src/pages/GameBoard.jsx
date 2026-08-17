@@ -277,8 +277,6 @@ const GameBoard = () => {
               )}
             </div>
           ))}
-
-          <DiceRoller onRollResult={handleDiceRoll} />
         </aside>
 
         <section className={`encounter-log${mobileTab !== 'log' ? ' mobile-hidden' : ''}`}>
@@ -303,6 +301,11 @@ const GameBoard = () => {
               </button>
             </div>
           )}
+
+          {/* Lives next to the composer (not in the Party tab) so it's reachable on mobile
+              without leaving the tab you're posting from — rolls insert straight into
+              whichever composer is active via handleDiceRoll. */}
+          <DiceRoller onRollResult={handleDiceRoll} />
 
           {/* DM tools render above the composer dock (not after it) so they scroll normally
               in the page flow instead of being covered by the sticky composer on mobile. */}
