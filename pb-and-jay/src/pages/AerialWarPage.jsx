@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './AerialWarPage.css';
-import p51Mustang from '../assets/aerial-war/p-51-mustang.png';
-import p47Thunderbolt from '../assets/aerial-war/p-47-thunderbolt.png';
-import hurricane from '../assets/aerial-war/hurricane.png';
-import spitfire from '../assets/aerial-war/spitfire.png';
-import bf109 from '../assets/aerial-war/bf-109.png';
+import p51Mustang from '../assets/aerial-war/p-51-mustang.webp';
+import p47Thunderbolt from '../assets/aerial-war/p-47-thunderbolt.webp';
+import hurricane from '../assets/aerial-war/hurricane.webp';
+import spitfire from '../assets/aerial-war/spitfire.webp';
+import bf109 from '../assets/aerial-war/bf-109.webp';
 
 // Card art for the planes we have illustrations for — everything else in
 // BASE_DECK still renders as a plain text card.
