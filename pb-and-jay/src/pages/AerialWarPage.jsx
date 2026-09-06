@@ -60,6 +60,10 @@ function rankLabel(value) {
   return String(value);
 }
 
+function valueOf(name) {
+  return BASE_DECK.find((c) => c.name === name)?.value;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function buildDeck() {
@@ -256,6 +260,13 @@ export default function AerialWarPage() {
   const p2Hand = p2.slice(0, Math.min(3, p2.length));
   const lastEntry = log[log.length - 1];
 
+  // Squadron header mirrors whatever was last played, so it starts on the
+  // deck's default matchup and then tracks the "Last round result" box below.
+  const squadronP1Name = lastEntry ? lastEntry.p1Name : 'P-51 Mustang';
+  const squadronP2Name = lastEntry ? lastEntry.p2Name : 'Bf-109';
+  const squadronP1Val = lastEntry ? lastEntry.p1Val : valueOf('P-51 Mustang');
+  const squadronP2Val = lastEntry ? lastEntry.p2Val : valueOf('Bf-109');
+
   const speedLabel = speed <= 350 ? 'Fast' : speed <= 900 ? 'Normal' : 'Slow';
 
   return (
@@ -301,11 +312,17 @@ export default function AerialWarPage() {
           </div>
         </div>
 
-        {/* Squadrons */}
+        {/* Squadrons — tracks whichever cards were last played */}
         <div className="flex items-center justify-between px-1">
-          <img src={p51Mustang} alt="P-51 Mustang" className="aerial-war-squadron-art" />
+          <div className="aerial-war-squadron-art-wrap">
+            <img src={PLANE_ART[squadronP1Name]} alt={squadronP1Name} className="aerial-war-squadron-art" />
+            <span className="aerial-war-card-rank">{rankLabel(squadronP1Val)}</span>
+          </div>
           <span className="text-[9px] uppercase tracking-widest text-white/40">vs</span>
-          <img src={bf109} alt="Bf-109" className="aerial-war-squadron-art" />
+          <div className="aerial-war-squadron-art-wrap">
+            <img src={PLANE_ART[squadronP2Name]} alt={squadronP2Name} className="aerial-war-squadron-art" />
+            <span className="aerial-war-card-rank">{rankLabel(squadronP2Val)}</span>
+          </div>
         </div>
 
         {/* Early-game tip — the opponent plays tactically, not randomly, and

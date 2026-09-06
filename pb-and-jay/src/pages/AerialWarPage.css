@@ -20,7 +20,14 @@
   animation: aerial-war-clash-in 0.28s ease-out;
 }
 
+.aerial-war-squadron-art-wrap {
+  position: relative;
+  width: 56px;
+  flex-shrink: 0;
+}
+
 .aerial-war-squadron-art {
+  display: block;
   width: 56px;
   aspect-ratio: 3 / 4.6;
   object-fit: contain;
