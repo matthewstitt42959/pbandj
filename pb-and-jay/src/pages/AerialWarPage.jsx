@@ -37,6 +37,16 @@ const BASE_DECK = [
   { name: 'P-51 Mustang',     value: 13, era: 'WWII' },
 ];
 
+// Playing-card style corner rank for a plane's value. This deck runs 2-13
+// (2 through King), so the top card lands on K rather than needing an Ace.
+function rankLabel(value) {
+  if (value === 13) return 'K';
+  if (value === 12) return 'Q';
+  if (value === 11) return 'J';
+  if (value === 14) return 'A';
+  return String(value);
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function buildDeck() {
@@ -315,7 +325,10 @@ export default function AerialWarPage() {
                     }`}
                   >
                     {PLANE_ART[card.name] && (
-                      <img src={PLANE_ART[card.name]} alt="" className="aerial-war-card-art" />
+                      <div className="aerial-war-card-art-wrap">
+                        <img src={PLANE_ART[card.name]} alt="" className="aerial-war-card-art" />
+                        <span className="aerial-war-card-rank">{rankLabel(card.value)}</span>
+                      </div>
                     )}
                     <div className="text-[9px] uppercase tracking-widest text-white mb-1">{card.era}</div>
                     <div className="text-xs font-semibold text-white leading-tight mb-2">{card.name}</div>
@@ -332,7 +345,10 @@ export default function AerialWarPage() {
                 {p2Hand.map((card, i) => (
                   <div key={i} className="p-3 border border-[var(--color-border)] bg-[var(--color-surface2)]/50 rounded-lg">
                     {PLANE_ART[card.name] && (
-                      <img src={PLANE_ART[card.name]} alt="" className="aerial-war-card-art" />
+                      <div className="aerial-war-card-art-wrap">
+                        <img src={PLANE_ART[card.name]} alt="" className="aerial-war-card-art" />
+                        <span className="aerial-war-card-rank">{rankLabel(card.value)}</span>
+                      </div>
                     )}
                     <div className="text-[9px] uppercase tracking-widest text-white mb-1">{card.era}</div>
                     <div className="text-xs font-semibold text-white leading-tight mb-2">{card.name}</div>
