@@ -1,17 +1,21 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './AerialWarPage.css';
+import p51Mustang from '../assets/aerial-war/p-51-mustang.png';
+import p47Thunderbolt from '../assets/aerial-war/p-47-thunderbolt.png';
+import hurricane from '../assets/aerial-war/hurricane.png';
+import spitfire from '../assets/aerial-war/spitfire.png';
+import bf109 from '../assets/aerial-war/bf-109.png';
 
-// Simple dart-shaped plane silhouette — not meant to be an accurate WWI/WWII
-// aircraft, just enough visual flavor to sell "one side vs. the other."
-function PlaneIcon({ color, facing = 'right' }) {
-  const points = facing === 'right' ? '98,15 6,2 34,15 6,28' : '2,15 94,2 66,15 94,28';
-  return (
-    <svg viewBox="0 0 100 30" width="72" height="22" aria-hidden="true">
-      <polygon points={points} fill={color} />
-    </svg>
-  );
-}
+// Card art for the planes we have illustrations for — everything else in
+// BASE_DECK still renders as a plain text card.
+const PLANE_ART = {
+  'P-51 Mustang': p51Mustang,
+  'P-47 Thunderbolt': p47Thunderbolt,
+  Hurricane: hurricane,
+  Spitfire: spitfire,
+  'Bf-109': bf109,
+};
 
 // Ported from broken-archive's admin lab (src/app/admin/war-game/page.tsx),
 // stripped of Next.js "use client" + TypeScript types. Game logic unchanged.
@@ -276,9 +280,9 @@ export default function AerialWarPage() {
 
         {/* Squadrons */}
         <div className="flex items-center justify-between px-1">
-          <PlaneIcon color="#f59e0b" facing="right" />
+          <img src={p51Mustang} alt="P-51 Mustang" className="aerial-war-squadron-art" />
           <span className="text-[9px] uppercase tracking-widest text-white/40">vs</span>
-          <PlaneIcon color="#e5e5e5" facing="left" />
+          <img src={bf109} alt="Bf-109" className="aerial-war-squadron-art aerial-war-squadron-art--flip" />
         </div>
 
         {/* Early-game tip — the opponent plays tactically, not randomly, and
@@ -310,6 +314,9 @@ export default function AerialWarPage() {
                         : 'border-[var(--color-border)] bg-[var(--color-surface2)] hover:border-amber-500 hover:bg-[var(--color-surface2)] active:scale-95 cursor-pointer'
                     }`}
                   >
+                    {PLANE_ART[card.name] && (
+                      <img src={PLANE_ART[card.name]} alt="" className="aerial-war-card-art" />
+                    )}
                     <div className="text-[9px] uppercase tracking-widest text-white mb-1">{card.era}</div>
                     <div className="text-xs font-semibold text-white leading-tight mb-2">{card.name}</div>
                     <div className="text-xl font-bold text-amber-400">{card.value}</div>
@@ -324,6 +331,9 @@ export default function AerialWarPage() {
               <div className="grid grid-cols-3 gap-2">
                 {p2Hand.map((card, i) => (
                   <div key={i} className="p-3 border border-[var(--color-border)] bg-[var(--color-surface2)]/50 rounded-lg">
+                    {PLANE_ART[card.name] && (
+                      <img src={PLANE_ART[card.name]} alt="" className="aerial-war-card-art" />
+                    )}
                     <div className="text-[9px] uppercase tracking-widest text-white mb-1">{card.era}</div>
                     <div className="text-xs font-semibold text-white leading-tight mb-2">{card.name}</div>
                     <div className="text-xl font-bold text-white/70">{card.value}</div>
@@ -447,9 +457,14 @@ export default function AerialWarPage() {
           <div className="divide-y divide-[var(--color-border)]">
             {BASE_DECK.map((card) => (
               <div key={card.name} className="flex items-center justify-between px-4 py-2">
-                <div>
-                  <span className="text-xs text-white">{card.name}</span>
-                  <span className="ml-2 text-[9px] uppercase tracking-widest text-white">{card.era}</span>
+                <div className="flex items-center gap-2">
+                  {PLANE_ART[card.name] && (
+                    <img src={PLANE_ART[card.name]} alt="" className="aerial-war-ref-art" />
+                  )}
+                  <div>
+                    <span className="text-xs text-white">{card.name}</span>
+                    <span className="ml-2 text-[9px] uppercase tracking-widest text-white">{card.era}</span>
+                  </div>
                 </div>
                 <span className="text-xs font-mono text-amber-500">{card.value}</span>
               </div>
