@@ -27,7 +27,6 @@ const GAMES = [
     tagline: 'WWI & WWII plane card game — a fast round of War',
     to: '/games/aerial-war',
     external: false,
-    badge: 'Under Construction',
   },
 ];
 
@@ -38,8 +37,8 @@ export default function HubPage() {
         <h1 className="hub-title">Play by Jay</h1>
         <p className="hub-tagline">A one-person indie arcade — new worlds added as they're built.</p>
         <p className="hub-subtext">
-          PB &amp; Jay is live and ready to play. Skyward Islands and Aerial War are still under
-          construction — jump in anyway and see how they're coming along.
+          PB &amp; Jay and Aerial War are live and ready to play. Skyward Islands is still under
+          construction — jump in anyway and see how it's coming along.
         </p>
       </header>
 
