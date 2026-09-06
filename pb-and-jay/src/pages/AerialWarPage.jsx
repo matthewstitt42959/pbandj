@@ -8,6 +8,7 @@ import spitfire from '../assets/aerial-war/spitfire.webp';
 import bf109 from '../assets/aerial-war/bf-109.webp';
 import albatrosD3 from '../assets/aerial-war/albatros-d3.webp';
 import sopwithCamel from '../assets/aerial-war/sopwith-camel.webp';
+import nieuport17 from '../assets/aerial-war/nieuport-17.webp';
 
 // Card art for the planes we have illustrations for — everything else in
 // BASE_DECK still renders as a plain text card.
@@ -19,6 +20,7 @@ const PLANE_ART = {
   'Bf-109': bf109,
   'Albatros D.III': albatrosD3,
   'Sopwith Camel': sopwithCamel,
+  'Nieuport 17': nieuport17,
 };
 
 // Ported from broken-archive's admin lab (src/app/admin/war-game/page.tsx),
