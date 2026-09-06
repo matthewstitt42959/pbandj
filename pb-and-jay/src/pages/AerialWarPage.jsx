@@ -9,9 +9,12 @@ import bf109 from '../assets/aerial-war/bf-109.webp';
 import albatrosD3 from '../assets/aerial-war/albatros-d3.webp';
 import sopwithCamel from '../assets/aerial-war/sopwith-camel.webp';
 import nieuport17 from '../assets/aerial-war/nieuport-17.webp';
+import fw190 from '../assets/aerial-war/fw-190.webp';
+import fokkerDr1 from '../assets/aerial-war/fokker-dr1.webp';
+import spadXiii from '../assets/aerial-war/spad-xiii.webp';
+import zero from '../assets/aerial-war/zero.webp';
 
-// Card art for the planes we have illustrations for — everything else in
-// BASE_DECK still renders as a plain text card.
+// Card art for every plane in BASE_DECK.
 const PLANE_ART = {
   'P-51 Mustang': p51Mustang,
   'P-47 Thunderbolt': p47Thunderbolt,
@@ -21,6 +24,10 @@ const PLANE_ART = {
   'Albatros D.III': albatrosD3,
   'Sopwith Camel': sopwithCamel,
   'Nieuport 17': nieuport17,
+  'Fw 190': fw190,
+  'Fokker Dr.I': fokkerDr1,
+  'SPAD XIII': spadXiii,
+  Zero: zero,
 };
 
 // Ported from broken-archive's admin lab (src/app/admin/war-game/page.tsx),
