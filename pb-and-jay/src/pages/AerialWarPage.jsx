@@ -60,6 +60,10 @@ function rankLabel(value) {
   return String(value);
 }
 
+function valueOf(name) {
+  return BASE_DECK.find((c) => c.name === name)?.value;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function buildDeck() {
@@ -303,9 +307,15 @@ export default function AerialWarPage() {
 
         {/* Squadrons */}
         <div className="flex items-center justify-between px-1">
-          <img src={p51Mustang} alt="P-51 Mustang" className="aerial-war-squadron-art" />
+          <div className="aerial-war-squadron-art-wrap">
+            <img src={p51Mustang} alt="P-51 Mustang" className="aerial-war-squadron-art" />
+            <span className="aerial-war-card-rank">{rankLabel(valueOf('P-51 Mustang'))}</span>
+          </div>
           <span className="text-[9px] uppercase tracking-widest text-white/40">vs</span>
-          <img src={bf109} alt="Bf-109" className="aerial-war-squadron-art" />
+          <div className="aerial-war-squadron-art-wrap">
+            <img src={bf109} alt="Bf-109" className="aerial-war-squadron-art" />
+            <span className="aerial-war-card-rank">{rankLabel(valueOf('Bf-109'))}</span>
+          </div>
         </div>
 
         {/* Early-game tip — the opponent plays tactically, not randomly, and
