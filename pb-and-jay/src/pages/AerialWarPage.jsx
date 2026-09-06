@@ -6,6 +6,8 @@ import p47Thunderbolt from '../assets/aerial-war/p-47-thunderbolt.webp';
 import hurricane from '../assets/aerial-war/hurricane.webp';
 import spitfire from '../assets/aerial-war/spitfire.webp';
 import bf109 from '../assets/aerial-war/bf-109.webp';
+import albatrosD3 from '../assets/aerial-war/albatros-d3.webp';
+import sopwithCamel from '../assets/aerial-war/sopwith-camel.webp';
 
 // Card art for the planes we have illustrations for — everything else in
 // BASE_DECK still renders as a plain text card.
@@ -15,6 +17,8 @@ const PLANE_ART = {
   Hurricane: hurricane,
   Spitfire: spitfire,
   'Bf-109': bf109,
+  'Albatros D.III': albatrosD3,
+  'Sopwith Camel': sopwithCamel,
 };
 
 // Ported from broken-archive's admin lab (src/app/admin/war-game/page.tsx),
