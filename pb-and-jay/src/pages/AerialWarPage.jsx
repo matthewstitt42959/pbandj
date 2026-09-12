@@ -135,19 +135,36 @@ function initGame() {
 // forces a war rather than conceding if nothing beats it outright, and only
 // sacrifices its weakest card as a last resort — conserving strong cards for
 // later rounds instead of burning them on a fight it was already winning.
+//
+// OVERKILL_CHANCE adds a human-like slip on top of that: instead of always
+// grabbing the cheapest card that wins, it occasionally reaches for a
+// stronger one than it needed to. The round's outcome never changes — it
+// only ever picks among cards that already win — so it's not a mistake a
+// player can spot round-to-round, just a slight, believable inefficiency in
+// how the opponent spends its strong cards over a full game.
+const OVERKILL_CHANCE = 0.15;
+
 function chooseP2Response(hand, p1Card, handSize) {
   let weakestIdx = 0;
   let cheapestWinIdx = -1;
   let cheapestWinValue = Infinity;
   let tieIdx = -1;
+  const winningIndices = [];
 
   for (let i = 0; i < handSize; i++) {
     if (hand[i].value < hand[weakestIdx].value) weakestIdx = i;
-    if (hand[i].value > p1Card.value && hand[i].value < cheapestWinValue) {
-      cheapestWinValue = hand[i].value;
-      cheapestWinIdx = i;
+    if (hand[i].value > p1Card.value) {
+      winningIndices.push(i);
+      if (hand[i].value < cheapestWinValue) {
+        cheapestWinValue = hand[i].value;
+        cheapestWinIdx = i;
+      }
     }
     if (hand[i].value === p1Card.value) tieIdx = i;
+  }
+
+  if (winningIndices.length > 1 && Math.random() < OVERKILL_CHANCE) {
+    return winningIndices[Math.floor(Math.random() * winningIndices.length)];
   }
 
   if (cheapestWinIdx !== -1) return cheapestWinIdx;
