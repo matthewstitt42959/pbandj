@@ -12,7 +12,12 @@ import { PLANE_ART, rankLabel, buildDeck, shuffle } from '../data/planeDeck';
 // than the target range does: simulating identical-strategy play, capping
 // face cards lands around 40% player / 51% dealer / 9% push regardless of
 // range, versus a lopsided ~65/31 with their raw plane values (2-13).
-const MIN_TARGET = 15;
+//
+// MIN_TARGET stays at 21 and up (never lower): with face cards capped at
+// 10, the highest possible 2-card hand is 10+10=20, so a target of 21+
+// guarantees the opening deal can never bust before the player gets a
+// single Hit/Stand decision — not just unlikely, structurally impossible.
+const MIN_TARGET = 21;
 const MAX_TARGET = 25;
 const DEALER_STAND_MARGIN = 4; // dealer (and auto-play) stops hitting within this of target
 const RESHUFFLE_THRESHOLD = 6; // keep a continuous shoe instead of running out mid-round
@@ -48,9 +53,9 @@ function dealHand(deck) {
 }
 
 // Deals a fresh round on top of the running match state (log, round count,
-// score tally). If the opening two cards already clear the target — common
-// here since there's no low-value filler to soften a low roll — resolves
-// immediately instead of making the player click Stand on a dead hand.
+// score tally). The immediate-bust check below is now unreachable in
+// practice (MIN_TARGET guarantees it can't happen) but stays as a guard in
+// case that constant ever changes — better a dead branch than a live bug.
 function startRound(state) {
   const p = dealHand(state.deck);
   const d = dealHand(p.deck);
@@ -61,8 +66,16 @@ function startRound(state) {
     playerHand: p.hand,
     dealerHand: d.hand,
     phase: 'player-turn',
+    ownRevealed: false,
   };
   return sumOf(dealt.playerHand) > dealt.target ? resolveRound(dealt) : dealt;
+}
+
+// The player's own second card starts hidden, mirroring the dealer's hole
+// card, until they choose to look at it.
+function revealOwnHand(state) {
+  if (state.phase !== 'player-turn' || state.ownRevealed) return state;
+  return { ...state, ownRevealed: true };
 }
 
 function initGame() {
@@ -72,6 +85,7 @@ function initGame() {
     playerHand: [],
     dealerHand: [],
     phase: 'player-turn',
+    ownRevealed: false,
     log: [],
     round: 0,
     playerWins: 0,
@@ -161,6 +175,11 @@ export default function Dogfight21Page() {
   const [speed, setSpeed] = useState(900);
   const logRef = useRef(null);
 
+  const revealHand = () => {
+    if (autoPlay) return;
+    setGame((prev) => revealOwnHand(prev));
+  };
+
   const hit = () => {
     if (autoPlay) return;
     setGame((prev) => playerHit(prev));
@@ -181,11 +200,13 @@ export default function Dogfight21Page() {
     setGame(initGame());
   };
 
-  // Auto-play: hit while below the dealer's own stopping threshold, stand
-  // otherwise, then move on once a round resolves.
+  // Auto-play: reveal the hidden card first (its own tick, so the flip is
+  // still visible), then hit while below the dealer's own stopping
+  // threshold, stand otherwise, then move on once a round resolves.
   const autoStep = useCallback(() => {
     setGame((prev) => {
       if (prev.phase === 'round-over') return nextRound(prev);
+      if (!prev.ownRevealed) return revealOwnHand(prev);
       const sum = sumOf(prev.playerHand);
       if (sum < prev.target - DEALER_STAND_MARGIN) return playerHit(prev);
       return playerStand(prev);
@@ -202,7 +223,7 @@ export default function Dogfight21Page() {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [game.log.length]);
 
-  const { target, playerHand, dealerHand, phase, log, playerWins, dealerWins, pushes } = game;
+  const { target, playerHand, dealerHand, phase, log, playerWins, dealerWins, pushes, ownRevealed } = game;
   const playerSum = sumOf(playerHand);
   const revealed = phase === 'round-over';
   const dealerSum = sumOf(dealerHand);
@@ -252,20 +273,42 @@ export default function Dogfight21Page() {
         <div className="space-y-4">
           <div>
             <div className="text-[10px] uppercase tracking-widest text-white mb-2">
-              Your Hand — {playerSum > target ? <span className="text-red-400">Bust at {playerSum}</span> : `Total ${playerSum}`}
+              Your Hand —{' '}
+              {!ownRevealed && phase === 'player-turn'
+                ? 'Tap your hidden card'
+                : playerSum > target
+                ? <span className="text-red-400">Bust at {playerSum}</span>
+                : `Total ${playerSum}`}
             </div>
             <div className="flex flex-wrap gap-2">
-              {playerHand.map((card, i) => (
-                <div key={i} className="dogfight21-card-wrap">
-                  {PLANE_ART[card.name] && (
-                    <div className="dogfight21-card-art-wrap">
-                      <img src={PLANE_ART[card.name]} alt="" className="dogfight21-card-art" />
-                      <span className="dogfight21-card-rank">{rankLabel(card.value)}</span>
+              {playerHand.map((card, i) => {
+                const hidden = phase === 'player-turn' && i === 1 && !ownRevealed;
+                return (
+                  <div key={i} className="dogfight21-card-wrap">
+                    {hidden ? (
+                      <button
+                        type="button"
+                        onClick={revealHand}
+                        disabled={autoPlay}
+                        aria-label="Reveal your hidden card"
+                        className="dogfight21-card-back dogfight21-card-back--reveal"
+                      >
+                        ?
+                      </button>
+                    ) : (
+                      PLANE_ART[card.name] && (
+                        <div className="dogfight21-card-art-wrap">
+                          <img src={PLANE_ART[card.name]} alt="" className="dogfight21-card-art" />
+                          <span className="dogfight21-card-rank">{rankLabel(card.value)}</span>
+                        </div>
+                      )
+                    )}
+                    <div className="text-[9px] uppercase tracking-widest text-white/70 truncate">
+                      {hidden ? 'Tap to reveal' : card.name}
                     </div>
-                  )}
-                  <div className="text-[9px] uppercase tracking-widest text-white/70 truncate">{card.name}</div>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -298,8 +341,17 @@ export default function Dogfight21Page() {
           </div>
         </div>
 
-        {/* Hit / Stand */}
-        {phase === 'player-turn' && (
+        {/* Reveal, then Hit / Stand */}
+        {phase === 'player-turn' && !ownRevealed && (
+          <button
+            onClick={revealHand}
+            disabled={autoPlay}
+            className="w-full py-2.5 px-5 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-[11px] uppercase tracking-widest rounded font-semibold transition-colors"
+          >
+            Reveal Your Hand
+          </button>
+        )}
+        {phase === 'player-turn' && ownRevealed && (
           <div className="flex gap-3">
             <button
               onClick={hit}
