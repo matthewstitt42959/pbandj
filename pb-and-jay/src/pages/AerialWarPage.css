@@ -8,14 +8,6 @@
   --color-border: #3d3730;
 }
 
-.aerial-war-back-link {
-  text-decoration: none;
-}
-
-.aerial-war-back-link:hover {
-  text-decoration: underline;
-}
-
 .aerial-war-clash {
   animation: aerial-war-clash-in 0.28s ease-out;
 }

@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
 import HubPage from './pages/HubPage';
 import AerialWarPage from './pages/AerialWarPage';
+import Dogfight21Page from './pages/Dogfight21Page';
 import HomePage from './pages/HomePage';
 import GameBoard from './pages/GameBoard';
 import NotFound from './pages/NotFound';
@@ -35,6 +36,7 @@ function AppShell() {
       {/* Hub + other games */}
       <Route path="/" element={<HubPage />} />
       <Route path="/games/aerial-war" element={<AerialWarPage />} />
+      <Route path="/games/dogfight-21" element={<Dogfight21Page />} />
 
       {/* PB & Jay — public routes (homepage lives at /pbj; everything else unchanged) */}
       <Route path="/pbj" element={<HomePage />} />

@@ -1,0 +1,66 @@
+.arcade-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.arcade-menu-toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+
+.arcade-menu-toggle:hover {
+  border-color: #ffc857;
+}
+
+.arcade-menu-toggle span {
+  display: block;
+  width: 16px;
+  height: 2px;
+  background: #ffc857;
+  border-radius: 1px;
+}
+
+.arcade-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  min-width: 11rem;
+  padding: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  background: #17161f;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.arcade-menu-link {
+  display: block;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+
+.arcade-menu-link:hover {
+  background: rgba(255, 200, 87, 0.12);
+  color: #ffc857;
+  text-decoration: none;
+}
+
+.arcade-menu-divider {
+  margin: 0.3rem 0.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}

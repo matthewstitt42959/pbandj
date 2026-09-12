@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import './HubPage.css';
+import ArcadeMenu from '../components/ArcadeMenu';
+import { ARCADE_GAMES } from '../data/arcadeGames';
 
 // In dev, point at a locally-running Skyward Islands instead of prod so you
 // can actually test changes — override with VITE_SKYWARD_ISLANDS_URL in
@@ -22,23 +24,21 @@ const GAMES = [
     external: true,
     badge: 'Under Construction',
   },
-  {
-    title: 'Aerial War',
-    tagline: 'WWI & WWII plane card game — a fast round of War',
-    to: '/games/aerial-war',
-    external: false,
-  },
+  ...ARCADE_GAMES,
 ];
 
 export default function HubPage() {
   return (
     <div className="hub-page">
+      <div className="hub-menu">
+        <ArcadeMenu />
+      </div>
       <header className="hub-hero">
         <h1 className="hub-title">Play by Jay</h1>
         <p className="hub-tagline">A one-person indie arcade — new worlds added as they're built.</p>
         <p className="hub-subtext">
-          PB &amp; Jay and Aerial War are live and ready to play. Skyward Islands is still under
-          construction — jump in anyway and see how it's coming along.
+          PB &amp; Jay and the plane-card arcade are live and ready to play. Skyward Islands is
+          still under construction — jump in anyway and see how it's coming along.
         </p>
       </header>
 
