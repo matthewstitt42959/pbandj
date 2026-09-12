@@ -59,6 +59,7 @@
   width: 100%;
   aspect-ratio: 3 / 4.6;
   margin-bottom: 0.35rem;
+  padding: 0;
   border: 1px solid var(--color-border);
   border-radius: 4px;
   background: repeating-linear-gradient(
@@ -69,8 +70,24 @@
     rgba(0, 0, 0, 0.2) 12px
   );
   color: rgba(212, 175, 55, 0.6);
+  font-family: inherit;
   font-size: 1.5rem;
   font-weight: 700;
+}
+
+/* Modifier for the player's own hidden card, which is a real <button> the
+   player taps to flip — the dealer's hidden card stays a plain, inert div. */
+.dogfight21-card-back--reveal {
+  cursor: pointer;
+}
+
+.dogfight21-card-back--reveal:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: rgba(212, 175, 55, 0.9);
+}
+
+.dogfight21-card-back--reveal:disabled {
+  cursor: not-allowed;
 }
 
 .dogfight21-result {
