@@ -1,0 +1,95 @@
+/* Own dark-green/gold palette so this reads as a distinct table from
+   Aerial War's WWI/WWII amber theme, even though it's the same deck. */
+.dogfight21-page {
+  --color-br-alt: #0d1a12;
+  --color-surface2: #142218;
+  --color-accent: #d4af37;
+  --color-border: #2a3d2f;
+}
+
+.dogfight21-target {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface2);
+  border-radius: 0.5rem;
+}
+
+.dogfight21-card-wrap {
+  width: 6rem;
+}
+
+.dogfight21-card-art-wrap {
+  position: relative;
+  margin-bottom: 0.35rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+}
+
+.dogfight21-card-art {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4.6;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.dogfight21-card-rank {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  min-width: 1.1rem;
+  padding: 0 3px;
+  background: rgba(13, 26, 18, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.dogfight21-card-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 3 / 4.6;
+  margin-bottom: 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.08),
+    rgba(212, 175, 55, 0.08) 6px,
+    rgba(0, 0, 0, 0.2) 6px,
+    rgba(0, 0, 0, 0.2) 12px
+  );
+  color: rgba(212, 175, 55, 0.6);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.dogfight21-result {
+  animation: dogfight21-result-in 0.28s ease-out;
+}
+
+@keyframes dogfight21-result-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dogfight21-result {
+    animation: none;
+  }
+}
