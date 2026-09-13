@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ARCADE_GAMES } from '../data/arcadeGames';
+import { preloadPlaneArt } from '../data/planeDeck';
 import './ArcadeMenu.css';
 
 // Shared nav for the plane-card arcade (Hub + every game under it) — a
@@ -9,6 +10,14 @@ import './ArcadeMenu.css';
 export default function ArcadeMenu() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
+
+  // This menu renders on the Hub and both plane-card games, so mounting it
+  // is a reliable signal the player is in (or about to enter) the arcade —
+  // a natural single place to start warming the deck's images regardless
+  // of which page they arrived on.
+  useEffect(() => {
+    preloadPlaneArt();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
