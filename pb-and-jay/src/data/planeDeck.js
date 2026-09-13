@@ -10,6 +10,7 @@ import fw190 from '../assets/aerial-war/fw-190.webp';
 import fokkerDr1 from '../assets/aerial-war/fokker-dr1.webp';
 import spadXiii from '../assets/aerial-war/spad-xiii.webp';
 import zero from '../assets/aerial-war/zero.webp';
+import p38Lightning from '../assets/aerial-war/p-38-lightning.webp';
 
 // Shared across every plane-card game (Aerial War, Dogfight 21, ...) so the
 // art and rank system only live in one place.
@@ -27,6 +28,7 @@ export const BASE_DECK = [
   { name: 'Spitfire',         value: 11, era: 'WWII' },
   { name: 'P-47 Thunderbolt', value: 12, era: 'WWII' },
   { name: 'P-51 Mustang',     value: 13, era: 'WWII' },
+  { name: 'P-38 Lightning',   value: 14, era: 'WWII' },
 ];
 
 // Card art for every plane in BASE_DECK.
@@ -43,10 +45,11 @@ export const PLANE_ART = {
   'Fokker Dr.I': fokkerDr1,
   'SPAD XIII': spadXiii,
   Zero: zero,
+  'P-38 Lightning': p38Lightning,
 };
 
-// Playing-card style corner rank for a plane's value. This deck runs 2-13
-// (2 through King), so the top card lands on K rather than needing an Ace.
+// Playing-card style corner rank for a plane's value. This deck runs 2-14
+// (2 through Ace) — 13 ranks x 4 copies = 52 cards, same size as a real deck.
 export function rankLabel(value) {
   if (value === 13) return 'K';
   if (value === 12) return 'Q';

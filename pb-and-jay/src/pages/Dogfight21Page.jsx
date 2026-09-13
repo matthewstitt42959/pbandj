@@ -13,10 +13,16 @@ import { PLANE_ART, rankLabel, buildDeck, shuffle } from '../data/planeDeck';
 // face cards lands around 40% player / 51% dealer / 9% push regardless of
 // range, versus a lopsided ~65/31 with their raw plane values (2-13).
 //
-// MIN_TARGET stays at 21 and up (never lower): with face cards capped at
-// 10, the highest possible 2-card hand is 10+10=20, so a target of 21+
-// guarantees the opening deal can never bust before the player gets a
-// single Hit/Stand decision — not just unlikely, structurally impossible.
+// The P-38 Lightning (value 14, "A") is this deck's Ace, and it's genuinely
+// flexible — 11 unless that busts, then 1 — same soft-hand rule as real
+// blackjack. A flat "always 11" isn't good enough here specifically because
+// the target isn't fixed at 21 (it can roll up to 25), so a rigid Ace would
+// overshoot a high target far more often than it would in real blackjack.
+//
+// MIN_TARGET stays at 21 and up (never lower): the best possible 2-card
+// hand is 21 (Ace + a 10-value card), so a target of 21+ guarantees the
+// opening deal can never bust before the player gets a single Hit/Stand
+// decision — not just unlikely, structurally impossible.
 const MIN_TARGET = 21;
 const MAX_TARGET = 25;
 const DEALER_STAND_MARGIN = 4; // dealer (and auto-play) stops hitting within this of target
@@ -26,12 +32,35 @@ function rollTarget() {
   return MIN_TARGET + Math.floor(Math.random() * (MAX_TARGET - MIN_TARGET + 1));
 }
 
-function blackjackValue(card) {
-  return Math.min(card.value, 10);
+function isAce(card) {
+  return card.value === 14;
 }
 
-function sumOf(hand) {
-  return hand.reduce((total, card) => total + blackjackValue(card), 0);
+// Single-card display value (the dealer's shown up-card) — no hand context
+// needed, so an Ace just shows at its usual high value.
+function blackjackValue(card) {
+  return isAce(card) ? 11 : Math.min(card.value, 10);
+}
+
+// Hand total against a specific target: every Ace starts counted as 11,
+// then each is demoted to 1 (one at a time) for as long as the hand is
+// over target and a soft Ace remains to demote.
+function sumOf(hand, target) {
+  let total = 0;
+  let softAces = 0;
+  for (const card of hand) {
+    if (isAce(card)) {
+      total += 11;
+      softAces += 1;
+    } else {
+      total += Math.min(card.value, 10);
+    }
+  }
+  while (total > target && softAces > 0) {
+    total -= 10;
+    softAces -= 1;
+  }
+  return total;
 }
 
 // Draws one card, reshuffling a fresh shoe onto the deck first if it's
@@ -68,7 +97,7 @@ function startRound(state) {
     phase: 'player-turn',
     ownRevealed: false,
   };
-  return sumOf(dealt.playerHand) > dealt.target ? resolveRound(dealt) : dealt;
+  return sumOf(dealt.playerHand, dealt.target) > dealt.target ? resolveRound(dealt) : dealt;
 }
 
 // The player's own second card starts hidden, mirroring the dealer's hole
@@ -103,21 +132,21 @@ function nextRound(state) {
 // the same way as one that busted from a Hit.
 function resolveRound(state) {
   const { target, playerHand } = state;
-  const playerSum = sumOf(playerHand);
+  const playerSum = sumOf(playerHand, target);
   const playerBusted = playerSum > target;
   let deck = state.deck;
   let dealerHand = state.dealerHand;
 
   if (!playerBusted) {
-    let dealerSum = sumOf(dealerHand);
+    let dealerSum = sumOf(dealerHand, target);
     while (dealerSum < target - DEALER_STAND_MARGIN) {
       const r = draw(deck);
       deck = r.deck;
       dealerHand = [...dealerHand, r.card];
-      dealerSum = sumOf(dealerHand);
+      dealerSum = sumOf(dealerHand, target);
     }
   }
-  const dealerSum = sumOf(dealerHand);
+  const dealerSum = sumOf(dealerHand, target);
 
   let winner;
   let msg;
@@ -159,7 +188,7 @@ function playerHit(state) {
   const { card, deck } = draw(state.deck);
   const playerHand = [...state.playerHand, card];
   const next = { ...state, deck, playerHand };
-  return sumOf(playerHand) > state.target ? resolveRound(next) : next;
+  return sumOf(playerHand, state.target) > state.target ? resolveRound(next) : next;
 }
 
 function playerStand(state) {
@@ -207,7 +236,7 @@ export default function Dogfight21Page() {
     setGame((prev) => {
       if (prev.phase === 'round-over') return nextRound(prev);
       if (!prev.ownRevealed) return revealOwnHand(prev);
-      const sum = sumOf(prev.playerHand);
+      const sum = sumOf(prev.playerHand, prev.target);
       if (sum < prev.target - DEALER_STAND_MARGIN) return playerHit(prev);
       return playerStand(prev);
     });
@@ -224,9 +253,9 @@ export default function Dogfight21Page() {
   }, [game.log.length]);
 
   const { target, playerHand, dealerHand, phase, log, playerWins, dealerWins, pushes, ownRevealed } = game;
-  const playerSum = sumOf(playerHand);
+  const playerSum = sumOf(playerHand, target);
   const revealed = phase === 'round-over';
-  const dealerSum = sumOf(dealerHand);
+  const dealerSum = sumOf(dealerHand, target);
   const decided = playerWins + dealerWins;
   const playerPct = decided > 0 ? (playerWins / decided) * 100 : 50;
   const lastEntry = log[log.length - 1];
