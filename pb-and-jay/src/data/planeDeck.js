@@ -74,3 +74,18 @@ export function shuffle(arr) {
   }
   return a;
 }
+
+// Warms the browser's cache for every plane image up front, so cards don't
+// visibly pop in one at a time as they're dealt during a round — matters
+// most on a slow connection, where waiting until a card is actually drawn
+// to start fetching it is the difference between instant and a stall.
+// Safe to call from multiple pages; only fires the network requests once.
+let artPreloaded = false;
+export function preloadPlaneArt() {
+  if (artPreloaded) return;
+  artPreloaded = true;
+  Object.values(PLANE_ART).forEach((src) => {
+    const img = new Image();
+    img.src = src;
+  });
+}

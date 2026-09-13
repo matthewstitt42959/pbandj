@@ -1820,8 +1820,22 @@ app.get('/api/health', async (req, res) => {
 });
 
 if (isProduction) {
-  app.use(express.static(distPath));
+  // Vite content-hashes every built asset filename (JS, CSS, images) — a
+  // changed file always gets a new URL, so it's safe to tell browsers to
+  // cache them forever instead of re-validating on every single visit.
+  // index.html itself is the one file that must never be cached, since
+  // it's what points at the current hashed asset names after each deploy.
+  app.use(express.static(distPath, {
+    maxAge: '1y',
+    immutable: true,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    },
+  }));
   app.get('*', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
