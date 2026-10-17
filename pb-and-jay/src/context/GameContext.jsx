@@ -626,6 +626,33 @@ export function GameProvider({ children }) {
     if (res.ok) dispatch({ type: 'REMOVE_POST', postId });
   }, [state.campaign?.id]);
 
+  // DM-only combat tracking: push an HP/condition change for any party member straight
+  // to the DB (players can only edit their own sheet), then reflect it locally by index.
+  const updateCharacterStatus = useCallback(async (dbId, updates) => {
+    const index = state.characters.findIndex(c => c.dbId === dbId);
+    if (index === -1) return;
+    const tok = localStorage.getItem('pb-and-jay-token');
+    const body = {};
+    if (updates.hp != null) body.hp = updates.hp;
+    if (updates.conditions != null) body.conditions = updates.conditions;
+    const res = await fetch(`/api/dm/characters/${dbId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      dispatch({
+        type: 'UPDATE_CHARACTER',
+        index,
+        updates: {
+          hp: { current: updated.hp, max: updated.maxHp },
+          conditions: Array.isArray(updated.conditions) ? updated.conditions : [],
+        },
+      });
+    }
+  }, [state.characters]);
+
   const submitDMPost = useCallback(
     (content) => {
       if (!state.campaign || !content.trim()) return;
@@ -738,6 +765,7 @@ export function GameProvider({ children }) {
     submitDMPost,
     runAiRound,
     updateCharacter,
+    updateCharacterStatus,
     setPlayerCharacter,
     levelUpParty,
     markSessionComplete,

@@ -89,6 +89,7 @@
   display: flex;
   gap: 0.35rem;
   margin-bottom: 0.75rem;
+  flex-shrink: 0;
 }
 
 /* ── Scene starters ── */
@@ -195,6 +196,7 @@
   flex-direction: column;
   gap: 0.4rem;
   margin-top: 0.75rem;
+  flex-shrink: 0;
 }
 
 .dm-response-hint {
@@ -309,6 +311,36 @@
   color: #a78bfa;
   background: rgba(167, 139, 250, 0.1);
   text-decoration: none;
+}
+
+.character-hp {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.2rem 0.75rem 0.4rem;
+  font-size: 0.72rem;
+  color: #9aa0b8;
+}
+
+.character-hp__val {
+  font-weight: 600;
+}
+
+.character-hp__adjust {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.character-hp__input {
+  width: 52px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(120, 192, 224, 0.2);
+  border-radius: 4px;
+  color: #e8e6f0;
+  padding: 0.15rem 0.3rem;
+  font-size: 0.72rem;
 }
 
 .character-btn__top {
@@ -629,6 +661,12 @@
 @keyframes pulse {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
+}
+
+/* Composer dock — wraps the composer + Get DM Response row so they can be
+   pinned together as a unit on mobile (see the @media block below). */
+.composer-dock {
+  flex-shrink: 0;
 }
 
 /* Post Composer */
@@ -1017,23 +1055,39 @@
     min-height: 0;
   }
 
-  /* Encounter log fills remaining height on mobile */
+  /* Encounter log scrolls with the page on mobile (like the Stats tab's .action-panel
+     below) instead of being clipped to a fixed height. A fixed-height + internal-scroll
+     box here kept fighting itself: shrinking the post list to reach the composer, or
+     letting it grow and losing the composer off the bottom with no way to reach it —
+     overscroll-behavior:contain on the post list (needed to stop bounce-chaining) blocks
+     a touch gesture from ever handing off to a parent scroll once the list hits its own
+     bounds, and the list covers nearly the whole screen. See .composer-dock below for how
+     the composer/Get DM Response row stay reachable regardless. */
   .encounter-log {
     display: flex;
     flex-direction: column;
-    height: calc(100dvh - 52px - 56px - 110px); /* navbar + tab bar + gameboard header/banner */
     border-radius: 0;
     border-left: none;
     border-right: none;
   }
 
   .log-window {
-    flex: 1;
-    overflow-y: auto; /* sole scroll owner — .encounter-log no longer scrolls itself, avoids nested-scroll rubber-banding */
+    flex: none;
+    overflow-y: auto;
     overscroll-behavior-y: contain;
-    max-height: none;
-    /* guarantee posts are always readable even when DM tools are expanded */
-    min-height: clamp(200px, 45dvh, 480px);
+    max-height: 55vh;
+    min-height: 240px;
+  }
+
+  /* Pinned to the bottom of the viewport (just above the fixed mobile tab bar) so the
+     composer and Get DM Response button are always visible without needing to scroll
+     to them at all. */
+  .composer-dock {
+    position: sticky;
+    bottom: 56px;
+    background: #252535;
+    padding-bottom: 0.5rem;
+    z-index: 5;
   }
 
   /* Character panel full width on mobile */

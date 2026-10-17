@@ -23,6 +23,48 @@ const TABS = [
   { id: 'world', label: 'World' },
 ];
 
+// DM combat tracking: HP is visible to everyone, but only a DM can push a change —
+// players still edit their own HP from their Character Sheet as before.
+function PartyMemberHp({ char, isDm, onApplyDelta }) {
+  const [delta, setDelta] = useState('');
+  const [applying, setApplying] = useState(false);
+  const hp = char.hp ?? { current: 0, max: 0 };
+
+  const apply = async () => {
+    const n = parseInt(delta, 10);
+    if (!n) { setDelta(''); return; }
+    setApplying(true);
+    try {
+      await onApplyDelta(char.dbId, hp.current + n);
+      setDelta('');
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  return (
+    <div className="character-hp">
+      <span className="character-hp__val">{hp.current}/{hp.max} HP</span>
+      {isDm && char.dbId && (
+        <span className="character-hp__adjust">
+          <input
+            type="number"
+            className="character-hp__input"
+            placeholder="±HP"
+            value={delta}
+            onChange={e => setDelta(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && apply()}
+            disabled={applying}
+          />
+          <button type="button" className="btn btn--ghost btn--xs" onClick={apply} disabled={applying || !delta}>
+            {applying ? '…' : 'Apply'}
+          </button>
+        </span>
+      )}
+    </div>
+  );
+}
+
 const GameBoard = () => {
   const navigate = useNavigate();
   const {
@@ -50,6 +92,7 @@ const GameBoard = () => {
     loadCampaignCharacters,
     editPost,
     deletePost,
+    updateCharacterStatus,
   } = useGame();
 
   const { user, authFetch } = useAuth();
@@ -95,7 +138,6 @@ const GameBoard = () => {
   const [aiAuthenticated, setAiAuthenticated] = useState(false);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [mobileTab, setMobileTab] = useState('log');
-  const [logScrollKey, setLogScrollKey] = useState(0);
   const [diceInsert, setDiceInsert] = useState(null);
   const [assistInsert, setAssistInsert] = useState(null);
   const [dmDiceResult, setDmDiceResult] = useState(null);
@@ -103,9 +145,14 @@ const GameBoard = () => {
   const [dmDiceMod, setDmDiceMod] = useState(0);
   const [showDmDice, setShowDmDice] = useState(false);
 
+  // Switching to the Log tab used to force-scroll straight to the newest post every time,
+  // wiping out any manual scroll-up — annoying on its own, and actively broken now that
+  // rolling dice means a trip to the Party tab and back. The log never actually unmounts
+  // between tabs (mobile-hidden is CSS-only), so its scroll position is already preserved
+  // naturally, and new posts arriving still auto-scroll (respecting a manual scroll-up)
+  // via EncounterLog's own effect — no extra reset needed here.
   const handleMobileTab = (tab) => {
     setMobileTab(tab);
-    if (tab === 'log') setLogScrollKey((k) => k + 1);
   };
 
   const refreshAiStatus = () => {
@@ -147,7 +194,7 @@ const GameBoard = () => {
           <span>You're watching this campaign. Contact the DM to be assigned a character and join.</span>
         </div>
         <div className="spectator-log-wrap">
-          <EncounterLog posts={posts} isLoading={false} scrollKey={0} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
+          <EncounterLog posts={posts} isLoading={false} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
         </div>
       </div>
     );
@@ -275,6 +322,11 @@ const GameBoard = () => {
                   title={`Edit ${char.name}`}
                 >✎</Link>
               )}
+              <PartyMemberHp
+                char={char}
+                isDm={isDm}
+                onApplyDelta={(dbId, newHp) => updateCharacterStatus(dbId, { hp: newHp })}
+              />
             </div>
           ))}
 
@@ -283,7 +335,7 @@ const GameBoard = () => {
 
         <section className={`encounter-log${mobileTab !== 'log' ? ' mobile-hidden' : ''}`}>
           <h3>Encounter Log</h3>
-          <EncounterLog posts={posts} isLoading={isLoadingDM} postsReady={postsReady} postsFetchError={postsFetchError} scrollKey={logScrollKey} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
+          <EncounterLog posts={posts} isLoading={isLoadingDM} postsReady={postsReady} postsFetchError={postsFetchError} isDm={isDm} onEdit={editPost} onDelete={deletePost} />
 
           {isDm && myCharacter && (
             <div className="post-as-toggle">
@@ -304,50 +356,8 @@ const GameBoard = () => {
             </div>
           )}
 
-          {(myCharacter || isDm) && (
-            <PostComposer
-              authorName={postAs === 'dm' ? 'DM' : myCharacter?.name}
-              appendText={postAs === 'character'
-                ? diceInsert
-                : postAs === 'dm'
-                  ? (!diceInsert ? assistInsert : !assistInsert ? diceInsert : diceInsert.ts > assistInsert.ts ? diceInsert : assistInsert)
-                  : null}
-              onSubmit={handlePost}
-              disabled={isLoadingDM}
-              submitLabel={postAs === 'dm' ? 'Post DM Narration' : 'Post Action'}
-              placeholder={
-                postAs === 'dm'
-                  ? 'Write what happens next — scene description, NPC dialogue, consequences...'
-                  : 'Describe your action... (tip: type /roll 1d20+3 for dice rolls)'
-              }
-            />
-          )}
-
-          {isAiCampaign && playMode === 'ai' && (
-            <div className="dm-response-row">
-              <button
-                className="btn btn--primary"
-                onClick={aiLocked && !aiAuthenticated ? () => setShowUnlockModal(true) : runAiRound}
-                disabled={isLoadingDM || (!allHumansPosted && aiAuthenticated)}
-                title={
-                  aiLocked && !aiAuthenticated ? 'Unlock AI DM first'
-                  : !allHumansPosted ? 'Post your action first'
-                  : 'Run AI companions then get DM narration'
-                }
-              >
-                {isLoadingDM ? 'DM is responding...'
-                  : aiLocked && !aiAuthenticated ? '🔒 Unlock AI DM'
-                  : 'Get DM Response'}
-              </button>
-              {!allHumansPosted && aiAuthenticated && !isLoadingDM && (
-                <span className="dm-response-hint">Post your action first</span>
-              )}
-              {dmError && (
-                <p className="dm-response-error">{dmError}</p>
-              )}
-            </div>
-          )}
-
+          {/* DM tools render above the composer dock (not after it) so they scroll normally
+              in the page flow instead of being covered by the sticky composer on mobile. */}
           {isDm && postAs === 'dm' && (
             <>
               {isAiCampaign && playMode === 'ai' && (
@@ -435,6 +445,55 @@ const GameBoard = () => {
               </div>
             </>
           )}
+
+          {/* Composer + Get DM Response are docked together so, on mobile, they can stick to
+              the bottom of the viewport (see .composer-dock) instead of relying on the post
+              list scrolling out of the way to reveal them. */}
+          <div className="composer-dock">
+            {(myCharacter || isDm) && (
+              <PostComposer
+                authorName={postAs === 'dm' ? 'DM' : myCharacter?.name}
+                appendText={postAs === 'character'
+                  ? diceInsert
+                  : postAs === 'dm'
+                    ? (!diceInsert ? assistInsert : !assistInsert ? diceInsert : diceInsert.ts > assistInsert.ts ? diceInsert : assistInsert)
+                    : null}
+                onSubmit={handlePost}
+                disabled={isLoadingDM}
+                submitLabel={postAs === 'dm' ? 'Post DM Narration' : 'Post Action'}
+                placeholder={
+                  postAs === 'dm'
+                    ? 'Write what happens next — scene description, NPC dialogue, consequences...'
+                    : 'Describe your action... (tip: type /roll 1d20+3 for dice rolls)'
+                }
+              />
+            )}
+
+            {isAiCampaign && playMode === 'ai' && (
+              <div className="dm-response-row">
+                <button
+                  className="btn btn--primary"
+                  onClick={aiLocked && !aiAuthenticated ? () => setShowUnlockModal(true) : runAiRound}
+                  disabled={isLoadingDM || (!allHumansPosted && aiAuthenticated)}
+                  title={
+                    aiLocked && !aiAuthenticated ? 'Unlock AI DM first'
+                    : !allHumansPosted ? 'Post your action first'
+                    : 'Run AI companions then get DM narration'
+                  }
+                >
+                  {isLoadingDM ? 'DM is responding...'
+                    : aiLocked && !aiAuthenticated ? '🔒 Unlock AI DM'
+                    : 'Get DM Response'}
+                </button>
+                {!allHumansPosted && aiAuthenticated && !isLoadingDM && (
+                  <span className="dm-response-hint">Post your action first</span>
+                )}
+                {dmError && (
+                  <p className="dm-response-error">{dmError}</p>
+                )}
+              </div>
+            )}
+          </div>
         </section>
 
         <aside className={`action-panel${mobileTab !== 'stats' ? ' mobile-hidden' : ''}`}>

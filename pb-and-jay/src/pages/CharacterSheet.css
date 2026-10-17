@@ -509,6 +509,21 @@
   margin-bottom: 1rem;
 }
 
+.cs-caster-stats {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.cs-caster-stats .cs-stat-box {
+  min-width: 88px;
+}
+
+.cs-caster-stats .cs-stat-box__val {
+  font-size: 1.2rem;
+}
+
 .cs-caster-summary__line {
   color: #e8e6f0;
   font-size: 0.88rem;

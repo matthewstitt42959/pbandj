@@ -316,6 +316,15 @@
   border-color: rgba(255, 138, 128, 0.4) !important;
 }
 
+.dash-delete-btn {
+  margin-left: auto;
+}
+
+.dash-delete-btn:hover {
+  color: #ff8a80 !important;
+  border-color: rgba(255, 138, 128, 0.4) !important;
+}
+
 /* ── Limit message ── */
 
 .dash-limit-msg {

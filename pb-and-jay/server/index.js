@@ -510,6 +510,43 @@ app.post('/api/characters/:id/retire', requireAuth, async (req, res) => {
   }
 });
 
+// GM-only: bring a retired character back to active status. Players can retire
+// their own characters freely (see /retire above), but reversing that is a
+// GM call, so this is scoped by role rather than by ownership.
+app.post('/api/characters/:id/unretire', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  try {
+    const existing = await prisma.character.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Character not found' });
+    const updated = await prisma.character.update({
+      where: { id: req.params.id },
+      data: { isRetired: false, retiredAt: null },
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error('POST /api/characters/:id/unretire error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete a character outright. Owners can delete their own; SUPER_DM can
+// delete anyone's (cleaning up test/orphaned characters from the roster).
+app.delete('/api/characters/:id', requireAuth, async (req, res) => {
+  try {
+    const existing = await prisma.character.findUnique({ where: { id: req.params.id } });
+    if (!existing) return res.status(404).json({ error: 'Character not found' });
+    const isOwner = existing.userId === req.authUser.id;
+    if (!isOwner && req.authUser.role !== 'SUPER_DM') {
+      return res.status(403).json({ error: 'Not authorized to delete this character' });
+    }
+    await prisma.character.delete({ where: { id: req.params.id } });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('DELETE /api/characters/:id error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/characters/:id/assign', requireAuth, async (req, res) => {
   const { campaignId } = req.body;
   try {
@@ -1216,6 +1253,29 @@ app.post('/api/dm/characters/:id/unassign', requireAuth, async (req, res) => {
   }
 });
 
+// DM updates HP/conditions on any character — combat tracking, since players can
+// only edit their own sheet (PATCH /api/characters/:id below is owner-scoped).
+app.patch('/api/dm/characters/:id/status', requireAuth, async (req, res) => {
+  if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
+  const { hp, conditions } = req.body;
+  try {
+    const character = await prisma.character.findUnique({ where: { id: req.params.id } });
+    if (!character) return res.status(404).json({ error: 'Character not found' });
+    const data = {};
+    if (hp != null) data.hp = Math.max(0, Math.min(character.maxHp, hp));
+    if (conditions != null) data.conditions = conditions;
+    const updated = await prisma.character.update({
+      where: { id: req.params.id },
+      data,
+      select: { id: true, name: true, hp: true, maxHp: true, conditions: true },
+    });
+    res.json(updated);
+  } catch (err) {
+    console.error('PATCH /api/dm/characters/:id/status error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // AI generates a party of characters and assigns them to a campaign
 app.post('/api/campaigns/:id/generate-characters', requireAuth, async (req, res) => {
   if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
@@ -1760,8 +1820,22 @@ app.get('/api/health', async (req, res) => {
 });
 
 if (isProduction) {
-  app.use(express.static(distPath));
+  // Vite content-hashes every built asset filename (JS, CSS, images) — a
+  // changed file always gets a new URL, so it's safe to tell browsers to
+  // cache them forever instead of re-validating on every single visit.
+  // index.html itself is the one file that must never be cached, since
+  // it's what points at the current hashed asset names after each deploy.
+  app.use(express.static(distPath, {
+    maxAge: '1y',
+    immutable: true,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    },
+  }));
   app.get('*', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }

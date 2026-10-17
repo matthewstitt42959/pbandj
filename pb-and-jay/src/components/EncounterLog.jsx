@@ -105,7 +105,7 @@ function PostEntry({ post, canEdit, onEdit, onDelete }) {
   );
 }
 
-const EncounterLog = ({ posts, isLoading, postsReady, postsFetchError, scrollKey, isDm, onEdit, onDelete }) => {
+const EncounterLog = ({ posts, isLoading, postsReady, postsFetchError, isDm, onEdit, onDelete }) => {
   const bottomRef = useRef(null);
   const logRef = useRef(null);
   const userScrolledUp = useRef(false);
@@ -113,7 +113,11 @@ const EncounterLog = ({ posts, isLoading, postsReady, postsFetchError, scrollKey
   const handleScroll = () => {
     const el = logRef.current;
     if (!el) return;
-    userScrolledUp.current = el.scrollHeight - el.scrollTop - el.clientHeight > 80;
+    // A small nudge to reread a line or two shouldn't count as "still at the bottom" — an AI
+    // round can add several posts in quick succession (party actions, then DM narration), each
+    // re-triggering the scrollToBottom effect below. An 80px allowance let those re-triggers
+    // yank the view back down out from under a manual scroll that hadn't gone far enough yet.
+    userScrolledUp.current = el.scrollHeight - el.scrollTop - el.clientHeight > 24;
   };
 
   const scrollToBottom = (smooth = true) => {
@@ -122,11 +126,10 @@ const EncounterLog = ({ posts, isLoading, postsReady, postsFetchError, scrollKey
     el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
   };
 
-  useEffect(() => {
-    userScrolledUp.current = false;
-    scrollToBottom(true);
-  }, [scrollKey]);
-
+  // Covers both the initial mount (scroll to the newest post once posts load) and any
+  // later arrival — a manual scroll-up is respected either way. Nothing else should force
+  // a scroll reset: the log stays mounted across mobile tab switches (mobile-hidden is
+  // CSS-only), so a reading position set before switching away is preserved automatically.
   useEffect(() => {
     if (!userScrolledUp.current) {
       scrollToBottom(true);

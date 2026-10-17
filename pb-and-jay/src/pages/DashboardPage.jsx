@@ -7,7 +7,7 @@ import './LoginPage.css';
 
 const MAX_ACTIVE = 2;
 
-function CharacterCard({ character, onRetire, onAssign, onUnassign, retiring, assigning }) {
+function CharacterCard({ character, onRetire, onUnretire, onDelete, onAssign, onUnassign, retiring, unretiring, deleting, assigning, canUnretire }) {
   const scores = character.abilityScores ?? {};
   const mod = (s) => { const m = Math.floor((s - 10) / 2); return (m >= 0 ? '+' : '') + m; };
   const inGame = !!character.campaignId;
@@ -50,13 +50,13 @@ function CharacterCard({ character, onRetire, onAssign, onUnassign, retiring, as
         <p className="dash-char-card__backstory">"{character.backstory}"</p>
       )}
 
-      {!isRetired && (
-        <div className="dash-char-card__actions">
-          <Link to={`/character/${character.id}`} className="btn btn--ghost btn--sm">
-            View Sheet
-          </Link>
+      <div className="dash-char-card__actions">
+        <Link to={`/character/${character.id}`} className="btn btn--ghost btn--sm">
+          View Sheet
+        </Link>
 
-          {inGame ? (
+        {!isRetired && (
+          inGame ? (
             <button
               className="btn btn--ghost btn--sm"
               onClick={() => onUnassign(character.id)}
@@ -72,8 +72,10 @@ function CharacterCard({ character, onRetire, onAssign, onUnassign, retiring, as
             >
               {assigning === character.id ? '...' : 'Enter Game'}
             </button>
-          )}
+          )
+        )}
 
+        {!isRetired && (
           <button
             className="btn btn--ghost btn--sm dash-retire-btn"
             onClick={() => onRetire(character.id)}
@@ -81,8 +83,26 @@ function CharacterCard({ character, onRetire, onAssign, onUnassign, retiring, as
           >
             {retiring === character.id ? '...' : 'Retire'}
           </button>
-        </div>
-      )}
+        )}
+
+        {isRetired && canUnretire && (
+          <button
+            className="btn btn--ghost btn--sm"
+            onClick={() => onUnretire(character.id)}
+            disabled={unretiring === character.id}
+          >
+            {unretiring === character.id ? '...' : 'Unretire'}
+          </button>
+        )}
+
+        <button
+          className="btn btn--ghost btn--sm dash-delete-btn"
+          onClick={() => onDelete(character.id)}
+          disabled={deleting === character.id}
+        >
+          {deleting === character.id ? '...' : 'Delete'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -176,9 +196,13 @@ const DashboardPage = () => {
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [retiring, setRetiring] = useState(null);
+  const [unretiring, setUnretiring] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const [assigning, setAssigning] = useState(null);
   const [showRetired, setShowRetired] = useState(false);
   const [savingEmailPref, setSavingEmailPref] = useState(false);
+
+  const canUnretire = user?.role === 'DM' || user?.role === 'SUPER_DM';
 
   const handleToggleEmailUpdates = async (e) => {
     const emailUpdates = e.target.checked;
@@ -205,6 +229,28 @@ const DashboardPage = () => {
       setCharacters(prev => prev.map(c => c.id === id ? { ...c, isRetired: true, campaignId: null } : c));
     } finally {
       setRetiring(null);
+    }
+  };
+
+  const handleUnretire = async (id) => {
+    setUnretiring(id);
+    try {
+      await authFetch(`/api/characters/${id}/unretire`, { method: 'POST' });
+      setCharacters(prev => prev.map(c => c.id === id ? { ...c, isRetired: false } : c));
+    } finally {
+      setUnretiring(null);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const target = characters.find(c => c.id === id);
+    if (!window.confirm(`Permanently delete ${target?.name ?? 'this character'}? This cannot be undone.`)) return;
+    setDeleting(id);
+    try {
+      await authFetch(`/api/characters/${id}`, { method: 'DELETE' });
+      setCharacters(prev => prev.filter(c => c.id !== id));
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -279,10 +325,15 @@ const DashboardPage = () => {
               <CharacterCard
                 key={c.id} character={c}
                 onRetire={handleRetire}
+                onUnretire={handleUnretire}
+                onDelete={handleDelete}
                 onAssign={handleAssign}
                 onUnassign={handleUnassign}
                 retiring={retiring}
+                unretiring={unretiring}
+                deleting={deleting}
                 assigning={assigning}
+                canUnretire={canUnretire}
               />
             ))}
           </div>

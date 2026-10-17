@@ -1,14 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
   const { campaign } = useGame();
-  const { user } = useAuth();
+  const { user, authFetch } = useAuth();
+  const [characters, setCharacters] = useState(user?.characters ?? []);
+  const [unretiring, setUnretiring] = useState(null);
+
+  useEffect(() => {
+    setCharacters(user?.characters ?? []);
+  }, [user]);
 
   const isDm = user?.role === 'DM' || user?.role === 'SUPER_DM';
-  const activeChars = user?.characters?.filter(c => c.status !== 'RETIRED') ?? [];
+  const activeChars = characters.filter(c => !c.isRetired);
+
+  const handleUnretire = async (id) => {
+    setUnretiring(id);
+    try {
+      await authFetch(`/api/characters/${id}/unretire`, { method: 'POST' });
+      setCharacters(prev => prev.map(c => c.id === id ? { ...c, isRetired: false } : c));
+    } finally {
+      setUnretiring(null);
+    }
+  };
 
   if (!user) {
     return (
@@ -76,22 +92,35 @@ const HomePage = () => {
 
         <section className="homepage__card">
           <h2>Your Characters</h2>
-          {activeChars.length === 0 ? (
+          {characters.length === 0 ? (
             <p className="homepage__note">You don't have a character yet.</p>
           ) : (
             <div className="homepage__char-list">
-              {activeChars.map(c => (
-                <div key={c.id} className="homepage__char-chip">
-                  <span className="homepage__char-name">{c.name}</span>
+              {characters.map(c => (
+                <div key={c.id} className={`homepage__char-chip${c.isRetired ? ' homepage__char-chip--retired' : ''}`}>
+                  <span className="homepage__char-name">
+                    {c.name}
+                    {c.isRetired && <span className="homepage__char-badge">Retired</span>}
+                  </span>
                   <span className="homepage__char-class">
                     {[c.race, c.class].filter(Boolean).join(' ')} — Level {c.level}
                   </span>
+                  {c.isRetired && isDm && (
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--xs homepage__char-unretire"
+                      onClick={() => handleUnretire(c.id)}
+                      disabled={unretiring === c.id}
+                    >
+                      {unretiring === c.id ? '…' : 'Unretire'}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           )}
           <Link
-            to="/character/create"
+            to={activeChars.length >= 2 ? '/dashboard' : '/character/create'}
             className="btn btn--ghost btn--sm"
             style={{ marginTop: '1rem', display: 'inline-flex' }}
           >

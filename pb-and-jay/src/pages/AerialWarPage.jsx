@@ -1,52 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import './AerialWarPage.css';
-
-// Simple dart-shaped plane silhouette — not meant to be an accurate WWI/WWII
-// aircraft, just enough visual flavor to sell "one side vs. the other."
-function PlaneIcon({ color, facing = 'right' }) {
-  const points = facing === 'right' ? '98,15 6,2 34,15 6,28' : '2,15 94,2 66,15 94,28';
-  return (
-    <svg viewBox="0 0 100 30" width="72" height="22" aria-hidden="true">
-      <polygon points={points} fill={color} />
-    </svg>
-  );
-}
+import ArcadeMenu from '../components/ArcadeMenu';
+import { BASE_DECK, PLANE_ART, rankLabel, valueOf, buildDeck, shuffle } from '../data/planeDeck';
 
 // Ported from broken-archive's admin lab (src/app/admin/war-game/page.tsx),
 // stripped of Next.js "use client" + TypeScript types. Game logic unchanged.
-
-// ── Data ─────────────────────────────────────────────────────────────────────
-
-const BASE_DECK = [
-  { name: 'Nieuport 17',      value:  2, era: 'WWI'  },
-  { name: 'Albatros D.III',   value:  3, era: 'WWI'  },
-  { name: 'Sopwith Camel',    value:  4, era: 'WWI'  },
-  { name: 'Fokker Dr.I',      value:  5, era: 'WWI'  },
-  { name: 'SPAD XIII',        value:  6, era: 'WWI'  },
-  { name: 'Hurricane',        value:  7, era: 'WWII' },
-  { name: 'Zero',             value:  8, era: 'WWII' },
-  { name: 'Bf-109',           value:  9, era: 'WWII' },
-  { name: 'Fw 190',           value: 10, era: 'WWII' },
-  { name: 'Spitfire',         value: 11, era: 'WWII' },
-  { name: 'P-47 Thunderbolt', value: 12, era: 'WWII' },
-  { name: 'P-51 Mustang',     value: 13, era: 'WWII' },
-];
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function buildDeck() {
-  return [...BASE_DECK, ...BASE_DECK, ...BASE_DECK, ...BASE_DECK];
-}
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
 
 // ── War resolution (mutates arrays in-place) ──────────────────────────────────
 
@@ -104,19 +62,36 @@ function initGame() {
 // forces a war rather than conceding if nothing beats it outright, and only
 // sacrifices its weakest card as a last resort — conserving strong cards for
 // later rounds instead of burning them on a fight it was already winning.
+//
+// OVERKILL_CHANCE adds a human-like slip on top of that: instead of always
+// grabbing the cheapest card that wins, it occasionally reaches for a
+// stronger one than it needed to. The round's outcome never changes — it
+// only ever picks among cards that already win — so it's not a mistake a
+// player can spot round-to-round, just a slight, believable inefficiency in
+// how the opponent spends its strong cards over a full game.
+const OVERKILL_CHANCE = 0.15;
+
 function chooseP2Response(hand, p1Card, handSize) {
   let weakestIdx = 0;
   let cheapestWinIdx = -1;
   let cheapestWinValue = Infinity;
   let tieIdx = -1;
+  const winningIndices = [];
 
   for (let i = 0; i < handSize; i++) {
     if (hand[i].value < hand[weakestIdx].value) weakestIdx = i;
-    if (hand[i].value > p1Card.value && hand[i].value < cheapestWinValue) {
-      cheapestWinValue = hand[i].value;
-      cheapestWinIdx = i;
+    if (hand[i].value > p1Card.value) {
+      winningIndices.push(i);
+      if (hand[i].value < cheapestWinValue) {
+        cheapestWinValue = hand[i].value;
+        cheapestWinIdx = i;
+      }
     }
     if (hand[i].value === p1Card.value) tieIdx = i;
+  }
+
+  if (winningIndices.length > 1 && Math.random() < OVERKILL_CHANCE) {
+    return winningIndices[Math.floor(Math.random() * winningIndices.length)];
   }
 
   if (cheapestWinIdx !== -1) return cheapestWinIdx;
@@ -229,6 +204,13 @@ export default function AerialWarPage() {
   const p2Hand = p2.slice(0, Math.min(3, p2.length));
   const lastEntry = log[log.length - 1];
 
+  // Squadron header mirrors whatever was last played, so it starts on the
+  // deck's default matchup and then tracks the "Last round result" box below.
+  const squadronP1Name = lastEntry ? lastEntry.p1Name : 'P-51 Mustang';
+  const squadronP2Name = lastEntry ? lastEntry.p2Name : 'Bf-109';
+  const squadronP1Val = lastEntry ? lastEntry.p1Val : valueOf('P-51 Mustang');
+  const squadronP2Val = lastEntry ? lastEntry.p2Val : valueOf('Bf-109');
+
   const speedLabel = speed <= 350 ? 'Fast' : speed <= 900 ? 'Normal' : 'Slow';
 
   return (
@@ -236,17 +218,15 @@ export default function AerialWarPage() {
       <div className="max-w-2xl mx-auto space-y-5">
 
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold tracking-widest uppercase text-amber-400">Aerial War</h1>
             <p className="text-xs text-white uppercase tracking-widest mt-0.5">
               WWI &amp; WWII Plane Card Game
               {round > 0 && <span className="ml-3 text-white">Round {round}</span>}
             </p>
           </div>
-          <Link to="/" className="aerial-war-back-link text-xs uppercase tracking-widest text-amber-400">
-            ← Hub
-          </Link>
+          <ArcadeMenu />
         </div>
 
         {/* Game over */}
@@ -274,11 +254,17 @@ export default function AerialWarPage() {
           </div>
         </div>
 
-        {/* Squadrons */}
+        {/* Squadrons — tracks whichever cards were last played */}
         <div className="flex items-center justify-between px-1">
-          <PlaneIcon color="#f59e0b" facing="right" />
+          <div className="aerial-war-squadron-art-wrap">
+            <img src={PLANE_ART[squadronP1Name]} alt={squadronP1Name} className="aerial-war-squadron-art" />
+            <span className="aerial-war-card-rank">{rankLabel(squadronP1Val)}</span>
+          </div>
           <span className="text-[9px] uppercase tracking-widest text-white/40">vs</span>
-          <PlaneIcon color="#e5e5e5" facing="left" />
+          <div className="aerial-war-squadron-art-wrap">
+            <img src={PLANE_ART[squadronP2Name]} alt={squadronP2Name} className="aerial-war-squadron-art" />
+            <span className="aerial-war-card-rank">{rankLabel(squadronP2Val)}</span>
+          </div>
         </div>
 
         {/* Early-game tip — the opponent plays tactically, not randomly, and
@@ -310,6 +296,12 @@ export default function AerialWarPage() {
                         : 'border-[var(--color-border)] bg-[var(--color-surface2)] hover:border-amber-500 hover:bg-[var(--color-surface2)] active:scale-95 cursor-pointer'
                     }`}
                   >
+                    {PLANE_ART[card.name] && (
+                      <div className="aerial-war-card-art-wrap">
+                        <img src={PLANE_ART[card.name]} alt="" className="aerial-war-card-art" />
+                        <span className="aerial-war-card-rank">{rankLabel(card.value)}</span>
+                      </div>
+                    )}
                     <div className="text-[9px] uppercase tracking-widest text-white mb-1">{card.era}</div>
                     <div className="text-xs font-semibold text-white leading-tight mb-2">{card.name}</div>
                     <div className="text-xl font-bold text-amber-400">{card.value}</div>
@@ -324,6 +316,12 @@ export default function AerialWarPage() {
               <div className="grid grid-cols-3 gap-2">
                 {p2Hand.map((card, i) => (
                   <div key={i} className="p-3 border border-[var(--color-border)] bg-[var(--color-surface2)]/50 rounded-lg">
+                    {PLANE_ART[card.name] && (
+                      <div className="aerial-war-card-art-wrap">
+                        <img src={PLANE_ART[card.name]} alt="" className="aerial-war-card-art" />
+                        <span className="aerial-war-card-rank">{rankLabel(card.value)}</span>
+                      </div>
+                    )}
                     <div className="text-[9px] uppercase tracking-widest text-white mb-1">{card.era}</div>
                     <div className="text-xs font-semibold text-white leading-tight mb-2">{card.name}</div>
                     <div className="text-xl font-bold text-white/70">{card.value}</div>
@@ -447,9 +445,14 @@ export default function AerialWarPage() {
           <div className="divide-y divide-[var(--color-border)]">
             {BASE_DECK.map((card) => (
               <div key={card.name} className="flex items-center justify-between px-4 py-2">
-                <div>
-                  <span className="text-xs text-white">{card.name}</span>
-                  <span className="ml-2 text-[9px] uppercase tracking-widest text-white">{card.era}</span>
+                <div className="flex items-center gap-2">
+                  {PLANE_ART[card.name] && (
+                    <img src={PLANE_ART[card.name]} alt="" className="aerial-war-ref-art" />
+                  )}
+                  <div>
+                    <span className="text-xs text-white">{card.name}</span>
+                    <span className="ml-2 text-[9px] uppercase tracking-widest text-white">{card.era}</span>
+                  </div>
                 </div>
                 <span className="text-xs font-mono text-amber-500">{card.value}</span>
               </div>

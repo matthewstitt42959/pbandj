@@ -9,6 +9,13 @@
   text-align: center;
 }
 
+.hub-menu {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 30;
+}
+
 .hub-hero {
   max-width: 32rem;
 }
