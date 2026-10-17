@@ -60,6 +60,13 @@ export default function HubPage() {
           )
         )}
       </div>
+
+      <footer className="hub-footer">
+        A catalogued property of the Broken Archive —{' '}
+        <a href="https://broken-archive.com" target="_blank" rel="noreferrer">
+          browse the archive &rarr;
+        </a>
+      </footer>
     </div>
   );
 }

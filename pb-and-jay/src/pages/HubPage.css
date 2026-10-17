@@ -81,3 +81,18 @@
   color: #ffffff;
   font-size: 0.85rem;
 }
+
+.hub-footer {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.hub-footer a {
+  color: rgba(255, 200, 87, 0.85);
+  text-decoration: none;
+}
+
+.hub-footer a:hover {
+  color: #ffc857;
+  text-decoration: underline;
+}
