@@ -13,7 +13,7 @@ export const ARCADE_GAMES = [
   },
   {
     title: 'Art of War at Sea',
-    tagline: 'Plot your fleet\'s course, then watch the naval battle unfold',
+    tagline: 'Age-of-sail fleet command — sail with the wind, broadside the enemy, board and capture their flagship',
     to: '/games/art-of-war-at-sea',
   },
 ];
