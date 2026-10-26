@@ -12,11 +12,6 @@ export const ARCADE_GAMES = [
     to: '/games/dogfight-21',
   },
   {
-    title: 'Art of War at Sea',
-    tagline: 'Age-of-sail fleet command — sail with the wind, broadside the enemy, board and capture their flagship',
-    to: '/games/art-of-war-at-sea',
-  },
-  {
     title: 'Chess at Sea',
     tagline: 'Chess with ships — every capture is a boarding battle, and the winner sinks the loser or takes it as a prize',
     to: '/games/chess-at-sea',
