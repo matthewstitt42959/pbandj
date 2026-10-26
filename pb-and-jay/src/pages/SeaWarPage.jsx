@@ -645,18 +645,18 @@ export default function SeaWarPage() {
           </div>
         </details>
 
-        <div className="grid lg:grid-cols-[1fr_280px] gap-5">
+        <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[1fr_280px]">
           <canvas
             ref={canvasRef}
             width={WORLD.w}
             height={WORLD.h}
             onClick={onClick}
             onContextMenu={onContextMenu}
-            className="w-full border border-[var(--color-border)] rounded-lg cursor-crosshair"
+            className="sea-war-map w-full min-w-0 border border-[var(--color-border)] rounded-lg cursor-crosshair"
             style={{ aspectRatio: `${WORLD.w} / ${WORLD.h}` }}
           />
 
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             {/* Boarding controls */}
             {g.mode === 'board' && bd && (
               <div className="p-3 border border-amber-600 bg-amber-950/30 rounded-lg text-xs space-y-2">

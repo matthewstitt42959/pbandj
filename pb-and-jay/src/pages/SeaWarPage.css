@@ -18,3 +18,37 @@
 .sea-war-page button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.06);
 }
+
+/* Phones: stop iOS from zooming the page on a quick double-tap (which happens
+   constantly when tapping Fire / Helm), and from zooming in when a dropdown is
+   focused (it does that for any form control under 16px). */
+.sea-war-page,
+.sea-war-page button,
+.sea-war-page canvas {
+  touch-action: manipulation;
+}
+
+@media (max-width: 1023px) {
+  .sea-war-page select,
+  .sea-war-page input {
+    font-size: 16px;
+  }
+
+  /* Keep the map on screen while the controls underneath scroll. */
+  .sea-war-map {
+    position: sticky;
+    top: 0.5rem;
+    z-index: 10;
+    background: var(--color-br-alt);
+  }
+}
+
+/* Wide screens: map and controls sit side by side; keep the map in view as the
+   (taller) controls column scrolls. */
+@media (min-width: 1024px) {
+  .sea-war-map {
+    position: sticky;
+    top: 0.5rem;
+    align-self: start;
+  }
+}
