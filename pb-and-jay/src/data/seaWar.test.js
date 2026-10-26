@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   SCENARIOS, SPECS, WORLD, COMPASS, CONTACT_RANGE, BOARD_RANGE,
-  alive, battleShips, bestHeading, createScenario, disengage, dist, fire, getShip,
-  normalizeAngle, orderBoard, orderBoarding, orderCourse, orderMove, setAim, step, windFactor,
+  alive, battleShips, bestHeading, broadsideTarget, createScenario, disengage, dist, fire, getShip,
+  normalizeAngle, orderBoard, orderBoarding, orderCourse, orderMove, setAim, setAuto, step, windFactor,
 } from './seaWar';
 
 const always = () => 0; // every shot / blow lands
@@ -232,6 +232,56 @@ describe('gunnery', () => {
   });
 });
 
+describe('who commands the ships', () => {
+  it('your ships start in manual and the enemy starts on auto-pilot', () => {
+    const s = createScenario('pirates');
+    expect(alive(s, 'player').every((x) => !x.auto)).toBe(true);
+    expect(alive(s, 'enemy').every((x) => x.auto)).toBe(true);
+  });
+
+  it('a manual ship neither steers nor fires until you tell it to', () => {
+    const { s, p, e } = duel();
+    s.mode = 'battle';
+    s.battle = { ids: [p.id, e.id], center: { x: 400, y: 250 }, time: 0 };
+    p.b = { x: 300, y: 250, heading: 0, speed: 0, reload: [0, 0], order: null };
+    e.b = { x: 300, y: 300, heading: Math.PI, speed: 0, reload: [9, 9], order: null };
+    e.auto = false; // keep the enemy quiet too, so only p could have acted
+    step(s, 0.1, always);
+    expect(e.hull).toBe(e.maxHull);
+    expect(p.b.order).toBeNull();
+  });
+});
+
+describe('broadsideTarget', () => {
+  function setup() {
+    const { s, p, e } = duel();
+    s.mode = 'battle';
+    s.battle = { ids: [p.id, e.id], center: { x: 400, y: 250 }, time: 0 };
+    p.b = { x: 300, y: 250, heading: 0, speed: 0, reload: [0, 0], order: null };
+    return { s, p, e };
+  }
+
+  it('finds an enemy on the right (starboard) side, not the left', () => {
+    const { s, p, e } = setup();
+    e.b = { x: 300, y: 300, heading: Math.PI, speed: 0, reload: [0, 0], order: null }; // y down = right of a ship facing +x
+    expect(broadsideTarget(s, p, 'starboard')).toBe(e);
+    expect(broadsideTarget(s, p, 'port')).toBeNull();
+  });
+
+  it('cannot see an enemy dead ahead — the guns point out of the sides', () => {
+    const { s, p, e } = setup();
+    e.b = { x: 380, y: 250, heading: Math.PI, speed: 0, reload: [0, 0], order: null };
+    expect(broadsideTarget(s, p, 'port')).toBeNull();
+    expect(broadsideTarget(s, p, 'starboard')).toBeNull();
+  });
+
+  it('ignores enemies out of range', () => {
+    const { s, p, e } = setup();
+    e.b = { x: 300, y: 250 + SPECS.frigate.range + 40, heading: Math.PI, speed: 0, reload: [0, 0], order: null };
+    expect(broadsideTarget(s, p, 'starboard')).toBeNull();
+  });
+});
+
 describe('victory', () => {
   it('sinking the enemy flagship wins the game', () => {
     const s = createScenario('pirates');
@@ -325,6 +375,7 @@ describe('orders', () => {
     s.battle = { ids: [p.id, e.id], center: { x: 400, y: 250 }, time: 0 };
     p.b = { x: 300, y: 250, heading: 0, speed: 0, reload: [0, 0], order: null };
     e.b = { x: 500, y: 250, heading: Math.PI, speed: 0, reload: [0, 0], order: null };
+    setAuto(s, p.id, true);
     expect(p.auto).toBe(true);
     expect(orderCourse(s, p.id, 1)).toBe(true);
     expect(p.auto).toBe(false);

@@ -224,7 +224,7 @@ function makeShip(state, side, kind, x, y, name) {
     crew: spec.crew, maxCrew: spec.crew,
     sails: 1, // 0 furled, 0.5 half, 1 full
     dest: null, route: [],
-    auto: true, // battle: let the helmsman fight it unless you give orders
+    auto: side === 'enemy', // battle: a helmsman steers and fires for the ship. Yours start in your hands.
     aim: 'hull',
     sunk: false, cool: 0, aiTimer: 0, b: null,
   };
@@ -531,10 +531,9 @@ function sinkShip(state, ship, by) {
   note(state, `${by ? `${by.name} sank` : 'Lost:'} ${ship.name}${by ? '!' : '.'}`);
 }
 
-export function fire(state, ship, side, rng = Math.random) {
-  if (state.mode !== 'battle' || !ship.b || ship.sunk) return false;
-  const idx = side === 'port' ? 0 : 1;
-  if (ship.b.reload[idx] > 0) return false;
+// The nearest enemy in reach of this ship's port or starboard guns, or null.
+export function broadsideTarget(state, ship, side) {
+  if (!ship.b || ship.sunk) return null;
   const spec = SPECS[ship.kind];
   const sign = side === 'port' ? -1 : 1;
   let target = null;
@@ -549,7 +548,18 @@ export function fire(state, ship, side, rng = Math.random) {
       best = d;
     }
   }
+  return target;
+}
+
+export function fire(state, ship, side, rng = Math.random) {
+  if (state.mode !== 'battle' || !ship.b || ship.sunk) return false;
+  const idx = side === 'port' ? 0 : 1;
+  if (ship.b.reload[idx] > 0) return false;
+  const spec = SPECS[ship.kind];
+  const sign = side === 'port' ? -1 : 1;
+  const target = broadsideTarget(state, ship, side);
   if (!target) return false;
+  const best = dist(ship.b, target.b);
 
   ship.b.reload[idx] = spec.reload;
   const guns = Math.max(1, Math.round(spec.guns * Math.sqrt(ship.crew / ship.maxCrew)));

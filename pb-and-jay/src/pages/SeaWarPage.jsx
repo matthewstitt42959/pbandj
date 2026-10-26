@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import ArcadeMenu from '../components/ArcadeMenu';
 import './SeaWarPage.css';
 import {
-  COMPASS, SCENARIOS, SPECS, UNIT, WIND_STRENGTHS, WORLD,
-  alive, battleShips, clearCourse, createScenario, disengage, dist, fire, getShip,
+  COMPASS, GUN_ARC, SCENARIOS, SPECS, UNIT, WIND_STRENGTHS, WORLD,
+  alive, battleShips, broadsideTarget, clearCourse, createScenario, disengage, dist, fire, getShip,
   nearestEnemy, orderBoard, orderBoarding, orderCourse, orderMove, setAim, setAuto,
   setSails, step, windFromLabel,
 } from '../data/seaWar';
@@ -245,6 +245,47 @@ function drawBoarding(ctx, g) {
   }
 }
 
+// Shows where the selected ship's guns can reach: a wedge off each side.
+// Green = loaded with an enemy inside it, white = loaded but empty, orange = reloading.
+function drawFiringArcs(ctx, g, ship) {
+  const spec = SPECS[ship.kind];
+  const b = ship.b;
+  [['port', -1, 'LEFT'], ['starboard', 1, 'RIGHT']].forEach(([side, sign, label], i) => {
+    const target = broadsideTarget(g, ship, side);
+    const loaded = b.reload[i] <= 0;
+    const mid = b.heading + sign * (Math.PI / 2);
+    ctx.fillStyle = !loaded ? 'rgba(251,146,60,0.14)' : target ? 'rgba(74,222,128,0.28)' : 'rgba(255,255,255,0.09)';
+    ctx.strokeStyle = !loaded ? 'rgba(251,146,60,0.5)' : target ? 'rgba(74,222,128,0.8)' : 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.arc(b.x, b.y, spec.range, mid - GUN_ARC, mid + GUN_ARC);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, b.x + Math.cos(mid) * spec.range * 0.55, b.y + Math.sin(mid) * spec.range * 0.55);
+    if (target && loaded) {
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(target.b.x, target.b.y, 14, 0, Math.PI * 2); ctx.stroke();
+    }
+  });
+  // Where the ship has been told to head.
+  if (b.order?.type === 'course') {
+    ctx.strokeStyle = PLAYER;
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x + Math.cos(b.order.heading) * 70, b.y + Math.sin(b.order.heading) * 70);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
 function frameCamera(g, ui, selected) {
   if (g.battle && ui.view === 'close') {
     const focus = selected?.b ?? battleShips(g).find((s) => s.side === 'player')?.b ?? { x: WORLD.w / 2, y: WORLD.h / 2 };
@@ -283,6 +324,7 @@ function render(ctx, g, ui) {
     ctx.strokeRect(1, 1, WORLD.w - 2, WORLD.h - 2);
     const bs = battleShips(g);
     const scale = cam.zoom > 1 ? 1 : 1.25;
+    if (selected?.b && g.mode === 'battle') drawFiringArcs(ctx, g, selected);
     for (const s of bs) {
       drawShip(ctx, s, s.b, { scale, selected: s.id === ui.selectedId });
     }
@@ -322,6 +364,28 @@ function render(ctx, g, ui) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const COMPASS_POINTS = Object.keys(COMPASS);
+
+// One plain-English line telling the player what to do right now.
+function getHint(g, selected, running) {
+  if (g.mode === 'over') return g.winner === 'player' ? 'You won! Start a new battle whenever you like.' : 'Your flagship went down. Start a new battle to try again.';
+  if (g.mode === 'board') return 'Boarding fight! Charge sends your men at the enemy; Hold lets your musketeers shoot first. Last side standing takes the ship.';
+  if (g.mode === 'map') {
+    if (!selected) return 'Tap one of your ships to select it.';
+    if (g.time === 0) return `${selected.name} is selected. Tap the sea to send it somewhere, then press Execute. Capture or sink their flagship to win.`;
+    return running ? 'Sailing… tap a ship to select it, tap the sea to change its course.' : 'Paused. Give orders, then press Resume.';
+  }
+  // battle
+  if (!selected?.b) return 'Tap one of your ships to take command of it.';
+  const left = broadsideTarget(g, selected, 'port');
+  const right = broadsideTarget(g, selected, 'starboard');
+  const loaded = (i) => selected.b.reload[i] <= 0;
+  if (!running && g.battle.time === 0) return 'Battle! Your cannons fire out of the SIDES, not the front. Steer so an enemy sits off your left or right, fire, then press Resume.';
+  if (left && loaded(0)) return `Enemy on your LEFT — fire the left side now!`;
+  if (right && loaded(1)) return `Enemy on your RIGHT — fire the right side now!`;
+  if (left || right) return 'Guns are reloading — keep the enemy on your side and wait for the bar to fill.';
+  if (nearestEnemy(g, selected)) return 'No enemy beside you yet. Turn so one lines up inside a green-lit side wedge, or tap the sea to steer there.';
+  return 'Tap the sea to steer, or pick another ship.';
+}
 
 function Bar({ value, max, color }) {
   return (
@@ -527,6 +591,9 @@ export default function SeaWarPage() {
   }, []);
 
   const sc = SCENARIOS[opts.scenario];
+  const hint = getHint(g, selected, running);
+  const myLive = g.ships.filter((s) => s.side === 'player' && !s.sunk);
+  const allAuto = myLive.length > 0 && myLive.every((s) => s.auto);
   const mine = g.ships.filter((s) => s.side === 'player');
   const foes = alive(g, 'enemy');
   const bd = g.boarding;
@@ -620,7 +687,13 @@ export default function SeaWarPage() {
               <button onClick={() => setView(view === 'long' ? 'close' : 'long')} className={btn}>
                 {view === 'long' ? 'Close view' : 'Long view'}
               </button>
-              <button onClick={() => { disengage(g); refresh(); }} className={btn}>Disengage</button>
+              <button
+                onClick={() => { myLive.forEach((s) => setAuto(g, s.id, !allAuto)); refresh(); }}
+                className={allAuto ? btnOn : btn}
+              >
+                {allAuto ? 'Fleet: captains in charge' : 'Fleet: I command'}
+              </button>
+              <button onClick={() => { disengage(g); refresh(); }} className={btn}>Retreat</button>
             </>
           )}
         </div>
@@ -629,32 +702,44 @@ export default function SeaWarPage() {
           <summary className="cursor-pointer uppercase tracking-widest text-amber-400 text-xs">How to play</summary>
           <div className="mt-2 space-y-1.5">
             <p>
-              <b>Map:</b> select a ship and click the sea to plot a course (shift-click adds waypoints, right-click cancels).
-              Ships can&apos;t sail straight into the wind — they&apos;ll tack. A beam reach is fastest. Ports repair hull and sails;
-              with hostile waters on, shoals tear hulls open. Capture or sink the enemy flagship to win — lose yours and you lose.
+              <b>Goal:</b> capture or sink the enemy flagship (⚑). Lose yours and you lose.
             </p>
             <p>
-              <b>Contact:</b> when fleets meet, the game zooms to the battle and pauses. Click the sea to set a ship&apos;s course,
-              or use ◀ ▶ (arrow keys). Fire a broadside to port (Q) or starboard (E) at anything in arc — aim for the hull to kill crew
-              and sink ships, or the rigging to slow them. Unordered ships fight on auto-pilot.
+              <b>Sailing:</b> select a ship, tap the sea to send it there, press Execute. The blue arrow shows where the
+              wind is blowing. Ships go fastest with the wind from the side, and can&apos;t sail straight into it —
+              they zigzag. Visit your port to repair. Shoals (sandy circles) damage ships if hostile waters is on.
             </p>
             <p>
-              <b>Boarding:</b> order a ship to board (B, or right-click an enemy) or ram one. On deck, swordsmen close in and
-              musketeers shoot — Charge (C) or Hold (H). The last side standing takes the ship.
+              <b>Battle:</b> when fleets meet, the game zooms in and pauses. Cannons fire out of the <b>sides</b> of a ship
+              — the lit wedges on the map show how far they reach. Turn your ship so an enemy sits in a wedge, then fire that
+              side. Hull shots sink ships; sail shots slow them. Each side reloads separately.
+            </p>
+            <p>
+              <b>Boarding:</b> pick &quot;Board an enemy&quot; to close in and fight hand to hand. Swordsmen charge in; musketeers
+              shoot. The last side standing takes the ship.
+            </p>
+            <p>
+              <b>Captains:</b> your ships do only what you tell them. Turn on &quot;Let the captain fight&quot; for a ship (or
+              the whole fleet) if you&apos;d rather the computer steer and fire it.
             </p>
           </div>
         </details>
 
         <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[1fr_280px]">
-          <canvas
-            ref={canvasRef}
-            width={WORLD.w}
-            height={WORLD.h}
-            onClick={onClick}
-            onContextMenu={onContextMenu}
-            className="sea-war-map w-full min-w-0 border border-[var(--color-border)] rounded-lg cursor-crosshair"
-            style={{ aspectRatio: `${WORLD.w} / ${WORLD.h}` }}
-          />
+          <div className="sea-war-map min-w-0">
+            <canvas
+              ref={canvasRef}
+              width={WORLD.w}
+              height={WORLD.h}
+              onClick={onClick}
+              onContextMenu={onContextMenu}
+              className="w-full border border-[var(--color-border)] rounded-lg cursor-crosshair"
+              style={{ aspectRatio: `${WORLD.w} / ${WORLD.h}` }}
+            />
+            <div className="mt-2 p-2.5 border border-amber-600/60 bg-amber-950/40 rounded-lg text-xs leading-snug">
+              {hint}
+            </div>
+          </div>
 
           <div className="space-y-4 min-w-0">
             {/* Boarding controls */}
@@ -696,32 +781,59 @@ export default function SeaWarPage() {
                 )}
                 {g.mode === 'battle' && selected.b && (
                   <>
-                    <div className="flex gap-1 items-center">
-                      <span className="uppercase tracking-widest mr-1">Helm</span>
-                      <button onClick={() => turn(-0.2)} className={btn}>◀ Port</button>
-                      <button onClick={() => turn(0.2)} className={btn}>Stbd ▶</button>
+                    <div className="space-y-1">
+                      <div className="uppercase tracking-widest text-white/70">Steer</div>
+                      <div className="flex gap-1">
+                        <button onClick={() => turn(-0.35)} className={`${btn} flex-1`}>↰ Turn left</button>
+                        <button onClick={() => turn(0.35)} className={`${btn} flex-1`}>Turn right ↱</button>
+                      </div>
+                      <div className="text-white/60">Or tap the sea to sail toward that spot.</div>
                     </div>
-                    {['port', 'starboard'].map((side, i) => {
-                      const left = selected.b.reload[i];
-                      const total = SPECS[selected.kind].reload;
-                      return (
-                        <div key={side}>
-                          <button onClick={() => doFire(side)} disabled={left > 0} className={`${btn} w-full`}>
-                            Fire {side} ({side === 'port' ? 'Q' : 'E'})
-                          </button>
-                          <Bar value={total - left} max={total} color="#fb923c" />
-                        </div>
-                      );
-                    })}
-                    <div className="flex gap-1 items-center">
-                      <span className="uppercase tracking-widest mr-1">Aim</span>
-                      <button onClick={() => { setAim(g, selected.id, 'hull'); refresh(); }} className={selected.aim === 'hull' ? btnOn : btn}>Hull</button>
-                      <button onClick={() => { setAim(g, selected.id, 'rigging'); refresh(); }} className={selected.aim === 'rigging' ? btnOn : btn}>Rigging</button>
+
+                    <div className="space-y-1.5">
+                      <div className="uppercase tracking-widest text-white/70">Fire — guns shoot out the sides</div>
+                      {[['port', '⬅ Fire left side', 'Q'], ['starboard', 'Fire right side ➡', 'E']].map(([side, label, key], i) => {
+                        const left = selected.b.reload[i];
+                        const total = SPECS[selected.kind].reload;
+                        const inReach = !!broadsideTarget(g, selected, side);
+                        const ready = left <= 0;
+                        return (
+                          <div key={side}>
+                            <button
+                              onClick={() => doFire(side)}
+                              disabled={!ready}
+                              className={`${ready && inReach ? btnOn : btn} w-full`}
+                            >
+                              {label} ({key})
+                            </button>
+                            <Bar value={total - left} max={total} color="#fb923c" />
+                            <div className="text-white/60 mt-0.5">
+                              {!ready ? 'Reloading…' : inReach ? 'Enemy in range — fire!' : 'No enemy on this side'}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="flex gap-1">
-                      <button onClick={boardNearest} className={btn}>Board (B)</button>
-                      <button onClick={() => { setAuto(g, selected.id, !selected.auto); refresh(); }} className={selected.auto ? btnOn : btn}>
-                        Auto {selected.auto ? 'on' : 'off'}
+
+                    <div className="space-y-1">
+                      <div className="uppercase tracking-widest text-white/70">Aim at</div>
+                      <div className="flex gap-1">
+                        <button onClick={() => { setAim(g, selected.id, 'hull'); refresh(); }} className={`${selected.aim === 'hull' ? btnOn : btn} flex-1`}>Hull</button>
+                        <button onClick={() => { setAim(g, selected.id, 'rigging'); refresh(); }} className={`${selected.aim === 'rigging' ? btnOn : btn} flex-1`}>Sails</button>
+                      </div>
+                      <div className="text-white/60">
+                        {selected.aim === 'hull' ? 'Hull shots damage the ship and kill crew — this is how you sink it.' : 'Sail shots slow the enemy down so you can catch or escape it.'}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <button onClick={boardNearest} className={`${btn} w-full`}>Board the nearest enemy (B)</button>
+                      <div className="text-white/60">Closes in for a hand-to-hand fight. Win it and you capture the ship.</div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <button onClick={() => { setAuto(g, selected.id, !selected.auto); refresh(); }} className={`${selected.auto ? btnOn : btn} w-full`}>
+                        {selected.auto ? 'Captain is fighting this ship' : 'Let the captain fight this ship'}
                       </button>
                     </div>
                   </>
