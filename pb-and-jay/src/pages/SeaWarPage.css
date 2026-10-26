@@ -1,0 +1,20 @@
+/* Same palette as Aerial War, scoped locally so it doesn't leak into the
+   rest of the site's theme. */
+.sea-war-page {
+  --color-br-alt: #111009;
+  --color-surface2: #1a1712;
+  --color-accent: #c8a96e;
+  --color-border: #3d3730;
+}
+
+/* The site's global button/select styles are light — keep the controls dark
+   to match the rest of the page. */
+.sea-war-page button,
+.sea-war-page select {
+  background: transparent;
+  color: inherit;
+}
+
+.sea-war-page button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}

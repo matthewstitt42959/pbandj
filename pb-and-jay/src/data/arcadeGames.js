@@ -11,4 +11,9 @@ export const ARCADE_GAMES = [
     tagline: 'Push your luck to a random target altitude — blackjack with planes',
     to: '/games/dogfight-21',
   },
+  {
+    title: 'Art of War at Sea',
+    tagline: 'Age-of-sail fleet command — sail with the wind, broadside the enemy, board and capture their flagship',
+    to: '/games/art-of-war-at-sea',
+  },
 ];
