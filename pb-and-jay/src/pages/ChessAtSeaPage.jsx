@@ -215,12 +215,24 @@ export default function ChessAtSeaPage() {
         </details>
         )}
 
+        {phase !== 'battle' && phase === 'over' && (
+          <div className={`chess-sea-over ${game.winner === 'w' ? 'is-win' : game.winner === 'b' ? 'is-loss' : 'is-draw'}`}>
+            <div className="chess-sea-over-title">
+              {game.winner === 'w' ? 'Victory!' : game.winner === 'b' ? 'Defeat' : 'Draw'}
+            </div>
+            <div className="chess-sea-over-reason">{game.endReason}</div>
+            <button onClick={newGame} className="chess-sea-over-btn">New game</button>
+          </div>
+        )}
+
+        {phase !== 'battle' && phase !== 'over' && (
+          <div className="p-2.5 border border-amber-600/60 bg-amber-950/40 rounded-lg text-xs leading-snug">{hint}</div>
+        )}
+
         {phase !== 'battle' && (
           <>
-            <div className="p-2.5 border border-amber-600/60 bg-amber-950/40 rounded-lg text-xs leading-snug">{hint}</div>
-
             {/* Board */}
-            <div className="chess-sea-board" role="grid" aria-label="Chess at Sea board">
+            <div className={`chess-sea-board ${phase === 'over' ? 'is-over' : ''}`} role="grid" aria-label="Chess at Sea board">
               {RANKS.map((rank, r) => FILES.map((file, f) => {
                 const sq = `${file}${rank}`;
                 const piece = game.chess.get(sq);
