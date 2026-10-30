@@ -1,8 +1,15 @@
 // A top-down ship for a chess piece. Each type has its own silhouette so the
 // pieces can be told apart at a glance on a phone-sized board:
-//   sloop (small, one mast) · frigate (long, two masts) · brig (two slanted yards)
+//   sloop (small, one mast) · frigate (long, two masts) · brig (two slanted sails)
 //   ship of the line (broad, three masts) · man-of-war (widest, gun-deck stripes)
 //   flagship (three masts and a pennant)
+//
+// The art is a set of small EGA-style sprites (see scripts/build-chess-sprites.py):
+// cream sails for the amber fleet, red sails for the red fleet. If a sprite
+// fails to load, the ship falls back to the hand-drawn SVG below.
+
+import { useState } from 'react';
+import { SPRITES } from './shipSprites';
 
 export const AMBER = '#fbbf24';
 export const RED = '#f87171';
@@ -26,13 +33,29 @@ const YARDS = {
 };
 
 export default function ShipIcon({ type, color, className = '' }) {
+  const [spriteFailed, setSpriteFailed] = useState(false);
+  const src = SPRITES[color]?.[type];
+  // Amber sails bow-up; red sails face the other way, as the pieces do on a chess board.
+  const flip = color === 'w' ? undefined : 'rotate(180deg)';
+  if (src && !spriteFailed) {
+    return (
+      <img
+        src={src}
+        alt=""
+        draggable={false}
+        className={className}
+        style={{ transform: flip }}
+        onError={() => setSpriteFailed(true)}
+      />
+    );
+  }
   const side = color === 'w' ? AMBER : RED;
   const h = HULL[type];
   return (
     <svg
       viewBox="0 0 100 100"
       className={className}
-      style={{ transform: color === 'w' ? undefined : 'rotate(180deg)' }}
+      style={{ transform: flip }}
       aria-hidden="true"
     >
       <g transform={`translate(50 52) scale(${h.w} ${h.len}) translate(-50 -52)`}>
