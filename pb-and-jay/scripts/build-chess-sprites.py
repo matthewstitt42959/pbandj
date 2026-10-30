@@ -5,9 +5,11 @@ usage: python3 -I scripts/build-chess-sprites.py <dir with sloop.png, frigate.pn
 
 (e.g. output dir: src/assets/chess-at-sea)
 
-Each source is a ship (bow up) on a plain white background. The script
-  1. cuts the ship out (flood-fills the white background from the border and
-     strips the magenta halo the image generator leaves at the edges),
+Each source is a ship (bow up), ideally a PNG with a transparent background
+(a plain white one also works). The script
+  1. cuts the ship out (uses the transparency, or flood-fills the white
+     background from the border) and strips the magenta halo the image
+     generator can leave at the edges,
   2. scales all six by ONE common factor so the bigger ships stay bigger,
   3. centres each on its hull in a square frame,
   4. forces every sprite onto a single shared 16-colour palette (EGA style),
@@ -66,12 +68,18 @@ def border_connected(mask):
 
 
 def cut_out(path):
-    im = Image.open(path).convert('RGB')
+    src = Image.open(path)
+    # Prefer the image's own transparency; otherwise find the white background.
+    has_alpha = src.mode == 'RGBA' and np.asarray(src.getchannel('A')).min() < 255
+    im = src.convert('RGBA' if has_alpha else 'RGB')
     im = im.resize((WORK_WIDTH, round(im.height * WORK_WIDTH / im.width)), Image.LANCZOS)
-    arr = np.asarray(im).astype(np.int16)
+    full = np.asarray(im)
+    arr = full[..., :3].astype(np.int16)
 
-    near_white = (arr.min(axis=2) >= WHITE_MIN)
-    background = border_connected(near_white)
+    if has_alpha:
+        background = full[..., 3] < 128
+    else:
+        background = border_connected(arr.min(axis=2) >= WHITE_MIN)
 
     # The generator leaves a magenta halo just outside the dark outline.
     r, g, b = arr[..., 0], arr[..., 1], arr[..., 2]
