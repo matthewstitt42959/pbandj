@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ArcadeMenu from '../components/ArcadeMenu';
 import ShipIcon from '../components/chessAtSea/ShipIcon';
+import { preloadShipArt } from '../components/chessAtSea/shipSprites';
 import DeckBattleScene from '../components/chessAtSea/DeckBattleScene';
 import './ChessAtSeaPage.css';
 import {
@@ -74,6 +75,7 @@ export default function ChessAtSeaPage() {
   }, [refresh]);
 
   useEffect(() => {
+    preloadShipArt();
     if (gameRef.current.chess.turn() === 'b') settle();
     return () => clearTimeout(timerRef.current);
   }, [settle]);
