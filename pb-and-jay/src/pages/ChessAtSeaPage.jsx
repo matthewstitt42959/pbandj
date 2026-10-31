@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import ArcadeMenu from '../components/ArcadeMenu';
 import ShipIcon from '../components/chessAtSea/ShipIcon';
 import { preloadShipArt } from '../components/chessAtSea/shipSprites';
+import { preloadTroopArt } from '../components/chessAtSea/troopSprites';
 import DeckBattleScene from '../components/chessAtSea/DeckBattleScene';
 import './ChessAtSeaPage.css';
 import {
-  BATTLE_MODES, PIECES, SIDE, aiChoice, battleInfo, checkEnd, chooseAiMove, createGame,
+  BATTLE_MODES, PIECES, SIDE, aiChoice, allLegalMoves, battleInfo, checkEnd, chooseAiMove, createGame,
   legalMoves, playMove, resolveBattle,
 } from '../data/chessAtSea';
 import { createBattle, estimateOdds } from '../data/deckBattle';
@@ -57,7 +58,15 @@ export default function ChessAtSeaPage() {
       setPhase('thinking');
       refresh();
       timerRef.current = setTimeout(() => {
-        const mv = chooseAiMove(g, settingsRef.current.level);
+        let mv;
+        try {
+          mv = chooseAiMove(g, settingsRef.current.level);
+        } catch (err) {
+          // Never leave the player staring at "thinking" forever — fall
+          // back to any legal move so a bad position can't freeze the game.
+          console.error('Chess at Sea: AI move search failed, playing any legal move instead', err);
+          mv = allLegalMoves(g)[0];
+        }
         if (!mv) { checkEnd(g); setPhase(g.winner ? 'over' : 'play'); refresh(); return; }
         const info = battleInfo(g, mv);
         if (!info) {
@@ -76,6 +85,7 @@ export default function ChessAtSeaPage() {
 
   useEffect(() => {
     preloadShipArt();
+    preloadTroopArt();
     if (gameRef.current.chess.turn() === 'b') settle();
     return () => clearTimeout(timerRef.current);
   }, [settle]);

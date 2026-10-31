@@ -6,10 +6,36 @@ import {
 } from '../../data/deckBattle';
 import { PIECES } from '../../data/chessAtSea';
 import { AMBER, RED } from './ShipIcon';
+import { troopImage } from './troopSprites';
 
 const SCALE = 2; // deck units → canvas pixels
 const STEP = 0.05;
 const SPEEDS = [1, 2, 3];
+
+// Render height in canvas px for a troop sprite; width follows the sprite's
+// own frame aspect (tall and narrow facing up/down, wide facing left/right).
+const SPRITE_H = { sword: 26, musket: 26, captain: 34 };
+
+function nearestFoe(units, u) {
+  let best = null;
+  let bd = Infinity;
+  for (const o of units) {
+    if (o.side === u.side) continue;
+    const d = Math.hypot(o.x - u.x, o.y - u.y);
+    if (d < bd) { best = o; bd = d; }
+  }
+  return best;
+}
+
+// Which of the four sprite facings a unit should use right now, based on the
+// direction to its nearest foe — troops have no facing of their own in the
+// pure battle engine, so the renderer works it out from relative position.
+function facingOf(u, foe) {
+  if (!foe) return u.side === 'a' ? 'right' : 'left';
+  const dx = foe.x - u.x;
+  const dy = foe.y - u.y;
+  return Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : (dy >= 0 ? 'down' : 'up');
+}
 
 function drawDeck(ctx, engine, colors) {
   const W = DECK.w * SCALE;
@@ -49,30 +75,45 @@ function drawDeck(ctx, engine, colors) {
     const x = u.x * SCALE;
     const y = u.y * SCALE;
     const c = u.side === 'a' ? colors.a : colors.d;
-    ctx.fillStyle = c;
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 1.5;
-    if (u.kind === 'musket') {
-      ctx.fillRect(x - 6, y - 6, 12, 12);
-      ctx.strokeRect(x - 6, y - 6, 12, 12);
-      ctx.strokeStyle = '#e5e7eb';
-      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (u.side === 'a' ? 15 : -15), y); ctx.stroke();
+    const facing = facingOf(u, nearestFoe(engine.units, u));
+    const img = troopImage(u.kind, facing);
+    let barY = y - 17;
+
+    if (img) {
+      const h = SPRITE_H[u.kind] ?? 26;
+      const w = h * (img.naturalWidth / img.naturalHeight);
+      const top = y - h * 0.95;
+      // A faint tint disc underfoot tells the sides apart at a glance.
+      ctx.fillStyle = c + '55';
+      ctx.beginPath(); ctx.ellipse(x, y, w * 0.32, w * 0.14, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.drawImage(img, x - w / 2, top, w, h);
+      barY = top - 4;
     } else {
-      const r = u.kind === 'captain' ? 11 : 7;
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      if (u.kind === 'captain') {
-        ctx.fillStyle = '#facc15';
-        ctx.beginPath(); ctx.moveTo(x - 9, y - 9); ctx.lineTo(x, y - 18); ctx.lineTo(x + 9, y - 9); ctx.closePath(); ctx.fill();
-      } else {
+      ctx.fillStyle = c;
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1.5;
+      if (u.kind === 'musket') {
+        ctx.fillRect(x - 6, y - 6, 12, 12);
+        ctx.strokeRect(x - 6, y - 6, 12, 12);
         ctx.strokeStyle = '#e5e7eb';
-        ctx.beginPath(); ctx.moveTo(x + (u.side === 'a' ? 7 : -7), y); ctx.lineTo(x + (u.side === 'a' ? 16 : -16), y - 5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (u.side === 'a' ? 15 : -15), y); ctx.stroke();
+      } else {
+        const r = u.kind === 'captain' ? 11 : 7;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        if (u.kind === 'captain') {
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath(); ctx.moveTo(x - 9, y - 9); ctx.lineTo(x, y - 18); ctx.lineTo(x + 9, y - 9); ctx.closePath(); ctx.fill();
+        } else {
+          ctx.strokeStyle = '#e5e7eb';
+          ctx.beginPath(); ctx.moveTo(x + (u.side === 'a' ? 7 : -7), y); ctx.lineTo(x + (u.side === 'a' ? 16 : -16), y - 5); ctx.stroke();
+        }
       }
     }
     if (u.hp < u.maxHp) {
       ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(x - 9, y - 17, 18, 3);
+      ctx.fillRect(x - 9, barY, 18, 3);
       ctx.fillStyle = '#4ade80';
-      ctx.fillRect(x - 9, y - 17, 18 * (u.hp / u.maxHp), 3);
+      ctx.fillRect(x - 9, barY, 18 * (u.hp / u.maxHp), 3);
     }
   }
 

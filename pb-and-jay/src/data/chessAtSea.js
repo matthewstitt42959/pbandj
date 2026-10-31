@@ -293,7 +293,11 @@ function negamax(chess, depth, alpha, beta) {
 // weighed by the crews' chances, so the computer won't throw a sloop at a man-of-war.
 export function chooseAiMove(game, level = 'normal', rng = Math.random) {
   const depth = level === 'easy' ? 2 : 3;
-  const search = new Chess(game.chess.fen());
+  // A boarding battle can leave a position chess.js's own strict FEN parser
+  // would reject (e.g. a ship vanishing out from under a defended king,
+  // leaving it in check on the mover's own turn) even though `game.chess`
+  // keeps working fine — skip re-validating what's already live.
+  const search = new Chess(game.chess.fen(), { skipValidation: true });
   const me = search.turn();
   const sign = me === 'w' ? 1 : -1;
   const baseline = sign * evaluate(search);
