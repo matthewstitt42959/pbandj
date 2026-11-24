@@ -31,6 +31,35 @@
   color: #ffffff;
 }
 
+.hub-about {
+  max-width: 36rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  text-align: left;
+}
+
+.hub-about-title {
+  margin: 0 0 0.6rem;
+  color: #ffc857;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hub-about p {
+  margin: 0 0 0.6rem;
+  color: #ffffff;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.hub-about p:last-child {
+  margin-bottom: 0;
+}
+
 .hub-subtext {
   margin-top: 0.75rem;
   color: #ffffff;

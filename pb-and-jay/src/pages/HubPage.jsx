@@ -21,6 +21,19 @@ export default function HubPage() {
         <p className="hub-tagline">A one-person indie arcade — new worlds added as they're built.</p>
       </header>
 
+      <section className="hub-about" aria-labelledby="hub-about-title">
+        <h2 id="hub-about-title" className="hub-about-title">What is this place?</h2>
+        <p>
+          Play by Jay is my lab — a place to experiment with game ideas and put the results
+          where anyone can play them. Some games are polished, some are rough drafts, and
+          they&rsquo;re all works in progress.
+        </p>
+        <p>
+          New to it? <strong>Pick a game below and jump in</strong> — no setup needed for the
+          arcade games. Want something bigger? PB &amp; Jay is a full play-by-post D&amp;D campaign.
+        </p>
+      </section>
+
       <Link to="/pbj" className="hub-feature">
         <h2>PB &amp; Jay</h2>
         <p>Play-by-post D&amp;D — AI dungeon master, real adventures</p>
