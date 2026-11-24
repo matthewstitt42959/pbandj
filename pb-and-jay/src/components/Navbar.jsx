@@ -46,7 +46,7 @@ const Navbar = () => {
             </>
           ) : (
             <NavLink to="/login" className="nav-auth__btn nav-auth__btn--signin" onClick={close}>
-              Sign in
+              Sign up / Log in
             </NavLink>
           )}
           <button className="hamburger" onClick={() => setMenuOpen(p => !p)} aria-label="Toggle Menu">
@@ -76,7 +76,7 @@ const Navbar = () => {
               <li><button className="nav-mobile-signout" onClick={handleSignOut}>Sign out</button></li>
             </>
           ) : (
-            <li><NavLink to="/login" onClick={close}>Sign in</NavLink></li>
+            <li><NavLink to="/login" onClick={close}>Sign up / Log in</NavLink></li>
           )}
         </ul>
       )}

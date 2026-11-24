@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import './HubPage.css';
 import ArcadeMenu from '../components/ArcadeMenu';
 import { ARCADE_GAMES } from '../data/arcadeGames';
+import { useAuth } from '../context/AuthContext';
 
 // In dev, point at a locally-running Skyward Islands instead of prod so you
 // can actually test changes — override with VITE_SKYWARD_ISLANDS_URL in
@@ -11,6 +12,7 @@ const SKYWARD_ISLANDS_URL =
   (import.meta.env.DEV ? 'http://localhost:5173' : 'https://islands.playbyjayrpg.com');
 
 export default function HubPage() {
+  const { user } = useAuth();
   return (
     <div className="hub-page">
       <div className="hub-menu">
@@ -24,13 +26,18 @@ export default function HubPage() {
       <section className="hub-about" aria-labelledby="hub-about-title">
         <h2 id="hub-about-title" className="hub-about-title">What is this place?</h2>
         <p>
-          Play by Jay is my lab — a place to experiment with game ideas and put the results
-          where anyone can play them. Some games are polished, some are rough drafts, and
-          they&rsquo;re all works in progress.
+          This is my lab. I use it to test out game ideas and post the results where anyone can
+          play them. Some games are polished, some are rough drafts, and all of them are works
+          in progress.
         </p>
         <p>
-          New to it? <strong>Pick a game below and jump in</strong> — no setup needed for the
-          arcade games. Want something bigger? PB &amp; Jay is a full play-by-post D&amp;D campaign.
+          New here? <strong>Pick a game below and jump in.</strong> The arcade games need no
+          account. PB &amp; Jay, a full play-by-post D&amp;D campaign, does.
+          {user ? null : (
+            <>
+              {' '}<Link to="/register">Sign up</Link> or <Link to="/login">log in</Link> to play it.
+            </>
+          )}
         </p>
       </section>
 
