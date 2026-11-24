@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import './HubPage.css';
 import ArcadeMenu from '../components/ArcadeMenu';
 import { ARCADE_GAMES } from '../data/arcadeGames';
+import { KOFI_URL } from '../lib/support';
 import { useAuth } from '../context/AuthContext';
 
 // In dev, point at a locally-running Skyward Islands instead of prod so you
@@ -75,6 +76,10 @@ export default function HubPage() {
       </section>
 
       <footer className="hub-footer">
+        <a href={KOFI_URL} target="_blank" rel="noreferrer">
+          Enjoying the lab? Support it on Ko-fi
+        </a>
+        <br />
         A catalogued property of the Broken Archive —{' '}
         <a href="https://broken-archive.com" target="_blank" rel="noreferrer">
           browse the archive &rarr;

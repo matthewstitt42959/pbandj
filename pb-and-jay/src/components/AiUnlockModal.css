@@ -68,3 +68,9 @@
   gap: 0.5rem;
   margin-top: 1rem;
 }
+
+.modal-card__kofi {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  text-decoration: none;
+}

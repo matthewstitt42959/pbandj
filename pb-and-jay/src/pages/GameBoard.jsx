@@ -245,7 +245,7 @@ const GameBoard = () => {
                 disabled={!aiAvailable}
                 title={
                   !aiAvailable ? 'Add an API key in Setup to enable'
-                  : aiLocked && !aiAuthenticated ? 'Subscription required — click to unlock'
+                  : aiLocked && !aiAuthenticated ? 'Access code required — click to unlock'
                   : 'AI assists with narration and companions'
                 }
               >
