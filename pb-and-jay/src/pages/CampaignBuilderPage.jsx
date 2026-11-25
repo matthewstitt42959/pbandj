@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { KOFI_URL } from '../lib/support';
 import './CampaignBuilderPage.css';
 
 const STATUS_LABELS = {
@@ -244,7 +245,7 @@ const CampaignBuilderPage = () => {
           </label>
           <p className="cb-field-hint" style={{ margin: 0 }}>
             Mark this as an AI-run game. Players who join will see the AI DM badge. The game board auto-enables AI mode.
-            {' '}AI runs on paid API credits, so it needs an unlock code — support the lab on Ko-fi and ask the site owner for one.
+            {' '}The AI runs on paid API credits — if you enjoy it, <a href={KOFI_URL} target="_blank" rel="noreferrer">tips on Ko-fi</a> help keep it running.
           </p>
         </div>
 
