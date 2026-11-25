@@ -10,6 +10,7 @@ import { createHmac, randomBytes } from 'crypto';
 import { getProvider, listProviders } from './providers/index.js';
 import prisma from './prisma.js';
 import { requireAuth } from './auth-middleware.js';
+import { requireAiQuota } from './aiUsage.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { sendDmPostNotification, sendMembershipConfirmation, sendPasswordResetEmail, isEmailEnabled } from './email.js';
@@ -204,7 +205,7 @@ app.post('/api/auth/unlock', async (req, res) => {
   res.json({ token: makeToken(password) });
 });
 
-app.post('/api/dm/respond', requireAiAuth, async (req, res) => {
+app.post('/api/dm/respond', requireAiAuth, requireAuth, requireAiQuota(prisma), async (req, res) => {
   let provider;
   try {
     provider = getProvider();
@@ -236,7 +237,7 @@ app.post('/api/dm/respond', requireAiAuth, async (req, res) => {
   }
 });
 
-app.post('/api/player/respond', requireAiAuth, async (req, res) => {
+app.post('/api/player/respond', requireAiAuth, requireAuth, requireAiQuota(prisma), async (req, res) => {
   let provider;
   try {
     provider = getProvider();
@@ -998,7 +999,7 @@ app.post('/api/campaigns/:id/assign-dm', requireAuth, async (req, res) => {
 });
 
 // AI generate campaign content
-app.post('/api/campaigns/:id/generate', requireAuth, async (req, res) => {
+app.post('/api/campaigns/:id/generate', requireAuth, requireAiQuota(prisma), async (req, res) => {
   if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
   let provider;
   try { provider = getProvider(); } catch (err) { return res.status(500).json({ error: err.message }); }
@@ -1277,7 +1278,7 @@ app.patch('/api/dm/characters/:id/status', requireAuth, async (req, res) => {
 });
 
 // AI generates a party of characters and assigns them to a campaign
-app.post('/api/campaigns/:id/generate-characters', requireAuth, async (req, res) => {
+app.post('/api/campaigns/:id/generate-characters', requireAuth, requireAiQuota(prisma), async (req, res) => {
   if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
   let provider;
   try { provider = getProvider(); } catch (err) { return res.status(500).json({ error: err.message }); }
@@ -1419,7 +1420,7 @@ async function seedRules() {
 
 // ── DM Assist (writing helper, not full AI DM) ─────────────────────────────
 
-app.post('/api/dm/assist', requireAuth, async (req, res) => {
+app.post('/api/dm/assist', requireAuth, requireAiQuota(prisma), async (req, res) => {
   if (!['DM', 'SUPER_DM'].includes(req.authUser.role)) {
     return res.status(403).json({ error: 'DM only' });
   }
