@@ -26,11 +26,16 @@ import CampaignManagePage from './pages/CampaignManagePage';
 import RulesPage from './pages/RulesPage';
 import WikiPage from './pages/WikiPage';
 
-// The hub (/) and other games (/games/*) are chrome-free — PB & Jay's own
-// navbar only makes sense once you're inside the PB & Jay app itself.
+// Arcade-wide pages are chrome-free: the hub, other games, and auth (sign-in is
+// now entered from the Hub, not PB & Jay specifically — PB & Jay's navbar only
+// makes sense once you're inside the PB & Jay app itself).
+const ARCADE_WIDE_PATHS = ['/login', '/register', '/forgot-password', '/auth/reset', '/auth/callback'];
 function AppShell() {
   const location = useLocation();
-  const hideChrome = location.pathname === '/' || location.pathname.startsWith('/games/');
+  const hideChrome =
+    location.pathname === '/' ||
+    location.pathname.startsWith('/games/') ||
+    ARCADE_WIDE_PATHS.includes(location.pathname);
 
   const routes = (
     <Routes>

@@ -3,7 +3,10 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 const TOKEN_KEY = 'pb-and-jay-token';
 const AuthContext = createContext(null);
 
-function getToken() { return localStorage.getItem(TOKEN_KEY); }
+// Exported so other apps in the arcade (e.g. cwb-foundry) can hand this same
+// token along when a logged-in user clicks through, instead of needing their own
+// separate login — see HubPage.jsx's cwb-foundry link.
+export function getToken() { return localStorage.getItem(TOKEN_KEY); }
 function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
 function clearToken() { localStorage.removeItem(TOKEN_KEY); }
 

@@ -3,7 +3,7 @@ import './HubPage.css';
 import ArcadeMenu from '../components/ArcadeMenu';
 import { ARCADE_GAMES } from '../data/arcadeGames';
 import { KOFI_URL } from '../lib/support';
-import { useAuth } from '../context/AuthContext';
+import { getToken, useAuth } from '../context/AuthContext';
 
 // In dev, point at a locally-running Skyward Islands instead of prod so you
 // can actually test changes — override with VITE_SKYWARD_ISLANDS_URL in
@@ -19,10 +19,27 @@ const CWB_FOUNDRY_URL =
   (import.meta.env.DEV ? 'http://localhost:3000' : 'https://cwb-foundry.onrender.com');
 
 export default function HubPage() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  // cwb-foundry has no login of its own — it recognizes this same account by
+  // verifying the token we already have, handed off via a URL fragment (never
+  // sent to a server, never logged, unlike a query param).
+  const token = user ? getToken() : null;
+  const cwbFoundryHref = token ? `${CWB_FOUNDRY_URL}/#token=${encodeURIComponent(token)}` : CWB_FOUNDRY_URL;
   return (
     <div className="hub-page">
       <div className="hub-menu">
+        {user ? (
+          <div className="hub-account">
+            <span className="hub-account__name">@{user.username}</span>
+            <button type="button" className="hub-account__btn" onClick={signOut}>
+              Sign out
+            </button>
+          </div>
+        ) : (
+          <Link to="/login" className="hub-account__btn hub-account__btn--signin">
+            Sign up / Log in
+          </Link>
+        )}
         <ArcadeMenu />
       </div>
       <header className="hub-hero">
@@ -68,7 +85,7 @@ export default function HubPage() {
           </a>
 
           <a
-            href={CWB_FOUNDRY_URL}
+            href={cwbFoundryHref}
             target="_blank"
             rel="noreferrer"
             className="hub-card hub-card--standalone"
