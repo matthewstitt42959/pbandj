@@ -10,6 +10,12 @@ const SKYWARD_ISLANDS_URL =
   import.meta.env.VITE_SKYWARD_ISLANDS_URL ||
   (import.meta.env.DEV ? 'http://localhost:5173' : 'https://islands.playbyjayrpg.com');
 
+// Same pattern as Skyward Islands: a separately-hosted app, not one of the
+// plane-card family. Override with VITE_CWB_FOUNDRY_URL in .env.local.
+const CWB_FOUNDRY_URL =
+  import.meta.env.VITE_CWB_FOUNDRY_URL ||
+  (import.meta.env.DEV ? 'http://localhost:3000' : 'https://cwb-foundry.onrender.com');
+
 export default function HubPage() {
   return (
     <div className="hub-page">
@@ -38,6 +44,17 @@ export default function HubPage() {
           >
             <h3>Skyward Islands</h3>
             <p>Climb floating islands, then terraform and trade on them</p>
+          </a>
+
+          <a
+            href={CWB_FOUNDRY_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="hub-card hub-card--standalone"
+          >
+            <span className="hub-card-badge">Construction in progress</span>
+            <h3>Cards With Borders Foundry</h3>
+            <p>Mix-and-match TCG engine — build a deck, play it against an AI</p>
           </a>
 
           <div className="hub-card-group">

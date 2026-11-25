@@ -122,6 +122,19 @@
   text-decoration: none;
 }
 
+.hub-card-badge {
+  display: inline-block;
+  margin-bottom: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 200, 87, 0.4);
+  color: #ffc857;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .hub-card h3 {
   margin: 0 0 0.5rem;
   color: #ffc857;
