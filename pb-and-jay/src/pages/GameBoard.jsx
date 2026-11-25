@@ -11,6 +11,7 @@ import DiceRoller from '../components/DiceRoller';
 import SiteOpediaPanel from '../components/SiteOpediaPanel';
 import { checkAIStatus } from '../services/aiDM';
 import AiUnlockModal from '../components/AiUnlockModal';
+import { KOFI_URL } from '../lib/support';
 import DmAssist from '../components/DmAssist';
 import { useAuth } from '../context/AuthContext';
 import './Gameboard.css';
@@ -245,12 +246,21 @@ const GameBoard = () => {
                 disabled={!aiAvailable}
                 title={
                   !aiAvailable ? 'Add an API key in Setup to enable'
-                  : aiLocked && !aiAuthenticated ? 'Subscription required — click to unlock'
+                  : aiLocked && !aiAuthenticated ? 'Access code required — click to unlock'
                   : 'AI assists with narration and companions'
                 }
               >
                 {aiLocked && !aiAuthenticated ? '🔒 AI Active' : 'AI Active'}
               </button>
+              <a
+                className="mode-toggle__tip"
+                href={KOFI_URL}
+                target="_blank"
+                rel="noreferrer"
+                title="The AI runs on paid API credits — tips keep it going"
+              >
+                ☕ Tip
+              </a>
             </div>
           )}
           <button className="btn btn--ghost" onClick={resetCampaign} title="Reset campaign">

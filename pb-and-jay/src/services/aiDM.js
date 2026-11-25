@@ -4,8 +4,10 @@ const API_BASE = '/api';
 
 function aiHeaders() {
   const token = getAiToken();
+  const authToken = localStorage.getItem('pb-and-jay-token');
   return {
     'Content-Type': 'application/json',
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     ...(token ? { 'X-AI-Token': token } : {}),
   };
 }

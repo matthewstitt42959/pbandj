@@ -1120,3 +1120,15 @@
   color: #6a7088;
   font-style: italic;
 }
+
+.mode-toggle__tip {
+  font-size: 0.75rem;
+  color: #ffc857;
+  text-decoration: none;
+  padding: 0 0.5rem;
+  white-space: nowrap;
+}
+
+.mode-toggle__tip:hover {
+  text-decoration: underline;
+}

@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import './HubPage.css';
 import ArcadeMenu from '../components/ArcadeMenu';
 import { ARCADE_GAMES } from '../data/arcadeGames';
+import { KOFI_URL } from '../lib/support';
+import { useAuth } from '../context/AuthContext';
 
 // In dev, point at a locally-running Skyward Islands instead of prod so you
 // can actually test changes — override with VITE_SKYWARD_ISLANDS_URL in
@@ -17,6 +19,7 @@ const CWB_FOUNDRY_URL =
   (import.meta.env.DEV ? 'http://localhost:3000' : 'https://cwb-foundry.onrender.com');
 
 export default function HubPage() {
+  const { user } = useAuth();
   return (
     <div className="hub-page">
       <div className="hub-menu">
@@ -26,6 +29,24 @@ export default function HubPage() {
         <h1 className="hub-title">Play by Jay</h1>
         <p className="hub-tagline">A one-person indie arcade — new worlds added as they're built.</p>
       </header>
+
+      <section className="hub-about" aria-labelledby="hub-about-title">
+        <h2 id="hub-about-title" className="hub-about-title">What is this place?</h2>
+        <p>
+          This is my lab. I use it to test out game ideas and post the results where anyone can
+          play them. Some games are polished, some are rough drafts, and all of them are works
+          in progress.
+        </p>
+        <p>
+          New here? <strong>Pick a game below and jump in.</strong> The arcade games need no
+          account. PB &amp; Jay, a full play-by-post D&amp;D campaign, does.
+          {user ? null : (
+            <>
+              {' '}<Link to="/register">Sign up</Link> or <Link to="/login">log in</Link> to play it.
+            </>
+          )}
+        </p>
+      </section>
 
       <Link to="/pbj" className="hub-feature">
         <h2>PB &amp; Jay</h2>
@@ -72,6 +93,10 @@ export default function HubPage() {
       </section>
 
       <footer className="hub-footer">
+        <a href={KOFI_URL} target="_blank" rel="noreferrer">
+          Enjoying the lab? Support it on Ko-fi
+        </a>
+        <br />
         A catalogued property of the Broken Archive —{' '}
         <a href="https://broken-archive.com" target="_blank" rel="noreferrer">
           browse the archive &rarr;

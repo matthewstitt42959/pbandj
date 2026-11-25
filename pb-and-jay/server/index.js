@@ -10,9 +10,10 @@ import { createHmac, randomBytes } from 'crypto';
 import { getProvider, listProviders } from './providers/index.js';
 import prisma from './prisma.js';
 import { requireAuth } from './auth-middleware.js';
+import { requireAiQuota } from './aiUsage.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { sendDmPostNotification, sendMembershipConfirmation, sendMembershipExpiringReminder, sendPasswordResetEmail, isEmailEnabled } from './email.js';
+import { sendDmPostNotification, sendMembershipConfirmation, sendPasswordResetEmail, isEmailEnabled } from './email.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, '..', 'dist');
@@ -204,7 +205,7 @@ app.post('/api/auth/unlock', async (req, res) => {
   res.json({ token: makeToken(password) });
 });
 
-app.post('/api/dm/respond', requireAiAuth, async (req, res) => {
+app.post('/api/dm/respond', requireAiAuth, requireAuth, requireAiQuota(prisma), async (req, res) => {
   let provider;
   try {
     provider = getProvider();
@@ -236,7 +237,7 @@ app.post('/api/dm/respond', requireAiAuth, async (req, res) => {
   }
 });
 
-app.post('/api/player/respond', requireAiAuth, async (req, res) => {
+app.post('/api/player/respond', requireAiAuth, requireAuth, requireAiQuota(prisma), async (req, res) => {
   let provider;
   try {
     provider = getProvider();
@@ -998,7 +999,7 @@ app.post('/api/campaigns/:id/assign-dm', requireAuth, async (req, res) => {
 });
 
 // AI generate campaign content
-app.post('/api/campaigns/:id/generate', requireAuth, async (req, res) => {
+app.post('/api/campaigns/:id/generate', requireAuth, requireAiQuota(prisma), async (req, res) => {
   if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
   let provider;
   try { provider = getProvider(); } catch (err) { return res.status(500).json({ error: err.message }); }
@@ -1277,7 +1278,7 @@ app.patch('/api/dm/characters/:id/status', requireAuth, async (req, res) => {
 });
 
 // AI generates a party of characters and assigns them to a campaign
-app.post('/api/campaigns/:id/generate-characters', requireAuth, async (req, res) => {
+app.post('/api/campaigns/:id/generate-characters', requireAuth, requireAiQuota(prisma), async (req, res) => {
   if (req.authUser.role === 'PLAYER') return res.status(403).json({ error: 'DM access required' });
   let provider;
   try { provider = getProvider(); } catch (err) { return res.status(500).json({ error: err.message }); }
@@ -1419,7 +1420,7 @@ async function seedRules() {
 
 // ── DM Assist (writing helper, not full AI DM) ─────────────────────────────
 
-app.post('/api/dm/assist', requireAuth, async (req, res) => {
+app.post('/api/dm/assist', requireAuth, requireAiQuota(prisma), async (req, res) => {
   if (!['DM', 'SUPER_DM'].includes(req.authUser.role)) {
     return res.status(403).json({ error: 'DM only' });
   }
@@ -1646,7 +1647,6 @@ app.patch('/api/admin/subscribers/:id', requireAuth, requireSuperDM, async (req,
   if (paidAt) data.paidAt = new Date(paidAt);
   if (expiresAt) {
     data.expiresAt = new Date(expiresAt);
-    data.reminderSentAt = null; // renewed with a new expiration — allow a fresh reminder later
   }
   if (notes !== undefined) data.notes = notes?.trim() || null;
   const subscriber = await prisma.subscriber.update({
@@ -1671,31 +1671,6 @@ app.delete('/api/admin/subscribers/:id', requireAuth, requireSuperDM, async (req
   await prisma.subscriber.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
 });
-
-const MEMBERSHIP_REMINDER_WINDOW_DAYS = 3;
-
-async function checkExpiringMemberships() {
-  if (!isEmailEnabled()) return;
-  try {
-    const now = new Date();
-    const windowEnd = new Date(now.getTime() + MEMBERSHIP_REMINDER_WINDOW_DAYS * 24 * 60 * 60 * 1000);
-    const expiring = await prisma.subscriber.findMany({
-      where: { reminderSentAt: null, expiresAt: { gte: now, lte: windowEnd } },
-      include: { user: { select: SUBSCRIBER_USER_SELECT } },
-    });
-    for (const sub of expiring) {
-      if (!sub.user.emailUpdates) continue;
-      await sendMembershipExpiringReminder({
-        email: sub.user.email,
-        displayName: sub.user.displayName,
-        expiresAt: sub.expiresAt,
-      });
-      await prisma.subscriber.update({ where: { id: sub.id }, data: { reminderSentAt: now } });
-    }
-  } catch (err) {
-    console.error('Membership reminder check error:', err.message);
-  }
-}
 
 // ── Wiki ──────────────────────────────────────────────────────────────────────
 
@@ -1840,12 +1815,8 @@ if (isProduction) {
   });
 }
 
-const MEMBERSHIP_REMINDER_INTERVAL_MS = 12 * 60 * 60 * 1000;
-
 const server = app.listen(PORT, () => {
   seedRules();
-  checkExpiringMemberships();
-  setInterval(checkExpiringMemberships, MEMBERSHIP_REMINDER_INTERVAL_MS);
   try {
     const provider = getProvider();
     console.log(`PB & Jay running on port ${PORT}`);
