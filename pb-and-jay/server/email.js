@@ -52,40 +52,6 @@ export async function sendMembershipConfirmation({ email, displayName }) {
   });
 }
 
-// Kept for the existing expiry check. Wording no longer implies access will be
-// cut off: the AI Dungeon Master is open and supported by optional tips.
-export async function sendMembershipExpiringReminder({ email, displayName }) {
-  if (!transporter) return;
-
-  await transporter.sendMail({
-    from: `"PB & Jay" <${GMAIL_USER}>`,
-    to: email,
-    subject: 'A note from PB & Jay',
-    text: [
-      `Hi ${displayName},`,
-      '',
-      'Thanks again for supporting PB & Jay. The AI Dungeon Master is now open to everyone and runs on optional tips, so there is nothing you need to renew.',
-      '',
-      `If you would like to keep supporting the lab, you can do it on Ko-fi: ${KOFI_URL}`,
-      '',
-      `${APP_URL}/pbj`,
-    ].join('\n'),
-    html: `
-      <p style="font-family:sans-serif;color:#333">Hi ${displayName},</p>
-      <p style="font-family:sans-serif;color:#333">
-        Thanks again for supporting PB &amp; Jay. The AI Dungeon Master is now open to everyone and runs on
-        optional tips, so there is nothing you need to renew.
-      </p>
-      <p style="font-family:sans-serif;color:#333">
-        If you would like to keep supporting the lab, you can do it on <a href="${KOFI_URL}">Ko-fi</a>.
-      </p>
-      <p style="margin-top:1.5rem">
-        <a href="${APP_URL}/pbj" style="${BTN}">Go to PB &amp; Jay →</a>
-      </p>
-    `,
-  });
-}
-
 export async function sendPasswordResetEmail({ email, displayName, resetUrl }) {
   if (!transporter) return;
 
