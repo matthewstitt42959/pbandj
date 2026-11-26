@@ -255,3 +255,35 @@
   color: #ffc857;
   text-decoration: underline;
 }
+
+/* Phones: one full-width column, and the account bar scrolls with the page
+   instead of floating over the text. */
+@media (max-width: 600px) {
+  .hub-page {
+    justify-content: flex-start;
+    gap: 1.75rem;
+    box-sizing: border-box;
+    padding: 1rem;
+  }
+
+  .hub-menu {
+    position: static;
+    align-self: stretch;
+    justify-content: flex-end;
+  }
+
+  .hub-about,
+  .hub-feature,
+  .hub-secondary,
+  .hub-secondary-row,
+  .hub-card-group,
+  .hub-card {
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .hub-secondary-row,
+  .hub-card-group-items {
+    flex-direction: column;
+  }
+}
