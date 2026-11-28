@@ -3,7 +3,6 @@ import { GameProvider } from './context/GameContext';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
-import HubPage from './pages/HubPage';
 import AerialWarPage from './pages/AerialWarPage';
 import Dogfight21Page from './pages/Dogfight21Page';
 import ChessAtSeaPage from './pages/ChessAtSeaPage';
@@ -26,26 +25,26 @@ import CampaignManagePage from './pages/CampaignManagePage';
 import RulesPage from './pages/RulesPage';
 import WikiPage from './pages/WikiPage';
 
-// Arcade-wide pages are chrome-free: the hub, other games, and auth (sign-in is
-// now entered from the Hub, not PB & Jay specifically — PB & Jay's navbar only
-// makes sense once you're inside the PB & Jay app itself).
+// Arcade-wide pages are chrome-free: the plane-card games and auth (sign-in is
+// entered from the Games Hub on the main platform, not PB & Jay specifically —
+// PB & Jay's navbar only makes sense once you're inside the PB & Jay app itself).
 const ARCADE_WIDE_PATHS = ['/login', '/register', '/forgot-password', '/auth/reset', '/auth/callback'];
 function AppShell() {
   const location = useLocation();
   const hideChrome =
-    location.pathname === '/' ||
     location.pathname.startsWith('/games/') ||
     ARCADE_WIDE_PATHS.includes(location.pathname);
 
   const routes = (
     <Routes>
-      {/* Hub + other games */}
-      <Route path="/" element={<HubPage />} />
+      {/* Other games living in this app */}
       <Route path="/games/aerial-war" element={<AerialWarPage />} />
       <Route path="/games/dogfight-21" element={<Dogfight21Page />} />
       <Route path="/games/chess-at-sea" element={<ChessAtSeaPage />} />
 
-      {/* PB & Jay — public routes (homepage lives at /pbj; everything else unchanged) */}
+      {/* PB & Jay — public routes (this host's root is the RPG itself now; the arcade-wide
+          listing of every game lives on the Broken Archive games platform instead) */}
+      <Route path="/" element={<HomePage />} />
       <Route path="/pbj" element={<HomePage />} />
       <Route path="/rules" element={<RulesPage />} />
       <Route path="/login" element={<LoginPage />} />

@@ -2,19 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ARCADE_GAMES } from '../data/arcadeGames';
 import { preloadPlaneArt } from '../data/planeDeck';
+import { GAMES_HUB_URL } from '../lib/support';
 import './ArcadeMenu.css';
 
-// Shared nav for the plane-card arcade (Hub + every game under it) — a
-// hamburger so adding another game later doesn't mean redesigning a header
-// full of links every time.
+// Shared nav for the plane-card arcade (every game under it) — a hamburger
+// so adding another game later doesn't mean redesigning a header full of
+// links every time.
 export default function ArcadeMenu() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
 
-  // This menu renders on the Hub and both plane-card games, so mounting it
-  // is a reliable signal the player is in (or about to enter) the arcade —
-  // a natural single place to start warming the deck's images regardless
-  // of which page they arrived on.
+  // This menu renders on all three plane-card games, so mounting it is a
+  // reliable signal the player is in the arcade — a natural single place to
+  // start warming the deck's images regardless of which page they arrived on.
   useEffect(() => {
     preloadPlaneArt();
   }, []);
@@ -51,9 +51,9 @@ export default function ArcadeMenu() {
 
       {open && (
         <div className="arcade-menu-panel" role="menu">
-          <Link to="/" className="arcade-menu-link" role="menuitem" onClick={() => setOpen(false)}>
+          <a href={GAMES_HUB_URL} className="arcade-menu-link" role="menuitem" onClick={() => setOpen(false)}>
             ← Hub
-          </Link>
+          </a>
           <div className="arcade-menu-divider" />
           {ARCADE_GAMES.map((game) => (
             <Link

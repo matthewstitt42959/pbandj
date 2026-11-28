@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { GAMES_HUB_URL } from '../lib/support';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -13,7 +14,7 @@ const Navbar = () => {
   return (
     <nav className="nav-bar">
       <div className="nav-inner">
-        <Link to="/" className="nav-hub-link" onClick={close}>&larr; Hub</Link>
+        <a href={GAMES_HUB_URL} className="nav-hub-link" onClick={close}>&larr; Hub</a>
         <NavLink to="/pbj" className="nav-title" onClick={close}>
           <img src="/bluejay-logo.svg" alt="" className="nav-logo" aria-hidden="true" />
           PB & Jay
@@ -58,7 +59,7 @@ const Navbar = () => {
       {/* Mobile menu */}
       {menuOpen && (
         <ul className="nav-links nav-links--mobile">
-          <li><Link to="/" onClick={close}>&larr; Hub</Link></li>
+          <li><a href={GAMES_HUB_URL} onClick={close}>&larr; Hub</a></li>
           <li><NavLink to="/pbj" end onClick={close}>Home</NavLink></li>
           <li><NavLink to="/rules" onClick={close}>Rules</NavLink></li>
           <li><NavLink to="/wiki" onClick={close}>World Wiki</NavLink></li>
